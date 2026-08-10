@@ -1,6 +1,6 @@
 # 检查单
 
-![]
+![background](background.png)
 
 > 一个 MD3 风格的待办清单，从此不再忘记每一件事。
 
