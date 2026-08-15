@@ -67,6 +67,7 @@
 
 - 💡 企划：[Crazy Sue](https://github.com/CrazySue)
 - ⌨️ 编程：[GLM-5.2](https://github.com/zai-org/GLM-5)
+- 🛠️ 维护：[DeepSeek V4 Pro](https://github.com/deepseek-ai/DeepSeek-V4)
 
 ---
 
