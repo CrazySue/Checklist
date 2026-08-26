@@ -1,6 +1,6 @@
 # Liste de contrôle
 
-![background](../background.png)
+![background](/background.png)
 
 > Une liste de tâches de style MD3 — ne plus jamais rien oublier.
 
@@ -27,9 +27,9 @@
 
 ## 📱 Captures d'écran
 
-| ![Accueil](../pictures/picture-1.png)  | ![Modification de la liste de contrôle](../pictures/picture-2.png) | ![Paramètres](../pictures/picture-3.png) |
+| ![Accueil](/pictures/picture-1.png)  | ![Modification de la liste de contrôle](/pictures/picture-2.png) | ![Paramètres](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![Sélection d'icônes](../pictures/picture-4.png) | ![Recherche](../pictures/picture-5.png)    | ![Terminé](../pictures/picture-6.png) |
+| ![Sélection d'icônes](/pictures/picture-4.png) | ![Recherche](/pictures/picture-5.png)    | ![Terminé](/pictures/picture-6.png) |
 
 ---
 
