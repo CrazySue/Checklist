@@ -6,7 +6,7 @@
 
 [![Download Release](https://img.shields.io/badge/Download-Release-blue.svg)](https://github.com/CrazySue/Checklist/releases) [![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/CrazySue/Checklist/blob/main/LICENSE) [![Platform Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://github.com/CrazySue/Checklist/releases) [![Made by GLM-5.2](https://img.shields.io/badge/Made_by-GLM5.2-red.svg)](https://github.com/zai-org/GLM-5) [![Maintain by DeepSeek V4 Pro](https://img.shields.io/badge/Maintain_by-DeepSeek_V4_Pro-orange.svg)](https://github.com/zai-org/GLM-5)
 
-[English]() | 简体中文 | [繁體中文]() | [日本語]() | [한국어]() | [Français]() | [Deutsch]() | [Español]() | [Русский]() | [Português]()
+[English](README-en.md) | 简体中文 | [繁體中文](README-zh_TW.md) | [日本語](README-ja.md) | [한국어](README-ko.md) | [Français](README-fr.md) | [Deutsch](README-de.md) | [Español](README-es.md) | [Русский](README-ru.md) | [Português](README-pt.md)
 
 **检查单**是一款使用 MD3 设计语言的待办清单应用。
 
@@ -27,9 +27,9 @@
 
 ## 📱 截图
 
-| ![主界面](pictures/picture-1.png)  | ![检查单编辑](pictures/picture-2.png) | ![设置](pictures/picture-3.png) |
+| ![主界面](/pictures/picture-1.png)  | ![检查单编辑](/pictures/picture-2.png) | ![设置](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![图标选择](pictures/picture-4.png) | ![搜索](pictures/picture-5.png)    | ![完成](pictures/picture-6.png) |
+| ![图标选择](/pictures/picture-4.png) | ![搜索](/pictures/picture-5.png)    | ![完成](/pictures/picture-6.png) |
 
 ---
 
