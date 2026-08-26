@@ -27,9 +27,9 @@ English | [简体中文](README-zh_CN.md) | [繁體中文](README-zh_TW.md) | [�
 
 ## 📱 Screenshots
 
-| ![Home](../pictures/picture-1.png)  | ![Edit checklist](../pictures/picture-2.png) | ![Settings](../pictures/picture-3.png) |
+| ![Home](/pictures/picture-1.png)  | ![Edit checklist](/pictures/picture-2.png) | ![Settings](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![Icon picker](../pictures/picture-4.png) | ![Search](../pictures/picture-5.png)    | ![Done](../pictures/picture-6.png) |
+| ![Icon picker](/pictures/picture-4.png) | ![Search](/pictures/picture-5.png)    | ![Done](/pictures/picture-6.png) |
 
 ---
 
