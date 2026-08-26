@@ -1,6 +1,6 @@
 # Checkliste
 
-![background](../background.png)
+![background](/background.png)
 
 > Eine To-do-Liste im MD3-Stil – nie wieder etwas vergessen.
 
