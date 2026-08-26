@@ -1,6 +1,6 @@
 # Lista de verificação
 
-![background](../background.png)
+![background](/background.png)
 
 > Uma lista de tarefas em estilo MD3 — para nunca mais esquecer de nada.
 
@@ -27,9 +27,9 @@ A **Lista de verificação** é uma aplicação de lista de tarefas que usa a li
 
 ## 📱 Capturas de ecrã
 
-| ![Ecrã principal](../pictures/picture-1.png)  | ![Edição da lista de verificação](../pictures/picture-2.png) | ![Configurações](../pictures/picture-3.png) |
+| ![Ecrã principal](/pictures/picture-1.png)  | ![Edição da lista de verificação](/pictures/picture-2.png) | ![Configurações](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![Seleção de ícone](../pictures/picture-4.png) | ![Pesquisa](../pictures/picture-5.png)    | ![Concluído](../pictures/picture-6.png) |
+| ![Seleção de ícone](/pictures/picture-4.png) | ![Pesquisa](/pictures/picture-5.png)    | ![Concluído](/pictures/picture-6.png) |
 
 ---
 
