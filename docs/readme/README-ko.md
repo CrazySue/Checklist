@@ -1,6 +1,6 @@
 # 체크리스트
 
-![background](../background.png)
+![background](/background.png)
 
 > MD3 스타일의 할 일 목록, 이제 어떤 일도 잊지 마세요.
 
@@ -27,9 +27,9 @@
 
 ## 📱 스크린샷
 
-| ![홈 화면](../pictures/picture-1.png)  | ![체크리스트 편집](../pictures/picture-2.png) | ![설정](../pictures/picture-3.png) |
+| ![홈 화면](/pictures/picture-1.png)  | ![체크리스트 편집](/pictures/picture-2.png) | ![설정](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![아이콘 선택](../pictures/picture-4.png) | ![검색](../pictures/picture-5.png)    | ![완료](../pictures/picture-6.png) |
+| ![아이콘 선택](/pictures/picture-4.png) | ![검색](/pictures/picture-5.png)    | ![완료](/pictures/picture-6.png) |
 
 ---
 
