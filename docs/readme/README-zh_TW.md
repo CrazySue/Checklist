@@ -1,6 +1,6 @@
 # 檢查單
 
-![background](../background.png)
+![background](/background.png)
 
 > 一個 MD3 風格的待辦清單，從此不再忘記每一件事。
 
@@ -27,9 +27,9 @@
 
 ## 📱 截圖
 
-| ![主介面](../pictures/picture-1.png)  | ![編輯檢查單](../pictures/picture-2.png) | ![設定](../pictures/picture-3.png) |
+| ![主介面](/pictures/picture-1.png)  | ![編輯檢查單](/pictures/picture-2.png) | ![設定](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![選取圖示](../pictures/picture-4.png) | ![搜尋](../pictures/picture-5.png)    | ![完成](../pictures/picture-6.png) |
+| ![選取圖示](/pictures/picture-4.png) | ![搜尋](/pictures/picture-5.png)    | ![完成](/pictures/picture-6.png) |
 
 ---
 
