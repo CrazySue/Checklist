@@ -1,74 +1,107 @@
-# 检查单
+# Checklist
 
 ![background](background.png)
 
-> 一个 MD3 风格的待办清单，从此不再忘记每一件事。
+> A to-do list in MD3 style — never forget anything again.
 
-[![Download Release](https://img.shields.io/badge/Download-Release-blue.svg)](https://github.com/CrazySue/Checklist/releases) [![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/CrazySue/Checklist/blob/main/LICENSE) [![Platform Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://github.com/CrazySue/Checklist/releases) [![Made by GLM-5.2](https://img.shields.io/badge/Made_by-GLM5.2-red.svg)](https://github.com/zai-org/GLM-5)
+[![Download Release](https://img.shields.io/badge/Download-Release-blue.svg)](https://github.com/CrazySue/Checklist/releases) [![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/CrazySue/Checklist/blob/main/LICENSE.txt) [![Platform Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://github.com/CrazySue/Checklist/releases) [![Made by GLM-5.2](https://img.shields.io/badge/Made_by-GLM5.2-red.svg)](https://github.com/zai-org/GLM-5) [![Maintain by DeepSeek V4 Pro](https://img.shields.io/badge/Maintain_by-DeepSeek_V4_Pro-orange.svg)](https://github.com/deepseek-ai/DeepSeek-V4)
 
-[English]() | 简体中文 | [繁体中文]()
+English | [简体中文](docs/readme/README-zh_CN.md) | [繁體中文](docs/readme/README-zh_TW.md) | [日本語](docs/readme/README-ja.md) | [한국어](docs/readme/README-ko.md) | [Français](docs/readme/README-fr.md) | [Deutsch](docs/readme/README-de.md) | [Español](docs/readme/README-es.md) | [Русский](docs/readme/README-ru.md) | [Português](docs/readme/README-pt.md)
 
-> [!TIP]
-> 点击 [这里]() 查看《检查单》的宣传页！
-
-《检查单》是一款由 Crazy Sue 企划、由 GLM-5.2 编程实现的待办清单应用。
+**Checklist** is a to-do list application built with the MD3 design language.
 
 ---
 
-## 🎥 开发背景
+## ✨ Features
 
-当下，人们的事情变得越累越多了起来，参加生日派对、和朋友一起看电影......为此，许多日历应用都早已集成了日程这样的功能，用于提醒人们不要忘了某件大事。  
-可是，问题解决了吗？并没有。出门后忘记带公交卡？下班后忘记提交工作日志？反而是组成“大事”的那些“小事”拖慢了人们的进度。  
-为此，饱受其害的 Sue 决定开发一款待办清单来解决这个问题，《检查单》不会提醒你要做那些大事——因为许多日历应用比我做的好并且你很难忘记——而是让你在做那些需要分很多步的小事上列出每一步，做完一项划一项，**从此不再忘记每一件事**。
+- **Single file**: The entire app is one HTML file with fonts, icon fonts, and the app icon all embedded — double-click to run it offline;
+- **MD3 design language**: Complete MD3 design tokens, state layers, ripples, and non-linear easing animations;
+- **Localisation**: Support for 10 languages (简体中文、繁體中文、English、日本語、한국어、Français、Deutsch、Español、Русский、Português);
+- **Smart icon matching**: Icons are matched automatically from checklist item / checklist names (630+ keyword index per language);
+- **Auto reset**: After everything is done, the list can be set to reset automatically on a timer, ready for a new day;
+- **Easy sharing**: Export / import .checklist files (JSON under the hood) — your data never gets lost;
+- **Adaptive portrait & landscape**: Bottom bar in portrait, left navigation bar in landscape;
+- **Dark mode**: Follow system / light / dark, with smooth transitions across the whole UI.
 
 ---
 
-## 🛠️ 开始构建
+## 📱 Screenshots
 
-《检查单》是一款以 HTML 为编程语言的 5+App，通过 Hbuilder X 将其发行为 APK 安装包。
+| ![Home](pictures/picture-1.png)  | ![Edit checklist](pictures/picture-2.png) | ![Settings](pictures/picture-3.png) |
+| ------------------------------- | -------------------------------- | ----------------------------- |
+| ![Icon picker](pictures/picture-4.png) | ![Search](pictures/picture-5.png)    | ![Done](pictures/picture-6.png) |
+
+---
+
+## 📥 Download
+
+- For the latest version, download the APK from [GitHub Releases](https://github.com/CrazySue/Checklist/releases);
+- You can also use the web version directly: just open the HTML file in the repository and it runs;
+
+---
+
+## 🎥 Background
+
+Life keeps piling things onto our plates — birthday parties, movies with friends... That's why many calendar apps have long integrated scheduling features, to remind people not to forget the big stuff.
+
+But does that solve the problem? Not really. Forgot your transit card when you left the house? Forgot to submit your work log after clocking out? It's the "little things" that make up the "big things" that slow people down.
+
+That's why Sue, who has suffered from this problem, decided to build a to-do list to fix it: *Checklist* won't remind you about the big stuff — because most calendar apps do that better, and you're unlikely to forget it anyway — instead, it lets you break down the little things that need many steps into a list, checking off one item at a time, **so you never forget anything again**.
+
+---
+
+## 🛠️ Getting Started
+
+*Checklist* is a 5+ App written in HTML, packaged into an APK installer with HBuilderX.
 
 > [!NOTE]
-> 由于使用 Hbuilder X 将 HTML 打包的方法和教程数不胜数，在此仅列出简化后的构建方法，欲了解详情，请查看 [Hbuilder X 文档](https://hx.dcloud.net.cn/)。
+> There are countless tutorials on packaging HTML with HBuilderX, so only a simplified build process is listed here. For details, see the [HBuilderX documentation](https://hx.dcloud.net.cn/).
 
-要想自行将 HTML 文件打包为适用于操作系统的安装包，请：
+To package the HTML file into an installer for your OS yourself:
 
-1. [下载 Hbuilder X](https://www.dcloud.io/hbuilderx.html)。
-2. 新建一个 5+App 项目。
-3. 将 index.html 替换为要打包的 HTML 文件。
-4. 在 manifest.json 中编辑需要修改的选项。
-5. 使用云打包或离线打包。
-6. 上传应用证书（云打包可使用云端证书）。
-7. 打包。
-
----
-
-## 🤝 [参与共建](https://github.com/CrazySue/Checklist/blob/main/CONTRIBUTING.md)
+1. [Download HBuilderX](https://www.dcloud.io/hbuilderx.html).
+2. Create a new 5+ App project.
+3. Replace index.html with the HTML file you want to package.
+4. Edit the options you need in manifest.json.
+5. Use cloud packaging or offline packaging.
+6. Upload an app certificate (cloud packaging can use a cloud certificate).
+7. Package.
 
 ---
 
-## 📊 项目状态
+## 🧭 Getting Involved
+
+Want to read the code, fix bugs, or add features? Check out:
+
+- [Developer Guide](https://github.com/CrazySue/Checklist/blob/main/docs/devguide/DeveloperGuide-en.md) — architecture, build pipeline, testing, and pitfalls;
+- [CONTRIBUTING.md](https://github.com/CrazySue/Checklist/blob/main/.github/CONTRIBUTING.md) — contribution guidelines.
+
+---
+
+## 📊 Project Status
 
 ![Alt](https://repobeats.axiom.co/api/embed/973db86aa4cd093504f231f7853d6b984558f943.svg "Repobeats analytics image")
 
 ---
 
-## 📜 开源许可证
+## 📜 Open Source License
 
-本项目使用 **MIT License** 进行许可，允许任何人使用、复制、修改、合并、发布、分发、再许可和或出售本软件的副本，详见 [LICENSE](https://github.com/CrazySue/Checklist/blob/main/LICENSE) 文件。
+This project is licensed under the **MIT License**, which permits anyone to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software. See the [LICENSE](https://github.com/CrazySue/Checklist/blob/main/LICENSE.txt) file for details.
 
-本项目使用了以下开源软件：
-- Google 的 [Material Symbols Rounded](https://github.com/material-components/material-web) 设计体系
-- Google 的 [Material Design 3](https://github.com/material-components/material-web) 设计语言
-- Huawei 的 [HarmonyOS Sans](https://github.com/huawei-fonts/HarmonyOS-Sans#) 系列字体
+This project uses the following open-source software:
 
----
-
-## 💌 关于
-
-- 💡 企划：[Crazy Sue](https://github.com/CrazySue)
-- ⌨️ 编程：[GLM-5.2](https://github.com/zai-org/GLM-5)
-- 🛠️ 维护：[DeepSeek V4 Pro](https://github.com/deepseek-ai/DeepSeek-V4)
+- Google's [Material Symbols Rounded](https://github.com/material-components/material-web) icon system
+- Google's [Material Design 3](https://github.com/material-components/material-web) design language
+- Huawei's [HarmonyOS Sans](https://github.com/huawei-fonts/HarmonyOS-Sans#) font family
 
 ---
 
-*从此不再遗忘每一件事。*
+## 💌 About
+
+- 💡 Concept: [Crazy Sue](https://github.com/CrazySue)
+- ⌨️ Programming: [GLM-5.2](https://github.com/zai-org/GLM-5)
+- 🛠️ Maintenance: [DeepSeek V4 Pro](https://github.com/deepseek-ai/DeepSeek-V4)
+
+---
+
+*Never forget anything again.*
