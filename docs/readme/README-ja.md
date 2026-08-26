@@ -1,6 +1,6 @@
 # チェックリスト
 
-![background](../background.png)
+![background](/background.png)
 
 > MD3 スタイルのチェックリスト——これからは何も忘れない。
 
@@ -27,9 +27,9 @@
 
 ## 📱 スクリーンショット
 
-| ![ホーム画面](../pictures/picture-1.png)  | ![チェックリスト編集](../pictures/picture-2.png) | ![設定](../pictures/picture-3.png) |
+| ![ホーム画面](/pictures/picture-1.png)  | ![チェックリスト編集](/pictures/picture-2.png) | ![設定](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![アイコン選択](../pictures/picture-4.png) | ![検索](../pictures/picture-5.png)    | ![完了](../pictures/picture-6.png) |
+| ![アイコン選択](/pictures/picture-4.png) | ![検索](/pictures/picture-5.png)    | ![完了](/pictures/picture-6.png) |
 
 ---
 
