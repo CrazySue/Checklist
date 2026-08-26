@@ -27,9 +27,9 @@
 
 ## 📱 Screenshots
 
-| ![Hauptbildschirm](../pictures/picture-1.png)  | ![Checkliste bearbeiten](../pictures/picture-2.png) | ![Einstellungen](../pictures/picture-3.png) |
+| ![Hauptbildschirm](/pictures/picture-1.png)  | ![Checkliste bearbeiten](/pictures/picture-2.png) | ![Einstellungen](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![Symbolauswahl](../pictures/picture-4.png) | ![Suche](../pictures/picture-5.png)    | ![Erledigt](../pictures/picture-6.png) |
+| ![Symbolauswahl](/pictures/picture-4.png) | ![Suche](/pictures/picture-5.png)    | ![Erledigt](/pictures/picture-6.png) |
 
 ---
 
