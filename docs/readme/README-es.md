@@ -1,6 +1,6 @@
 # Lista de verificación
 
-![background](../background.png)
+![background](/background.png)
 
 > Una lista de tareas pendientes con estilo MD3 para no volver a olvidar nada jamás.
 
@@ -27,9 +27,9 @@
 
 ## 📱 Capturas de pantalla
 
-| ![Pantalla principal](../pictures/picture-1.png)  | ![Edición de lista](../pictures/picture-2.png) | ![Ajustes](../pictures/picture-3.png) |
+| ![Pantalla principal](/pictures/picture-1.png)  | ![Edición de lista](/pictures/picture-2.png) | ![Ajustes](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![Selector de iconos](../pictures/picture-4.png) | ![Búsqueda](../pictures/picture-5.png)    | ![Hecho](../pictures/picture-6.png) |
+| ![Selector de iconos](/pictures/picture-4.png) | ![Búsqueda](/pictures/picture-5.png)    | ![Hecho](/pictures/picture-6.png) |
 
 ---
 
