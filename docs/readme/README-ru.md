@@ -1,6 +1,6 @@
 # Чек-лист
 
-![background](../background.png)
+![background](/background.png)
 
 > Список дел в стиле MD3 — чтобы больше никогда ничего не забывать.
 
@@ -27,9 +27,9 @@
 
 ## 📱 Скриншоты
 
-| ![Главный экран](../pictures/picture-1.png)  | ![Редактирование чек-листа](../pictures/picture-2.png) | ![Настройки](../pictures/picture-3.png) |
+| ![Главный экран](/pictures/picture-1.png)  | ![Редактирование чек-листа](/pictures/picture-2.png) | ![Настройки](/pictures/picture-3.png) |
 | ------------------------------- | -------------------------------- | ----------------------------- |
-| ![Выбор иконки](../pictures/picture-4.png) | ![Поиск](../pictures/picture-5.png)    | ![Готово](../pictures/picture-6.png) |
+| ![Выбор иконки](/pictures/picture-4.png) | ![Поиск](/pictures/picture-5.png)    | ![Готово](/pictures/picture-6.png) |
 
 ---
 
