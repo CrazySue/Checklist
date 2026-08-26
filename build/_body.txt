@@ -1,0 +1,82 @@
+﻿</head>
+<body>
+<div id="app">
+  <!-- 顶栏 -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-title" id="topbarTitle"><span id="topbarTitleText"></span><span class="title-suffix" id="topbarTitleSuffix"></span></div>
+    <button class="icon-btn" id="btnConfig" aria-label="配置"><span class="icon">menu</span></button>
+    <button class="icon-btn" id="btnSearch" aria-label="搜索"><span class="icon">search</span></button>
+    <button class="icon-btn" id="btnSettings" aria-label="设置"><span class="icon">settings</span></button>
+  </header>
+
+  <!-- 搜索栏 -->
+  <div class="search-bar" id="searchBar">
+    <button class="sb-back" id="sbBack" aria-label="关闭搜索"><span class="icon">arrow_back</span></button>
+    <div class="search-input-wrap">
+      <input type="text" id="searchInput" autocomplete="off">
+    </div>
+    <button class="sb-clear" id="sbClear" aria-label="清除"><span class="icon">close</span></button>
+  </div>
+
+  <!-- 主区域（页面容器） -->
+  <main class="main-area" id="mainArea">
+    <!-- 主页面（检查项列表） -->
+    <section class="page page-active" id="pageHome">
+      <div class="list-scroll" id="listScroll">
+        <div class="list-container" id="listContainer"></div>
+        <!-- 空状态 / 全部完成 / 列表 由JS动态渲染 -->
+      </div>
+      <!-- 重置 FAB：仅全部完成时显示 -->
+      <button class="fab reset-fab" id="btnResetList" aria-label="重置检查单"><span class="icon">restart_alt</span></button>
+    </section>
+
+    <!-- 新建/编辑检查单页面 -->
+    <section class="page page-enter-right" id="pageForm">
+      <div class="form-page-content" id="formContent"></div>
+    </section>
+
+    <!-- 设置页面 -->
+    <section class="page page-enter-right" id="pageSettings">
+      <div class="settings-content" id="settingsContent"></div>
+    </section>
+  </main>
+
+  <!-- 底栏 -->
+  <nav class="bottombar" id="bottombar">
+    <div class="bottombar-scroll" id="bottombarScroll"></div>
+  </nav>
+</div>
+
+<!-- 弹窗：图标选择 -->
+<div class="modal-scrim" id="iconPickerScrim"></div>
+<div class="modal" id="iconPickerModal">
+  <div class="modal-header" id="iconPickerTitle">选择图标</div>
+  <div class="modal-search"><input type="text" id="iconPickerSearch" placeholder="搜索图标"></div>
+  <div class="modal-body"><div class="modal-icon-grid" id="iconPickerGrid"></div></div>
+  <div class="modal-actions">
+    <button class="btn btn-text" id="iconPickerCancel">取消</button>
+  </div>
+</div>
+
+<!-- 弹窗：语言选择（居中 modal 样式，可滚动） -->
+<div class="modal-scrim" id="langScrim"></div>
+<div class="modal" id="langModal">
+  <div class="modal-header" id="langModalTitle">语言</div>
+  <div class="modal-body" id="langModalBody"></div>
+  <div class="modal-actions">
+    <button class="btn btn-text" id="langModalCancel">取消</button>
+  </div>
+</div>
+
+<!-- 弹窗：确认对话框 -->
+<div class="modal-scrim" id="dialogScrim"></div>
+<div class="dialog" id="confirmDialog">
+  <div class="dialog-title" id="dialogTitle"></div>
+  <div class="dialog-body" id="dialogBody"></div>
+  <div class="dialog-actions" id="dialogActions"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>

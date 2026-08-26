@@ -1,0 +1,2690 @@
+﻿/* ============================================================
+   检查单应用 - JavaScript 逻辑
+   ============================================================ */
+
+/* ---------- 内嵌资源占位（构建脚本注入） ---------- */
+[LONG_BASE64 159002]
+const APP_VERSION = 'Release v0.9.3';
+const APP_AUTHOR_URL = 'https://github.com/CrazySue';
+/* 支持开发者的链接：中文环境用爱发电，其他语言用 Buy Me a Coffee */
+const SUPPORT_URL_AFDIAN = 'https://afdian.com/a/crazysue';
+const SUPPORT_URL_COFFEE = 'https://buymeacoffee.com/crazysue';
+/* 打开外部链接：浏览器用新窗口；HbuilderX 打包的 APK（5+ Runtime）用 plus.runtime.openURL */
+function openExternal(url){
+  if(window.plus && plus.runtime){
+    try{ plus.runtime.openURL(url); return; }catch(e){}
+  }
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/* ---------- 图标库（分类结构，便于查找） ---------- */
+const ICON_LIBRARY = {
+  '日常': ['checklist','home','work','school','bedtime','alarm','schedule','event','today','timer','hourglass_empty','restaurant','restaurant_menu','local_cafe','water_full','coffee','medication','health_and_safety','brush','shower','wash','checkroom','snowshoeing','watch','visibility','glasses','door_front','light','lightbulb','lock','key','wallet','credit_card','phone_iphone','laptop','headphones','battery_charging_full','backpack','umbrella'],
+  '出行': ['directions_car','directions_bus','directions_bike','directions_walk','directions_run','directions_boat','flight','flight_takeoff','train','sailing','luggage','travel_explore','map','location_on','navigation','local_taxi','two_wheeler','connecting_airports','local_shipping','delivery_dining','moped'],
+  '购物': ['shopping_bag','shopping_cart','shopping_basket','local_grocery_store','store','local_mall','redeem','card_giftcard','sell','label','inventory_2','warehouse','payments','savings','account_balance','currency_exchange','percent'],
+  '运动': ['fitness_center','sports_gymnastics','sports_basketball','sports_soccer','sports_tennis','sports_volleyball','sports_baseball','pool','directions_run','directions_walk','directions_bike','hiking','kayaking','surfing','snowboarding','skiing','skateboarding','sports_handball','sports_martial_arts'],
+  '休闲': ['music_note','queue_music','album','podcasts','radio','theaters','camera','photo_camera','photo_library','videocam','movie','book','menu_book','auto_stories','library_books','pets','cruelty_free','child_care','local_florist','park','forest','spa','emoji_nature','celebration','favorite','star','puzzle','videogame_asset','toys','blocks','casino','extension'],
+  '饮食': ['restaurant','restaurant_menu','local_cafe','local_bar','local_pizza','cake','water_drop','water_full','local_drink','sports_bar','wine_bar','liquor','coffee','microwave','blender','kitchen','outdoor_grill','rice_bowl','ramen_dining','lunch_dining','dinner_dining','breakfast_dining','icecream','bakery_dining','fastfood'],
+  '健康': ['medication','medical_services','vaccines','health_and_safety','monitor_heart','monitor_weight','psychology','spa','self_improvement','accessible','elderly','baby_changing_station'],
+  '工作': ['work','description','article','edit_note','edit','draw','content_copy','content_paste','save','file_download','file_upload','folder','folder_open','archive','delete','restore_from_trash','print','scanner','attach_file','mail','inbox','send','drafts','mark_email_unread','task_alt','done','check_circle','flag','bookmark','assignment','note','sticky_note_2','event_note'],
+  '其他': ['settings','tune','build','construction','plumbing','handyman','cleaning_services','soap','vaccumes','local_laundry_service','dry_cleaning','content_cut','gardening','agriculture','farming','energy_savings_leaf','eco','wb_sunny','cloud','ac_unit','thermostat','air','safety_check','verified','help','question_mark','info','warning','error','tips_and_updates','auto_awesome','science','biotech','compost']
+};
+/* 所有图标的扁平数组（用于搜索和验证） */
+const ICON_LIST = Object.values(ICON_LIBRARY).flat();
+/* 图标分类 → i18n 键（本地化分类描述，跟随设置中支持的语言） */
+const ICON_CATEGORY_KEYS = {
+  '日常':'icon_cat_daily',
+  '出行':'icon_cat_travel',
+  '购物':'icon_cat_shopping',
+  '运动':'icon_cat_sports',
+  '休闲':'icon_cat_leisure',
+  '饮食':'icon_cat_food',
+  '健康':'icon_cat_health',
+  '工作':'icon_cat_work',
+  '其他':'icon_cat_other'
+};
+
+/* ---------- 自动图标映射（根据关键词选图标） ----------
+   每条包含 10 种语言的关键词，用 | 分隔。
+   语言顺序：zh-CN zh-TW en ja ko fr de es ru pt */
+const AUTO_ICON_KEYWORDS = [
+  ['钥匙|門禁|門鎖|key|钥匙|key|key|鍵|열쇠|clé|Schlüssel|llave|ключ|chave', 'key'],
+  ['钱包|錢包|wallet|wallet|財布|지갑|portefeuille|Geldbeutel|cartera|кошелёк|carteira', 'wallet'],
+  ['卡|卡|card|card|カード|카드|carte|Karte|tarjeta|карта|cartão', 'credit_card'],
+  ['水|水|water|water|水|물|eau|Wasser|agua|вода|água', 'water_full'],
+  ['咖啡|咖啡|coffee|coffee|コーヒー|커피|café|Kaffee|café|кофе|café', 'coffee'],
+  ['茶|茶|tea|tea|お茶|차|thé|Tee|té|чай|chá', 'local_cafe'],
+  ['手机|手機|phone|phone|スマホ|폰|téléphone|Handy|teléfono|телефон|telemóvel', 'phone_iphone'],
+  ['充电|充電|charge|charge|充電|충전|charger|laden|cargar|заряд|carregar', 'battery_charging_full'],
+  ['电脑|電腦|laptop|laptop|ノート|노트북|ordinateur|Laptop|portátil|ноутбук|portátil', 'laptop'],
+  ['耳机|耳機|headphone|headphone|イヤホン|이어폰|écouteur|Kopfhörer|auricular|наушник|auscultador', 'headphones'],
+  ['书|書|book|book|本|책|livre|Buch|libro|книга|livro', 'book'],
+  ['书包|書包|backpack|backpack|バッグ|가방|sac|Rucksack|mochila|рюкзак|mochila', 'backpack'],
+  ['行李|行李|luggage|luggage|荷物|짐|bagage|Gepäck|equipaje|багаж|bagagem', 'luggage'],
+  ['车|車|car|car|車|자동차|voiture|Auto|coche|машина|carro', 'directions_car'],
+  ['自行车|單車|bike|bike|自転車|자전거|vélo|Fahrrad|bici|велосипед|bicicleta', 'directions_bike'],
+  ['公交|公車|bus|bus|バス|버스|bus|Bus|autobús|автобус|autocarro', 'directions_bus'],
+  ['飞机|飛機|flight|flight|飛行機|비행기|vol|Flug|vuelo|самолёт|voo', 'flight'],
+  ['火车|火車|train|train|電車|기차|train|Zug|tren|поезд|comboio', 'train'],
+  ['饭|飯|meal|meal|食事|식사|repas|Mahlzeit|comida|еда|refeição', 'restaurant'],
+  ['食|食|food|food|食べ物|음식|nourriture|Essen|comida|еда|comida', 'restaurant_menu'],
+  ['药|藥|medicine|medicine|薬|약|médicament|Medikament|medicina|лекарство|remédio', 'medication'],
+  ['健康|健康|health|health|健康|건강|santé|Gesundheit|salud|здоровье|saúde', 'health_and_safety'],
+  ['运动|運動|exercise|exercise|運動|운동|exercice|Sport|ejercicio|упражнение|exercício', 'fitness_center'],
+  ['宠物|寵物|pet|pet|ペット|반려동물|animal|Haustier|mascota|питомец|animal', 'pets'],
+  ['孩子|孩子|baby|baby|赤ちゃん|아기|bébé|Baby|bebé|ребёнок|bebé', 'child_care'],
+  ['伞|傘|umbrella|umbrella|傘|우산|parapluie|Regenschirm|paraguas|зонт|guarda-chuva', 'umbrella'],
+  ['衣服|衣服|clothes|clothes|服|옷|vêtement|Kleidung|ropa|одежда|roupa', 'checkroom'],
+  ['鞋|鞋|shoe|shoe|靴|신발|chaussure|Schuh|zapato|обувь|sapato', 'snowshoeing'],
+  ['眼镜|眼鏡|glasses|glasses|眼鏡|안경|lunettes|Brille|gafas|очки|óculos', 'visibility'],
+  ['表|錶|watch|watch|時計|시계|montre|Uhr|reloj|часы|relógio', 'watch'],
+  ['音乐|音樂|music|music|音楽|음악|musique|Musik|música|музыка|música', 'music_note'],
+  ['相机|相機|camera|camera|カメラ|카메라|appareil|Kamera|cámara|камера|câmara', 'photo_camera'],
+  ['工作|工作|work|work|仕事|일업|travail|Arbeit|trabajo|работа|trabalho', 'work'],
+  ['学习|學習|study|study|勉強|공부|étudier|lernen|estudiar|учёба|estudar', 'school'],
+  ['购物|購物|shop|shop|買い物|쇼핑|courses|Einkaufen|comprar|покупки|compras', 'shopping_bag'],
+  ['植物|植物|plant|plant|植物|식물|plante|Pflanze|planta|растение|planta', 'local_florist'],
+  ['灯|燈|light|light|ライト|조명|lumière|Licht|luz|свет|luz', 'lightbulb'],
+  ['文档|文檔|document|document|書類|문서|document|Dokument|documento|документ|documento', 'description'],
+  ['密码|密碼|password|password|パスワード|비밀번호|mot de passe|Passwort|contraseña|пароль|senha', 'password'],
+  ['闹钟|鬧鐘|alarm|alarm|アラーム|알람|alarme|Alarm|alarma|будильник|alarme', 'alarm'],
+  ['日程|日程|schedule|schedule|スケジュール|일정|calendrier|Kalender|calendario|расписание|agenda', 'event'],
+  ['出门|出門|leave|leave|外出|외출|sortir|verlassen|salir|выход|sair', 'door_front'],
+  ['回家|回家|home|home|帰宅|귀가|maison|Heim|casa|дом|casa', 'home'],
+  ['刷牙|刷牙|brush|brush|歯磨き|양치|brosser|putzen|cepillar|чистить|escovar', 'brush'],
+  ['洗澡|洗澡|shower|shower|シャワー|샤워|douche|Dusche|ducha|душ|duche', 'shower'],
+  ['睡觉|睡覺|sleep|sleep|睡眠|수면|dormir|schlafen|dormir|сон|dormir', 'bedtime'],
+  ['起床|起床|wake|wake|起床|기상|réveiller|aufstehen|despertar|подъём|acordar', 'alarm'],
+  ['签到|簽到|check|check|チェック|체크|vérifier|prüfen|verificar|отметить|verificar', 'task_alt'],
+  ['刷牙|刷牙|toothbrush|brush|歯磨き|양치|brosser|Zahnbürste|cepillar|чистить|escovar', 'brush'],
+  ['洗澡|洗澡|shower|shower|シャワー|샤워|douche|Dusche|ducha|душ|duche', 'shower'],
+  ['洗衣|洗衣|laundry|laundry|洗濯|세탁|lessive|Wäsche|colada|стирка|roupa', 'local_laundry_service'],
+  ['剃须|剃鬚|shave|shave|髭剃り|면도|raser|rasieren|afeitar|бритьё|barbear', 'content_cut'],
+  ['做饭|做飯|cook|cook|料理|요리|cuisiner|kochen|cocinar|готовить|cozinhar', 'microwave'],
+  ['买菜|買菜|grocery|grocery|買い物|장보기|courses|Einkaufen|compra|покупка|mercado', 'local_grocery_store'],
+  ['游泳|游泳|swim|swim|水泳|수영|nager|schwimmen|nadar|плавать|nadar', 'pool'],
+  ['跑步|跑步|run|run|ランニング|달리기|courir|laufen|correr|бегать|correr', 'directions_run'],
+  ['看书|看書|read|read|読書|독서|lire|lesen|leer|читать|ler', 'menu_book'],
+  ['拍照|拍照|photo|photo|撮影|사진|photo|Foto|foto|фото|foto', 'photo_camera'],
+  ['听音乐|聽音樂|music|music|音楽|음악|musique|Musik|música|музыка|música', 'music_note'],
+  ['关灯|關燈|light off|light off|消灯|불 끄기|éteindre|Licht aus|apagar|выключить|apagar', 'lightbulb'],
+  ['开灯|開燈|light on|light on|点灯|불 켜기|allumer|Licht an|encender|включить|acender', 'lightbulb'],
+  ['锁门|鎖門|lock|lock|施錠|잠금|verrouiller|sperren|cerrar|запереть|trancar', 'lock'],
+  ['浇花|澆花|water plant|water plant|水やり|식물 물|arroser|gießen|regar|поливать|regar', 'local_florist'],
+  ['买菜|買菜|grocery|grocery|買い物|장보기|courses|Einkaufen|compra|покупка|mercado', 'shopping_bag'],
+  ['运动|運動|exercise|exercise|運動|운동|exercice|Sport|ejercicio|упражнение|exercício', 'fitness_center'],
+  ['吃药|吃藥|medicine|medicine|服薬|약|médicament|Medikament|medicina|лекарство|remédio', 'medication'],
+  ['早饭|早飯|breakfast|breakfast|朝食|아침|petit-déjeuner|Frühstück|desayuno|завтрак|pequeno-almoço', 'breakfast_dining'],
+  ['午饭|午飯|lunch|lunch|昼食|점심|déjeuner|Mittagessen|almuerzo|обед|almoço', 'lunch_dining'],
+  ['晚饭|晚飯|dinner|dinner|夕食|저녁|dîner|Abendessen|cena|ужин|jantar', 'dinner_dining'],
+  ['零食|零食|snack|snack|スナック|간식|snack|Snack|snack|перекус|lanche', 'fastfood'],
+  ['冰淇淋|冰淇淋|ice cream|ice cream|アイス|아이스크림|glace|Eis|helado|мороженое|gelado', 'icecream'],
+  ['面包|麵包|bread|bread|パン|빵|pain|Brot|pan|хлеб|pão', 'bakery_dining'],
+  ['面|麵|noodle|noodle|ラーメン|면|nouilles|Nudeln|fideos|лапша|macarrão', 'ramen_dining'],
+  ['快递|快遞|delivery|delivery|宅配|배달|livraison|Lieferung|envío|доставка|entrega', 'delivery_dining'],
+  ['签证|簽證|visa|visa|ビザ|비자|visa|Visum|visa|виза|visto', 'card_giftcard'],
+  ['护照|護照|passport|passport|パスポート|여권|passeport|Reisepass|pasaporte|паспорт|passaporte', 'badge'],
+  ['门票|門票|ticket|ticket|チケット|티켓|billet|Ticket|entrada|билет|bilhete', 'confirmation_number'],
+  /* ============ v0.9.0 扩充：200+ 关键词/语言 ============ */
+  ['洗手|洗手|wash hands|手洗い|손 씻기|se laver les mains|Hände waschen|lavarse las manos|мыть руки|lavar as mãos', 'wash'],
+  ['牙膏|牙膏|toothpaste|歯磨き粉|치약|dentifrice|Zahnpasta|pasta dental|зубная паста|pasta de dentes', 'brush'],
+  ['梳头|梳頭|comb hair|髪を梳く|머리 빗기|peigner|kämmen|peinar|расчёсывать|pentear', 'content_cut'],
+  ['吹头发|吹頭髮|blow dry|ドライヤー|머리 말리기|sécher les cheveux|föhnen|secar el pelo|сушить волосы|secar o cabelo', 'air'],
+  ['洗脸|洗臉|wash face|洗顔|세안|laver le visage|Gesicht waschen|lavarse la cara|умываться|lavar o rosto', 'water_drop'],
+  ['剪指甲|剪指甲|trim nails|爪切り|손톱 깎기|couper les ongles|Nägel schneiden|cortar uñas|стричь ногти|cortar unhas', 'content_cut'],
+  ['晨练|晨練|morning exercise|朝の運動|아침 운동|exercice du matin|Morgengymnastik|ejercicio matutino|утренняя зарядка|exercício matinal', 'directions_run'],
+  ['散步|散步|stroll|散歩|산책|se promener|spazieren|paseo|прогулка|passeio', 'directions_walk'],
+  ['遛狗|遛狗|walk the dog|犬の散歩|강아지 산책|promener le chien|Hund ausführen|pasear al perro|выгуливать собаку|passear com o cão', 'pets'],
+  ['喂猫|餵貓|feed the cat|猫に餌|고양이 밥|nourrir le chat|Katze füttern|alimentar al gato|кормить кота|alimentar o gato', 'pets'],
+  ['喂鱼|餵魚|feed fish|魚に餌|물고기 밥|nourrir les poissons|Fische füttern|alimentar peces|кормить рыб|alimentar peixes', 'water_full'],
+  ['换水|換水|change water|水替え|물 갈기|changer l eau|Wasser wechseln|cambiar el agua|менять воду|trocar a água', 'water_full'],
+  ['倒垃圾|倒垃圾|take out trash|ゴミ出し|쓰레기 버리기|sortir les poubelles|Müll rausbringen|sacar la basura|выносить мусор|tirar o lixo', 'delete'],
+  ['垃圾分类|垃圾分類|sort trash|ゴミ分別|분리수거|trier les déchets|Müll trennen|separar basura|сортировать мусор|separar lixo', 'delete'],
+  ['打扫|打掃|tidy|掃除|청소|ranger|aufräumen|ordenar|убирать|arrumar', 'cleaning_services'],
+  ['拖地|拖地|mop|モップ掛け|걸레질|passer la serpillière|wischen|fregar|мыть пол|esfregar o chão', 'cleaning_services'],
+  ['擦桌子|擦桌子|wipe table|机拭き|책상 닦기|essuyer la table|Tisch abwischen|limpiar la mesa|протирать стол|limpar a mesa', 'cleaning_services'],
+  ['整理床铺|整理床鋪|make the bed|ベッドメイク|침대 정리|faire le lit|Bett machen|hacer la cama|заправлять кровать|fazer a cama', 'bedtime'],
+  ['换床单|換床單|change sheets|シーツ交換|침구 교체|changer les draps|Bettwäsche wechseln|cambiar sábanas|менять бельё|trocar lençóis', 'bedtime'],
+  ['浇花|澆花|water plants|水やり|식물 물주기|arroser les plantes|gießen|regar las plantas|поливать цветы|regar plantas', 'local_florist'],
+  ['买菜|買菜|buy groceries|買い出し|장보기|faire les courses|einkaufen|hacer la compra|закупаться|fazer compras', 'shopping_bag'],
+  ['缴费|繳費|pay bills|支払い|요금 납부|payer les factures|Rechnungen zahlen|pagar facturas|оплачивать счета|pagar contas', 'payments'],
+  ['报销|報銷|reimburse|精算|정산|rembourser|erstatten|reembolsar|возмещать|reembolsar', 'payments'],
+  ['存钱|存錢|save money|貯金|저금|économiser|sparen|ahorrar|копить|poupar', 'savings'],
+  ['取钱|取錢|withdraw|引き出し|인출|retirer|abheben|retirar|снимать|levantar', 'account_balance'],
+  ['转账|轉賬|transfer money|送金|송금|virement|überweisen|transferir|перевод|transferência', 'currency_exchange'],
+  ['还信用卡|還信用卡|pay credit card|カード返済|카드값|payer la carte|Kreditkarte zahlen|pagar la tarjeta|оплатить карту|pagar o cartão', 'credit_card'],
+  ['车险|車險|car insurance|自動車保険|자동차 보험|assurance auto|Kfz-Versicherung|seguro de coche|автостраховка|seguro de carro', 'verified'],
+  ['体检|體檢|checkup|健康診断|건강검진|bilan de santé|Gesundheitscheck|revisión médica|обследование|check-up', 'health_and_safety'],
+  ['看牙|看牙|dentist|歯医者|치과|dentiste|Zahnarzt|dentista|стоматолог|dentista', 'medical_services'],
+  ['看医生|看醫生|see a doctor|医者|진료|voir un médecin|Arztbesuch|ver al médico|к врачу|ver o médico', 'medical_services'],
+  ['买药|買藥|buy medicine|薬を買う|약 사기|acheter des médicaments|Medikamente kaufen|comprar medicinas|купить лекарства|comprar remédios', 'medication'],
+  ['打针|打針|injection|注射|주사|piqûre|Spritze|inyección|укол|injeção', 'vaccines'],
+  ['量血压|量血壓|blood pressure|血圧|혈압|tension artérielle|Blutdruck|tensión arterial|давление|pressão arterial', 'monitor_heart'],
+  ['测血糖|測血糖|blood sugar|血糖|혈당|glycémie|Blutzucker|azúcar en sangre|сахар|açúcar no sangue', 'biotech'],
+  ['敷面膜|敷面膜|face mask|パック|팩|masque|Gesichtsmaske|mascarilla|маска|máscara', 'spa'],
+  ['泡脚|泡腳|foot soak|足湯|족욕|bain de pieds|Fußbad|baño de pies|ванночка для ног|banho de pés', 'pool'],
+  ['理发|理髮|haircut|散髪|이발|coupe de cheveux|Haarschnitt|corte de pelo|стрижка|corte de cabelo', 'content_cut'],
+  ['洗头|洗頭|shampoo|洗髪|샴푸|laver les cheveux|Haare waschen|lavar el pelo|мыть голову|lavar o cabelo', 'shower'],
+  ['护肤|護膚|skincare|スキンケア|스킨케어|soin de la peau|Hautpflege|cuidado de la piel|уход за кожей|cuidados com a pele', 'spa'],
+  ['防晒|防曬|sunscreen|日焼け止め|선크림|crème solaire|Sonnenschutz|protector solar|крем от солнца|protetor solar', 'wb_sunny'],
+  ['上班|上班|go to work|出勤|출근|aller au travail|zur Arbeit gehen|ir al trabajo|на работу|ir ao trabalho', 'work'],
+  ['下班|下班|get off work|退勤|퇴근|finir le travail|Feierabend|salir del trabajo|с работы|sair do trabalho', 'home'],
+  ['打卡|打卡|clock in|打刻|출퇴근 기록|pointer|stempeln|fichar|отметиться|bater o ponto', 'schedule'],
+  ['开会|開會|meeting|会議|회의|réunion|Besprechung|reunión|совещание|reunião', 'groups'],
+  ['写周报|寫週報|weekly report|週報|주간 보고|rapport hebdo|Wochenbericht|informe semanal|отчёт за неделю|relatório semanal', 'description'],
+  ['做PPT|做簡報|slides|プレゼン|발표 자료|diaporama|Präsentation|presentación|презентация|apresentação', 'slideshow'],
+  ['发邮件|發郵件|send email|メール送信|메일 보내기|envoyer un mail|E-Mail senden|enviar correo|отправить письмо|enviar e-mail', 'send'],
+  ['查邮件|查郵件|check email|メール確認|메일 확인|vérifier les mails|E-Mails prüfen|revisar el correo|проверить почту|verificar e-mail', 'inbox'],
+  ['收快递|收快遞|receive package|荷物を受け取る|택배 받기|recevoir un colis|Paket annehmen|recibir paquete|получить посылку|receber encomenda', 'local_shipping'],
+  ['寄快递|寄快遞|ship package|荷物を送る|택배 보내기|envoyer un colis|Paket versenden|enviar paquete|отправить посылку|enviar encomenda', 'local_shipping'],
+  ['打印资料|列印資料|print documents|書類印刷|서류 인쇄|imprimer des documents|Dokumente drucken|imprimir documentos|печатать документы|imprimir documentos', 'print'],
+  ['备份|備份|backup|バックアップ|백업|sauvegarde|Backup|copia de seguridad|резервная копия|backup', 'save'],
+  ['清理缓存|清理快取|clear cache|キャッシュ削除|캐시 정리|vider le cache|Cache leeren|limpiar caché|очистить кэш|limpar cache', 'delete'],
+  ['更新软件|更新軟體|update app|アプリ更新|앱 업데이트|mettre à jour|App aktualisieren|actualizar app|обновить приложение|atualizar app', 'system_update'],
+  ['关机|關機|shutdown|電源オフ|종료|éteindre|herunterfahren|apagar|выключить|desligar', 'power_settings_new'],
+  ['开机|開機|power on|電源オン|켜기|allumer|einschalten|encender|включить|ligar', 'power_settings_new'],
+  ['充电宝|行動電源|power bank|モバイルバッテリー|보조배터리|batterie externe|Powerbank|batería externa|повербанк|power bank', 'battery_charging_full'],
+  ['连WiFi|連WiFi|connect wifi|WiFi接続|와이파이 연결|connecter le wifi|WLAN verbinden|conectar wifi|подключить wifi|conectar wifi', 'wifi'],
+  ['开热点|開熱點|hotspot|テザリング|핫스팟|partage de connexion|Hotspot|zona wifi|точка доступа|hotspot', 'wifi'],
+  ['蓝牙|藍牙|bluetooth|ブルートゥース|블루투스|bluetooth|Bluetooth|bluetooth|блютуз|bluetooth', 'bluetooth'],
+  ['导航回家|導航回家|navigate home|帰宅ナビ|집까지 내비게이션|retour à la maison|nach Hause navigieren|volver a casa|маршрут домой|navegar para casa', 'navigation'],
+  ['查路线|查路線|check route|経路検索|경로 검색|itinéraire|Route prüfen|consultar ruta|проверить маршрут|verificar rota', 'map'],
+  ['订酒店|訂酒店|book hotel|ホテル予約|호텔 예약|réserver un hôtel|Hotel buchen|reservar hotel|забронировать отель|reservar hotel', 'bed'],
+  ['订机票|訂機票|book flight|航空券予約|항공권 예약|réserver un vol|Flug buchen|reservar vuelo|купить билет на самолёт|reservar voo', 'flight'],
+  ['订火车票|訂火車票|book train|切符予約|기차표 예약|réserver un train|Zugticket buchen|reservar tren|купить билет на поезд|reservar comboio', 'train'],
+  ['租车|租車|rent a car|レンタカー|렌터카|louer une voiture|Auto mieten|alquilar coche|арендовать машину|alugar carro', 'directions_car'],
+  ['加油|加油|refuel|給油|주유|faire le plein|tanken|echar gasolina|заправиться|abastecer', 'local_gas_station'],
+  ['洗车|洗車|car wash|洗車|세차|laver la voiture|Auto waschen|lavar el coche|мыть машину|lavar o carro', 'local_car_wash'],
+  ['保养|保養|maintenance|メンテナンス|정비|entretien|Wartung|mantenimiento|обслуживание|manutenção', 'build'],
+  ['停车|停車|park|駐車|주차|se garer|parken|aparcar|парковаться|estacionar', 'local_parking'],
+  ['收费站|收費站|toll|有料道路|통행료|péage|Maut|peaje|платная дорога|portagem', 'payments'],
+  ['机场|機場|airport|空港|공항|aéroport|Flughafen|aeropuerto|аэропорт|aeroporto', 'connecting_airports'],
+  ['候机|候機|waiting|待ち時間|대기|attente|warten|espera|ожидание|espera', 'schedule'],
+  ['值机|報到|check in|チェックイン|체크인|enregistrement|Check-in|facturación|регистрация|check-in', 'flight_takeoff'],
+  ['海关|海關|customs|税関|세관|douane|Zoll|aduana|таможня|alfândega', 'gavel'],
+  ['行李托运|行李託運|check baggage|荷物預け|수하물 위탁|enregistrer les bagages|Gepäck aufgeben|facturar equipaje|сдать багаж|despachar bagagem', 'luggage'],
+  ['到站|到站|arrive|到着|도착|arriver|ankommen|llegar|прибытие|chegar', 'directions_walk'],
+  ['换乘|換乘|transfer|乗り換え|환승|correspondance|umsteigen|transbordo|пересадка|baldeação', 'connecting_airports'],
+  ['地图导航|地圖導航|gps|GPS|내비게이션|gps|GPS|gps|GPS|gps', 'navigation'],
+  ['打车|打車|hail a taxi|タクシーを呼ぶ|택시 부르기|appeler un taxi|Taxi rufen|pedir un taxi|вызвать такси|chamar táxi', 'local_taxi'],
+  ['坐地铁|坐地鐵|subway|地下鉄|지하철|métro|U-Bahn|metro|метро|metrô', 'directions_subway'],
+  ['骑摩托|騎摩托|ride motorcycle|バイクに乗る|오토바이 타기|faire de la moto|Motorrad fahren|montar en moto|ехать на мотоцикле|andar de moto', 'two_wheeler'],
+  ['做饭|做飯|cook meals|料理作り|요리하기|cuisiner|kochen|cocinar|готовить еду|cozinhar', 'outdoor_grill'],
+  ['洗碗|洗碗|wash dishes|食器洗い|설거지|faire la vaisselle|Geschirr spülen|lavar los platos|мыть посуду|lavar a louça', 'local_dining'],
+  ['擦灶台|擦爐台|clean stove|コンロ掃除|가스레인지 닦기|nettoyer la cuisinière|Herd reinigen|limpiar la cocina|чистить плиту|limpar o fogão', 'cleaning_services'],
+  ['买菜清单|買菜清單|grocery list|買い物リスト|장보기 목록|liste de courses|Einkaufsliste|lista de la compra|список покупок|lista de compras', 'local_grocery_store'],
+  ['煮饭|煮飯|cook rice|ご飯を炊く|밥 짓기|cuire du riz|Reis kochen|cocinar arroz|варить рис|cozinhar arroz', 'rice_bowl'],
+  ['热饭|熱飯|reheat|温め直し|데우기|réchauffer|aufwärmen|recalentar|разогревать|reaquecer', 'microwave'],
+  ['泡咖啡|泡咖啡|brew coffee|コーヒーを淹れる|커피 내리기|préparer un café|Kaffee kochen|preparar café|заварить кофе|fazer café', 'coffee'],
+  ['泡茶|泡茶|make tea|お茶を淹れる|차 우리기|préparer du thé|Tee zubereiten|preparar té|заварить чай|fazer chá', 'local_cafe'],
+  ['果汁|果汁|juice|ジュース|주스|jus|Saft|zumo|сок|sumo', 'local_drink'],
+  ['牛奶|牛奶|milk|牛乳|우유|lait|Milch|leche|молоко|leite', 'local_drink'],
+  ['酸奶|酸奶|yogurt|ヨーグルト|요거트|yaourt|Joghurt|yogur|йогурт|iogurte', 'breakfast_dining'],
+  ['鸡蛋|雞蛋|egg|卵|계란|œuf|Ei|huevo|яйцо|ovo', 'egg'],
+  ['水果|水果|fruit|果物|과일|fruit|Obst|fruta|фрукты|fruta', 'local_florist'],
+  ['蔬菜|蔬菜|vegetable|野菜|야채|légume|Gemüse|verdura|овощи|legume', 'eco'],
+  ['肉类|肉類|meat|肉|고기|viande|Fleisch|carne|мясо|carne', 'restaurant'],
+  ['海鲜|海鮮|seafood|海鮮|해산물|fruits de mer|Meeresfrüchte|marisco|морепродукты|frutos do mar', 'sailing'],
+  ['火锅|火鍋|hotpot|鍋料理|샤브샤브|fondue chinoise|Feuertopf|olla caliente|хого|fondue', 'outdoor_grill'],
+  ['烧烤聚餐|燒烤聚餐|bbq party|BBQ|바비큐 파티|barbecue entre amis|Grillparty|barbacoa|шашлык|churrasco com amigos', 'outdoor_grill'],
+  ['早餐|早餐|breakfast|朝食|아침 식사|petit-déjeuner|Frühstück|desayuno|завтрак|pequeno-almoço', 'breakfast_dining'],
+  ['午餐|午餐|lunch|昼食|점심 식사|déjeuner|Mittagessen|almuerzo|обед|almoço', 'lunch_dining'],
+  ['晚餐|晚餐|dinner|夕食|저녁 식사|dîner|Abendessen|cena|ужин|jantar', 'dinner_dining'],
+  ['加餐|加餐|extra meal|間食|간식|collation|Zwischenmahlzeit|tentempié|перекус|lanche', 'fastfood'],
+  ['水果沙拉|水果沙拉|fruit salad|フルーツサラダ|과일 샐러드|salade de fruits|Obstsalat|ensalada de frutas|фруктовый салат|salada de frutas', 'local_florist'],
+  ['煲汤|煲湯|soup|スープ|국|soupe|Suppe|sopa|суп|sopa', 'soup_kitchen'],
+  ['煮面|煮麵|cook noodles|麺を茹でる|면 끓이기|cuire des nouilles|Nudeln kochen|cocinar fideos|варить лапшу|cozinhar macarrão', 'ramen_dining'],
+  ['预约|預約|appointment|予約|예약|rendez-vous|Termin|cita|запись|marcação', 'event'],
+  ['取号|取號|take a number|整理券|번호표|prendre un numéro|Nummer ziehen|tomar número|взять талон|tirar senha', 'confirmation_number'],
+  ['排队|排隊|queue|並ぶ|줄 서기|faire la queue|anstehen|hacer cola|стоять в очереди|fazer fila', 'groups'],
+  ['挂号|掛號|register|受付|접수|s inscrire|anmelden|registrarse|регистрация|inscrever-se', 'assignment'],
+  ['复查|複查|follow-up visit|再診|재진료|consultation de suivi|Nachuntersuchung|revisión|повторный приём|consulta de seguimento', 'health_and_safety'],
+  ['取药|取藥|pick up medicine|薬を受け取る|약 수령|récupérer les médicaments|Medikamente abholen|recoger medicinas|получить лекарства|apanhar medicamentos', 'medication'],
+  ['健身|健身|gym|ジム|헬스|salle de sport|Fitnessstudio|gimnasio|тренажёрный зал|academia', 'fitness_center'],
+  ['拉伸|拉伸|stretch|ストレッチ|스트레칭|étirements|dehnen|estirar|растяжка|alongamento', 'self_improvement'],
+  ['瑜伽|瑜珈|yoga|ヨガ|요가|yoga|Yoga|yoga|йога|ioga', 'self_improvement'],
+  ['跑步机|跑步機|treadmill|ランニングマシン|러닝머신|tapis de course|Laufband|cinta de correr|беговая дорожка|esteira', 'directions_run'],
+  ['打羽毛球|打羽毛球|badminton|バドミントン|배드민턴|badminton|Badminton|bádminton|бадминтон|badminton', 'sports_tennis'],
+  ['打乒乓球|打乒乓球|table tennis|卓球|탁구|tennis de table|Tischtennis|tenis de mesa|настольный теннис|ténis de mesa', 'sports_tennis'],
+  ['高尔夫|高爾夫|golf|ゴルフ|골프|golf|Golf|golf|гольф|golfe', 'golf_course'],
+  ['拳击|拳擊|boxing|ボクシング|복싱|boxe|Boxen|boxeo|бокс|boxe', 'sports_martial_arts'],
+  ['跳舞|跳舞|dance|ダンス|춤|danser|tanzen|bailar|танцевать|dançar', 'music_note'],
+  ['唱歌|唱歌|sing|歌う|노래 부르기|chanter|singen|cantar|петь|cantar', 'mic'],
+  ['练琴|練琴|practice piano|ピアノ練習|피아노 연습|pratiquer le piano|Klavier üben|practicar piano|играть на пианино|praticar piano', 'piano'],
+  ['画画|畫畫|paint|絵を描く|그림 그리기|peindre|malen|pintar|рисовать|pintar', 'draw'],
+  ['读书|讀書|read books|読書|독서|lire|lesen|leer|читать|ler', 'menu_book'],
+  ['背单词|背單字|memorize words|単語暗記|단어 외우기|apprendre des mots|Vokabeln lernen|memorizar palabras|учить слова|memorizar palavras', 'book'],
+  ['学英语|學英語|learn english|英語学習|영어 공부|apprendre l anglais|Englisch lernen|aprender inglés|учить английский|aprender inglês', 'school'],
+  ['上网课|上網課|online class|オンライン授業|온라인 수업|cours en ligne|Online-Kurs|clase en línea|онлайн-урок|aula online', 'laptop'],
+  ['写作业|寫作業|do homework|宿題|숙제|faire ses devoirs|Hausaufgaben|hacer deberes|делать уроки|fazer a tarefa', 'assignment'],
+  ['复习|複習|review|復習|복습|réviser|wiederholen|repasar|повторять|rever', 'auto_stories'],
+  ['预习|預習|preview|予習|예습|préparer|vorbereiten|preparar|подготовка|preparar aula', 'auto_stories'],
+  ['考试|考試|exam|試験|시험|examen|Prüfung|examen|экзамен|prova', 'assignment'],
+  ['看电影|看電影|watch a movie|映画を見る|영화 보기|regarder un film|Film schauen|ver una película|смотреть фильм|ver um filme', 'movie'],
+  ['追剧|追劇|watch series|ドラマを見る|드라마 보기|regarder une série|Serie schauen|ver serie|смотреть сериал|ver série', 'theaters'],
+  ['打游戏|打遊戲|play games|ゲームをする|게임 하기|jouer aux jeux|spielen|jugar|играть в игры|jogar', 'videogame_asset'],
+  ['下棋|下棋|chess|将棋|체스|échecs|Schach|ajedrez|шахматы|xadrez', 'extension'],
+  ['玩拼图|玩拼圖|jigsaw|ジグソーパズル|퍼즐 맞추기|puzzle|Puzzle|rompecabezas|пазл|quebra-cabeça', 'puzzle'],
+  ['摄影|攝影|photography|写真撮影|사진 촬영|photographie|Fotografie|fotografía|фотография|fotografia', 'photo_camera'],
+  ['录像|錄影|record video|動画撮影|영상 촬영|filmer|Video aufnehmen|grabar video|снимать видео|gravar vídeo', 'videocam'],
+  ['修图|修圖|edit photos|写真編集|사진 보정|retoucher|Fotos bearbeiten|editar fotos|редактировать фото|editar fotos', 'edit'],
+  ['发朋友圈|發朋友圈|post moments|SNS投稿|SNS 게시|publier|posten|publicar|опубликовать|publicar', 'send'],
+  ['刷视频|看影片|watch videos|動画を見る|영상 보기|regarder des vidéos|Videos schauen|ver videos|смотреть видео|ver vídeos', 'smart_display'],
+  ['听播客|聽播客|listen to podcast|ポッドキャストを聞く|팟캐스트 듣기|écouter un podcast|Podcast hören|escuchar podcast|слушать подкаст|ouvir podcast', 'podcasts'],
+  ['冥想放松|冥想放鬆|relax|リラックス|휴식|se détendre|entspannen|relajarse|расслабиться|relaxar', 'self_improvement'],
+  ['午睡|午睡|nap|昼寝|낮잠|sieste|Nickerchen|siesta|дремота|sesta', 'bedtime'],
+  ['早点睡|早點睡|sleep early|早寝|일찍 자기|se coucher tôt|früh schlafen|acostarse temprano|ложиться рано|dormir cedo', 'bedtime'],
+  ['关手机|關手機|put phone away|スマホを置く|폰 두기|poser le téléphone|Handy weglegen|apartar el móvil|отложить телефон|largar o telemóvel', 'phone_iphone'],
+  ['泡澡|泡澡|bath|入浴|목욕|bain|Baden|baño|ванна|banho', 'bathtub'],
+  ['擦身体乳|擦乳液|lotion|ローション|로션|crème hydratante|Lotion|crema hidratante|лосьон|loção', 'spa'],
+  ['做面膜|做面膜|face mask|フェイスマスク|마스크 팩|masque visage|Gesichtsmaske|mascarilla facial|маска для лица|máscara facial', 'spa'],
+  ['睡前阅读|睡前閱讀|read before bed|寝る前の読書|잠자기 전 독서|lire avant de dormir|Lesen vor dem Schlafen|leer antes de dormir|читать перед сном|ler antes de dormir', 'auto_stories'],
+  ['关机睡觉|關機睡覺|turn off phone|電源を切って寝る|폰 끄고 자기|éteindre et dormir|ausschalten und schlafen|apagar y dormir|выключить и спать|desligar e dormir', 'bedtime'],
+  ['检查门窗|檢查門窗|check doors and windows|戸締まり|문단속|vérifier portes et fenêtres|Türen prüfen|revisar puertas|проверить двери|verificar portas', 'lock'],
+  ['关煤气|關瓦斯|turn off gas|ガスを止める|가스 잠그기|couper le gaz|Gas abdrehen|cerrar el gas|перекрыть газ|fechar o gás', 'local_fire_department'],
+  ['充电|充電|charge|充電|충전|charger|laden|cargar|зарядить|carregar', 'battery_charging_full'],
+  ['检查行程|檢查行程|check itinerary|予定確認|일정 확인|vérifier l itinéraire|Reiseplan prüfen|revisar itinerario|проверить маршрут|verificar itinerário', 'event_note'],
+  ['买礼物|買禮物|buy a gift|プレゼント購入|선물 사기|acheter un cadeau|Geschenk kaufen|comprar un regalo|купить подарок|comprar presente', 'redeem'],
+  ['包礼物|包禮物|wrap a gift|ラッピング|선물 포장|emballer un cadeau|Geschenk einpacken|envolver regalo|упаковать подарок|embrulhar presente', 'card_giftcard'],
+  ['写贺卡|寫賀卡|write a card|カードを書く|카드 쓰기|écrire une carte|Karte schreiben|escribir tarjeta|написать открытку|escrever cartão', 'edit_note'],
+  ['布置房间|佈置房間|decorate|飾り付け|방 꾸미기|décorer|dekorieren|decorar|украшать|decorar', 'celebration'],
+  ['打扫房间|打掃房間|clean room|部屋の掃除|방 청소|nettoyer la chambre|Zimmer putzen|limpiar la habitación|убрать комнату|limpar o quarto', 'cleaning_services'],
+  ['收衣服|收衣服|fold laundry|洗濯物を畳む|빨래 개기|plier le linge|Wäsche falten|doblar ropa|сложить бельё|dobrar roupa', 'checkroom'],
+  ['晾衣服|晾衣服|hang laundry|洗濯物を干す|빨래 널기|étendre le linge|Wäsche aufhängen|tender ropa|развесить бельё|estender roupa', 'checkroom'],
+  ['熨衣服|熨衣服|iron clothes|アイロン|다림질|repasser|bügeln|planchar|гладить|engomar', 'iron'],
+  ['缝扣子|縫釦子|sew a button|ボタン付け|단추 달기|coudre un bouton|Knopf annähen|coser un botón|пришить пуговицу|costurar botão', 'content_cut'],
+  ['修鞋|修鞋|repair shoes|靴の修理|구두 수리|réparer des chaussures|Schuhe reparieren|arreglar zapatos|ремонт обуви|consertar sapatos', 'build'],
+  ['修电脑|修電腦|fix computer|PC修理|컴퓨터 수리|réparer l ordinateur|Computer reparieren|arreglar el ordenador|починить компьютер|consertar computador', 'build'],
+  ['装系统|裝系統|install os|OSインストール|OS 설치|installer un OS|OS installieren|instalar sistema|установить систему|instalar sistema', 'laptop'],
+  ['杀毒|防毒|antivirus|ウイルス対策|백신 검사|antivirus|Antivirus|antivirus|антивирус|antivírus', 'verified'],
+  ['清理手机|清理手機|clean phone|スマホ掃除|폰 정리|nettoyer le téléphone|Handy aufräumen|limpiar el móvil|почистить телефон|limpar o telemóvel', 'cleaning_services'],
+  ['预约保养|預約保養|book maintenance|点検予約|정비 예약|réserver un entretien|Wartung buchen|reservar revisión|записаться на ТО|marcar revisão', 'build'],
+  ['年检|年檢|annual inspection|車検|자동차 검사|contrôle technique|TÜV|inspección|техосмотр|inspeção', 'verified'],
+  ['加油卡|加油卡|fuel card|給油カード|주유 카드|carte carburant|Tankkarte|tarjeta de combustible|топливная карта|cartão de combustível', 'credit_card'],
+  ['行车记录|行車記錄|driving log|ドライブレコーダー|블랙박스|journal de conduite|Fahrtenbuch|registro de conducción|видеорегистратор|registo de condução', 'videocam'],
+  ['交罚款|交罰款|pay fine|罰金|벌금|payer une amende|Bußgeld zahlen|pagar multa|оплатить штраф|pagar multa', 'payments'],
+  ['买保险|買保險|buy insurance|保険加入|보험 가입|acheter une assurance|Versicherung kaufen|comprar seguro|купить страховку|comprar seguro', 'verified'],
+  ['预约理发|預約理髮|book haircut|美容院予約|미용실 예약|réserver chez le coiffeur|Friseurtermin|reservar peluquería|записаться к парикмахеру|marcar cabeleireiro', 'event'],
+  ['染发|染髮|hair dye|染髪|염색|teinture|Färben|teñir|окраска|tingir', 'palette'],
+  ['美甲|美甲|manicure|ネイル|네일|manucure|Maniküre|manicura|маникюр|manicure', 'spa'],
+  ['逛街|逛街|go shopping|買い物に出かける|쇼핑 나가기|faire du shopping|shoppen gehen|ir de compras|ходить по магазинам|ir às compras', 'shopping_bag'],
+  ['买衣服|買衣服|buy clothes|服を買う|옷 사기|acheter des vêtements|Kleidung kaufen|comprar ropa|купить одежду|comprar roupa', 'checkroom'],
+  ['试衣服|試衣服|try on clothes|試着|옷 입어보기|essayer des vêtements|anprobieren|probarse ropa|примерять|experimentar roupa', 'checkroom'],
+  ['退货|退貨|return|返品|반품|retourner|zurückgeben|devolver|возврат|devolver', 'assignment_return'],
+  ['退款|退款|refund|返金|환불|remboursement|Erstattung|reembolso|возврат денег|reembolso', 'payments'],
+  ['比价|比價|compare prices|価格比較|가격 비교|comparer les prix|Preise vergleichen|comparar precios|сравнить цены|comparar preços', 'currency_exchange'],
+  ['抽奖|抽獎|lottery|抽選|추첨|tirage au sort|Verlosung|sorteo|лотерея|sorteio', 'casino'],
+  ['维修家电|維修家電|repair appliances|家電修理|가전 수리|réparer l électroménager|Geräte reparieren|reparar electrodomésticos|ремонт техники|reparar eletrodomésticos', 'build'],
+  ['搬东西|搬東西|move things|引っ越し|이사|déménager|umziehen|mudarse|переезд|mudança', 'local_shipping'],
+  ['整理收纳|整理收納|organize|整理整頓|정리 정돈|ranger|aufräumen|organizar|наводить порядок|organizar', 'inventory_2'],
+  ['断舍离|斷捨離|declutter|断捨離|정리하기|désencombrer|entrümpeln|ordenar|разобрать вещи|desapegar', 'delete'],
+  ['记账|記帳|track expenses|家計簿|가계부|tenir les comptes|Konto führen|apuntar gastos|вести учёт|registrar despesas', 'payments'],
+  ['报税|報稅|file taxes|確定申告|세금 신고|déclarer ses impôts|Steuererklärung|declarar impuestos|подать декларацию|declarar impostos', 'account_balance'],
+  ['股票|股票|stocks|株|주식|actions|Aktien|acciones|акции|ações', 'candlestick_chart'],
+  ['基金|基金|fund|投資信託|펀드|fonds|Fonds|fondo|фонд|fundo', 'savings'],
+  ['理财|理財|invest|資産運用|재테크|investir|investieren|invertir|инвестировать|investir', 'savings'],
+  ['还款|還款|repay|返済|상환|rembourser|zurückzahlen|pagar deuda|погашение|pagar dívida', 'currency_exchange'],
+  ['打印作业|列印作業|print homework|宿題プリント|숙제 인쇄|imprimer les devoirs|Hausaufgaben drucken|imprimir deberes|распечатать уроки|imprimir tarefas', 'print'],
+  ['错题本|錯題本|error notebook|間違いノート|오답노트|cahier d erreurs|Fehlerheft|cuaderno de errores|тетрадь ошибок|caderno de erros', 'edit_note'],
+  ['家长会|家長會|parent meeting|懇談会|학부모 회의|réunion parents|Elternabend|reunión de padres|родительское собрание|reunião de pais', 'groups'],
+  ['接送孩子|接送孩子|pick up kids|子供の送迎|아이 등하원|accompagner les enfants|Kinder bringen|recoger niños|забрать ребёнка|buscar crianças', 'child_care'],
+  ['哄睡|哄睡|put baby to sleep|寝かしつけ|아기 재우기|endormir bébé|Baby schlafen legen|dormir al bebé|уложить ребёнка|adormecer o bebé', 'child_care'],
+  ['换尿布|換尿布|change diaper|おむつ交換|기저귀 갈기|changer la couche|Windel wechseln|cambiar pañal|сменить подгузник|trocar fralda', 'baby_changing_station'],
+  ['冲奶粉|沖奶粉|prepare formula|ミルク作り|분유 타기|préparer le biberon|Milchpulver anrühren|preparar biberón|приготовить смесь|preparar leite', 'baby_changing_station'],
+  ['喂饭|餵飯|feed baby|離乳食|이유식|nourrir bébé|füttern|dar de comer|кормить ребёнка|dar de comer ao bebé', 'restaurant'],
+  ['陪玩|陪玩|play with kids|子供と遊ぶ|아이와 놀기|jouer avec les enfants|mit Kindern spielen|jugar con niños|играть с детьми|brincar com crianças', 'toys'],
+  ['辅导作业|輔導作業|tutor homework|宿題を見る|숙제 지도|aider aux devoirs|bei Hausaufgaben helfen|ayudar con deberes|помогать с уроками|ajudar na tarefa', 'school'],
+  ['买奶粉|買奶粉|buy formula|粉ミルク購入|분유 사기|acheter du lait|Milchpulver kaufen|comprar leche|купить смесь|comprar leite', 'baby_changing_station'],
+  ['婴儿体检|嬰兒體檢|baby checkup|乳児健診|아기 건강검진|examen du bébé|Baby-Untersuchung|revisión del bebé|осмотр малыша|consulta do bebé', 'health_and_safety'],
+  ['宠物洗澡|寵物洗澡|bathe pet|ペットのシャンプー|반려동물 목욕|laver l animal|Haustier baden|bañar a la mascota|мыть питомца|dar banho ao animal', 'pets'],
+  ['宠物疫苗|寵物疫苗|pet vaccine|ペットの予防接種|반려동물 예방접종|vaccin animal|Tierimpfung|vacuna de mascota|прививка питомцу|vacina do animal', 'pets'],
+  ['铲猫砂|清貓砂|clean litter|猫砂交換|고양이 모래|nettoyer la litière|Katzenstreu wechseln|limpiar arenero|убрать лоток|limpar a caixa de areia', 'cleaning_services'],
+  ['遛弯|遛彎|take a walk|散歩する|산책하다|se balader|spazieren gehen|dar un paseo|гулять|passear', 'directions_walk'],
+  ['爬山|爬山|climb|登山|등산|randonnée en montagne|Bergwandern|senderismo|поход в горы|trilha', 'hiking'],
+  ['露营|露營|camping|キャンプ|캠핑|camping|Camping|acampar|кемпинг|acampar', 'forest'],
+  ['钓鱼|釣魚|fishing|釣り|낚시|pêche|Angeln|pescar|рыбалка|pesca', 'sailing'],
+  ['放风筝|放風箏|kite|凧揚げ|연 날리기|cerf-volant|Drachen|cometa|воздушный змей|pipa', 'toys'],
+  ['野餐|野餐|picnic|ピクニック|소풍|pique-nique|Picknick|picnic|пикник|piquenique', 'restaurant'],
+  ['泡温泉|泡溫泉|hot spring|温泉|온천|source chaude|Thermalbad|aguas termales|горячий источник|termas', 'pool'],
+  ['逛博物馆|逛博物館|museum|博物館|박물관|musée|Museum|museo|музей|museu', 'theaters'],
+  ['看展览|看展覽|exhibition|展覧会|전시회|exposition|Ausstellung|exposición|выставка|exposição', 'photo_library'],
+  ['看演唱会|看演唱會|concert|コンサート|콘서트|concert|Konzert|concierto|концерт|concerto', 'mic'],
+  ['去健身房|去健身房|go to gym|ジムに行く|헬스장 가기|aller à la salle|ins Fitnessstudio|ir al gimnasio|пойти в зал|ir à academia', 'fitness_center'],
+  ['游泳课|游泳課|swimming class|水泳教室|수영 수업|cours de natation|Schwimmkurs|clase de natación|урок плавания|aula de natação', 'pool'],
+  ['滑冰|滑冰|ice skating|スケート|빙상 스케이트|patinage|Eislaufen|patinaje|катание на коньках|patinagem', 'skiing'],
+  ['踢毽子|踢毽子|shuttlecock|羽根つき|제기차기|volant|Federball|volante|игра в волан|peteca', 'sports_tennis'],
+  ['跳操|跳操|aerobics|エアロビ|에어로빅|aérobic|Aerobic|aeróbic|аэробика|aeróbica', 'directions_run'],
+  ['广场舞|廣場舞|square dance|ダンス|광장 춤|danse en plein air|Tanzen|baile|танцы|dança', 'music_note'],
+  ['打太极|打太極|tai chi|太極拳|태극권|tai chi|Tai-Chi|tai chi|тайцзи|tai chi', 'self_improvement'],
+  ['夜跑|夜跑|night run|夜走|야간 러닝|courir le soir|Abendlauf|correr de noche|вечерняя пробежка|corrida noturna', 'directions_run'],
+  ['早睡早起|早睡早起|early to bed|早寝早起き|일찍 자고 일찍 일어나기|se coucher tôt|früh aufstehen|acostarse y levantarse temprano|рано ложиться и вставать|deitar e levantar cedo', 'alarm'],
+  ['起床闹钟|起床鬧鐘|wake up alarm|目覚まし|기상 알람|réveil|Wecker|despertador|будильник|despertador', 'alarm'],
+  ['睡前关灯|睡前關燈|lights out|消灯|불 끄기|éteindre la lumière|Licht aus|apagar la luz|выключить свет|apagar a luz', 'lightbulb'],
+  ['写日记|寫日記|write diary|日記|일기 쓰기|écrire un journal|Tagebuch schreiben|escribir diario|писать дневник|escrever diário', 'edit_note'],
+  ['发工资|發薪水|payday|給料日|월급날|jour de paie|Gehaltstag|día de pago|зарплата|dia de pagamento', 'payments'],
+  ['交房租|交房租|pay rent|家賃|월세 내기|payer le loyer|Miete zahlen|pagar alquiler|оплатить аренду|pagar renda', 'home'],
+  ['水电费|水電費|utilities|公共料金|공과금|factures|Nebenkosten|servicios|коммунальные|contas de serviços', 'payments'],
+  ['宽带|寬頻|internet|インターネット|인터넷|internet|Internet|internet|интернет|internet', 'wifi'],
+  ['话费|話費|phone bill|携帯料金|통신비|facture téléphone|Handyrechnung|factura del móvil|счёт за телефон|conta do telemóvel', 'phone_iphone'],
+  ['公积金|公積金|housing fund|積立金|주택 기금|fonds de logement|Bausparen|fondo de vivienda|накопления|fundo de habitação', 'savings'],
+  ['社保|社保|social insurance|社会保険|사회 보험|sécurité sociale|Sozialversicherung|seguridad social|соцстрах|segurança social', 'health_and_safety'],
+  ['医保|醫保|medical insurance|健康保険|의료 보험|assurance maladie|Krankenversicherung|seguro médico|медстраховка|seguro de saúde', 'medical_services'],
+  ['退休金|退休金|pension|年金|연금|retraite|Rente|pensión|пенсия|reforma', 'savings'],
+  ['学位|學位|degree|学位|학위|diplôme|Abschluss|título|диплом|diploma', 'school'],
+  ['论文|論文|thesis|論文|논문|thèse|Abschlussarbeit|tesis|диссертация|tese', 'description'],
+  ['毕业|畢業|graduate|卒業|졸업|diplômer|Abschluss|graduarse|выпуск|formatura', 'school'],
+  ['开学|開學|school starts|始業|개학|rentrée|Schulbeginn|inicio de curso|начало учёбы|início das aulas', 'school'],
+  ['放假|放假|holiday|休み|휴가|vacances|Ferien|vacaciones|каникулы|férias', 'celebration'],
+  ['出差|出差|business trip|出張|출장|voyage d affaires|Geschäftsreise|viaje de negocios|командировка|viagem de negócios', 'luggage'],
+  ['会议纪要|會議記錄|meeting notes|会議メモ|회의록|compte rendu|Besprechungsnotizen|actas|протокол|atas de reunião', 'edit_note'],
+  ['审批|審批|approval|承認|결재|approbation|Genehmigung|aprobación|согласование|aprovação', 'verified'],
+  ['合同|合約|contract|契約|계약|contrat|Vertrag|contrato|договор|contrato', 'assignment'],
+  ['发票|發票|invoice|領収書|영수증|facture|Rechnung|factura|счёт|fatura', 'receipt_long'],
+  ['报销单|報銷單|expense form|精算書|정산서|note de frais|Spesenbeleg|hoja de gastos|авансовый отчёт|formulário de despesas', 'receipt_long'],
+  ['盖章|蓋章|stamp|印鑑|도장|tampon|Stempel|sello|печать|carimbo', 'assignment'],
+  ['传真|傳真|fax|ファックス|팩스|fax|Fax|fax|факс|fax', 'print'],
+  ['面试|面試|interview|面接|면접|entretien|Vorstellungsgespräch|entrevista|собеседование|entrevista', 'groups'],
+  ['简历|履歷|resume|履歴書|이력서|CV|Lebenslauf|currículum|резюме|currículo', 'description'],
+  ['入职|入職|onboarding|入社|입사|prise de poste|Eintritt|incorporación|приём на работу|admissão', 'work'],
+  ['辞职|辭職|quit|退職|퇴사|démissionner|kündigen|renunciar|увольнение|pedir demissão', 'work_off'],
+  ['加班|加班|overtime|残業|야근|heures sup|Überstunden|horas extra|переработка|horas extras', 'schedule'],
+  ['请假|請假|leave|休暇申請|휴가 신청|congé|Urlaub|permiso|отпуск|licença', 'event'],
+  ['报销差旅|報銷差旅|travel expenses|出張精算|출장 정산|frais de voyage|Reisekosten|gastos de viaje|командировочные|despesas de viagem', 'luggage'],
+  ['值夜班|值夜班|night shift|夜勤|야간 근무|garde de nuit|Nachtschicht|turno de noche|ночная смена|turno da noite', 'bedtime'],
+  ['交接|交接|handover|引き継ぎ|인수인계|passation|Übergabe|traspaso|передача дел|transição', 'sync'],
+  ['总结|總結|summary|まとめ|정리|résumé|Zusammenfassung|resumen|итог|resumo', 'description'],
+  ['规划|規劃|plan|計画|계획|planifier|planen|planificar|план|planejar', 'map'],
+  ['目标|目標|goal|目標|목표|objectif|Ziel|meta|цель|meta', 'flag'],
+  ['清单|清單|list|リスト|목록|liste|Liste|lista|список|lista', 'checklist'],
+  ['日程表|日程表|itinerary|スケジュール|일정표|agenda|Terminkalender|agenda|расписание|agenda', 'event'],
+  ['待办|待辦|todo|やること|할 일|à faire|To-do|pendientes|дела|tarefas', 'task_alt'],
+  ['提醒|提醒|remind|リマインド|알림|rappel|erinnern|recordar|напоминание|lembrete', 'notifications'],
+  ['备忘录|備忘錄|memo|メモ帳|메모장|mémorandum|Notizblock|memorándum|памятка|memorando', 'note'],
+  ['纪念日|紀念日|anniversary|記念日|기념일|anniversaire|Jahrestag|aniversario|годовщина|aniversário', 'celebration'],
+  ['生日|生日|birthday|誕生日|생일|anniversaire|Geburtstag|cumpleaños|день рождения|aniversário', 'cake'],
+  ['节日|節日|festival|祝日|명절|fête|Feiertag|festividad|праздник|feriado', 'celebration'],
+  ['送礼|送禮|give a gift|贈り物|선물 주기|offrir un cadeau|Geschenk geben|dar un regalo|дарить подарок|dar presente', 'redeem'],
+  ['红包|紅包|red envelope|お年玉|세뱃돈|enveloppe rouge|Geldgeschenk|sobre rojo|красный конверт|envelope vermelho', 'redeem'],
+  ['年货|年貨|new year goods|正月用品|설 선물|courses de Nouvel An|Neujahrseinkäufe|compras de Año Nuevo|новогодние покупки|compras de Ano Novo', 'shopping_bag'],
+  ['大扫除|大掃除|spring cleaning|大掃除|대청소|grand nettoyage|Frühjahrsputz|limpieza general|генеральная уборка|limpeza geral', 'cleaning_services'],
+  ['团圆饭|團圓飯|reunion dinner|年夜飯|설날 식사|repas de réveillon|Festessen|cena familiar|праздничный ужин|jantar em família', 'dinner_dining'],
+  ['放鞭炮|放鞭炮|fireworks|花火|폭죽|feux d artifice|Feuerwerk|fuegos artificiales|фейерверк|fogos de artifício', 'celebration'],
+  ['拜年|拜年|new year visit|年始回り|새배|visites du Nouvel An|Neujahrsbesuche|visitas de Año Nuevo|новогодние визиты|visitas de Ano Novo', 'home'],
+  ['元宵|元宵|lantern festival|元宵節|정월 대보름|fête des lanternes|Laternenfest|fiesta de los faroles|праздник фонарей|festival das lanternas', 'lightbulb'],
+  ['粽子|粽子|zongzi|ちまき|송편|zongzi|Reisknödel|zongzi|цзунцзы|zongzi', 'restaurant'],
+  ['月饼|月餅|mooncake|月餅|월병|gâteau de lune|Mondkuchen|pastel de luna|лунный пряник|bolo lunar', 'cake'],
+  ['赏月|賞月|moon viewing|月見|보름달 감상|admirer la lune|Mond betrachten|ver la luna|любоваться луной|ver a lua', 'wb_sunny'],
+  ['体检预约|體檢預約|book checkup|健診予約|건강검진 예약|réserver un bilan|Check-up buchen|reservar revisión|записаться на осмотр|marcar check-up', 'event'],
+  ['买药提醒|買藥提醒|medicine reminder|服薬リマインダー|약 복용 알림|rappel de médicaments|Medikamentenerinnerung|recordatorio de medicinas|напоминание о лекарствах|lembrete de remédios', 'medication'],
+  ['复诊|複診|follow up|再診|재진|consultation de suivi|Nachkontrolle|seguimiento|повторный приём|consulta de seguimento', 'medical_services'],
+  ['体检报告|體檢報告|health report|健診結果|건강검진 결과|rapport de santé|Gesundheitsbericht|informe de salud|результаты обследования|relatório de saúde', 'description'],
+  ['献血|捐血|donate blood|献血|헌혈|don du sang|Blutspende|donar sangre|сдать кровь|doar sangue', 'bloodtype'],
+  ['眼镜护理|眼鏡保養|glasses care|眼鏡の手入れ|안경 관리|entretien des lunettes|Brillenpflege|cuidado de gafas|уход за очками|cuidados com óculos', 'visibility'],
+  ['隐形眼镜|隱形眼鏡|contact lenses|コンタクト|콘택트렌즈|lentilles|Kontaktlinsen|lentillas|линзы|lentes de contacto', 'visibility'],
+  ['洗眼镜|洗眼鏡|clean glasses|眼鏡を拭く|안경 닦기|nettoyer les lunettes|Brille putzen|limpiar gafas|протирать очки|limpar óculos', 'cleaning_services'],
+  ['看牙医|看牙醫|visit dentist|歯科|치과 진료|aller chez le dentiste|Zahnarzt|ir al dentista|к стоматологу|ir ao dentista', 'medical_services'],
+  ['洗牙|洗牙|teeth cleaning|歯のクリーニング|스케일링|détartrage|Zahnreinigung|limpieza dental|чистка зубов|limpeza dentária', 'brush'],
+  ['矫正|矯正|braces|矯正|교정|appareil dentaire|Zahnspange|frenos|брекеты|aparelho', 'brush'],
+  ['拔牙|拔牙|tooth extraction|抜歯|발치|extraction|Zahn ziehen|extraer muela|удаление зуба|extração', 'medical_services'],
+  ['体检指标|體檢指標|health metrics|健康指標|건강 지표|indicateurs de santé|Gesundheitswerte|indicadores de salud|показатели здоровья|indicadores de saúde', 'monitor_heart'],
+  ['跑步打卡|跑步打卡|running log|ランニング記録|러닝 기록|journal de course|Lauftagebuch|registro de carrera|журнал бега|registo de corrida', 'directions_run'],
+  ['健身计划|健身計畫|workout plan|筋トレ計画|운동 계획|plan d entraînement|Trainingsplan|plan de entrenamiento|план тренировок|plano de treino', 'fitness_center'],
+  ['做瑜伽|做瑜珈|do yoga|ヨガをする|요가 하기|faire du yoga|Yoga machen|hacer yoga|заниматься йогой|fazer ioga', 'self_improvement'],
+  ['冥想练习|冥想練習|meditation practice|瞑想練習|명상 연습|pratiquer la méditation|Meditation üben|practicar meditación|практиковать медитацию|praticar meditação', 'self_improvement'],
+  ['早读|早讀|morning reading|朝読書|아침 독서|lecture du matin|Morgenlektüre|lectura matinal|утреннее чтение|leitura matinal', 'auto_stories'],
+  ['晚自习|晚自習|evening study|夜の自習|야간 자습|étude du soir|Abendstudium|estudio nocturno|вечерние занятия|estudo noturno', 'school'],
+  ['模拟考|模擬考|mock exam|模擬試験|모의고사|examen blanc|Probeprüfung|examen de práctica|пробный экзамен|exame simulado', 'assignment'],
+  ['填志愿|填志願|college application|志望校申請|지원서|inscription|Bewerbung|solicitud|поступление|candidatura', 'assignment'],
+  ['查成绩|查成績|check grades|成績確認|성적 확인|consulter les notes|Noten prüfen|consultar notas|проверить оценки|verificar notas', 'assignment'],
+  ['毕业照|畢業照|graduation photo|卒業写真|졸업 사진|photo de diplôme|Abschlussfoto|foto de graduación|выпускное фото|foto de formatura', 'photo_camera'],
+  ['开学准备|開學準備|back to school|新学期準備|개학 준비|préparer la rentrée|Schulvorbereitung|preparar el curso|подготовка к школе|preparar o regresso às aulas', 'backpack'],
+  ['整理书包|整理書包|pack backpack|ランドセル整理|가방 정리|préparer le sac|Rucksack packen|preparar mochila|собрать рюкзак|arrumar a mochila', 'backpack'],
+  ['接送|接送|pick up|送迎|픽업|accompagner|abholen|recoger|встречать|ir buscar', 'directions_car'],
+  ['值日|值日|on duty|当番|당번|service|Dienst|turno|дежурство|serviço', 'schedule'],
+  ['班车|班車|shuttle|送迎バス|셔틀버스|navette|Shuttle|autobús lanzadera|маршрутка|shuttle', 'directions_bus'],
+  ['校车|校車|school bus|スクールバス|스쿨버스|bus scolaire|Schulbus|autobús escolar|школьный автобус|autocarro escolar', 'directions_bus'],
+  ['买文具|買文具|buy stationery|文房具購入|문구 사기|acheter des fournitures|Schreibwaren kaufen|comprar material escolar|купить канцтовары|comprar material escolar', 'shopping_bag'],
+  ['换笔芯|換筆芯|refill pen|替芯交換|샤프심 교체|recharger un stylo|Mine wechseln|cambiar recambio|заменить стержень|trocar a carga', 'edit'],
+  ['笔记本|筆記本|notebook|ノート|공책|cahier|Notizbuch|cuaderno|тетрадь|caderno', 'note'],
+  ['文具盒|文具盒|pencil case|筆箱|필통|trousse|Mäppchen|estuche|пенал|estojo', 'backpack'],
+  ['台灯|檯燈|desk lamp|デスクライト|책상 조명|lampe de bureau|Schreibtischlampe|lámpara de escritorio|настольная лампа|candeeiro de secretária', 'lightbulb'],
+  ['关窗|關窗|close windows|窓を閉める|창문 닫기|fermer les fenêtres|Fenster schließen|cerrar ventanas|закрыть окна|fechar janelas', 'door_front'],
+  ['开窗|開窗|open windows|窓を開ける|창문 열기|ouvrir les fenêtres|Fenster öffnen|abrir ventanas|открыть окна|abrir janelas', 'door_front'],
+  ['通风|通風|ventilate|換気|환기|aérer|lüften|ventilar|проветрить|ventilar', 'air'],
+  ['除湿|除濕|dehumidify|除湿|제습|déshumidifier|entfeuchten|deshumidificar|осушать|desumidificar', 'ac_unit'],
+  ['加湿|加濕|humidify|加湿|가습|humidifier|befeuchten|humidificar|увлажнять|humidificar', 'water_drop'],
+  ['换灯泡|換燈泡|change bulb|電球交換|전구 교체|changer une ampoule|Glühbirne wechseln|cambiar bombilla|сменить лампочку|trocar lâmpada', 'lightbulb'],
+  ['修水管|修水管|fix pipe|水道修理|배관 수리|réparer la plomberie|Rohr reparieren|arreglar tubería|починить трубу|consertar cano', 'plumbing'],
+  ['通马桶|通馬桶|unclog toilet|トイレつまり|변기 뚫기|déboucher les toilettes|Toilette entstopfen|desatascar el inodoro|прочистить унитаз|desentupir sanita', 'plumbing'],
+  ['换锁|換鎖|change lock|鍵交換|자물쇠 교체|changer la serrure|Schloss wechseln|cambiar cerradura|сменить замок|trocar fechadura', 'lock'],
+  ['配钥匙|配鑰匙|make key|鍵の複製|열쇠 복사|copier une clé|Schlüssel nachmachen|hacer llave|сделать ключ|fazer chave', 'key'],
+  ['装窗帘|裝窗簾|install curtains|カーテン設置|커튼 설치|poser des rideaux|Vorhänge anbringen|instalar cortinas|повесить шторы|instalar cortinas', 'home'],
+  ['贴墙纸|貼壁紙|wallpaper|壁紙|벽지|papier peint|Tapete|papel pintado|обои|papel de parede', 'home'],
+  ['刷墙|刷牆|paint wall|塗装|페인트 칠|peindre les murs|Wand streichen|pintar pared|красить стены|pintar parede', 'brush'],
+  ['装家具|裝家具|assemble furniture|家具組み立て|가구 조립|monter des meubles|Möbel aufbauen|montar muebles|собрать мебель|montar móveis', 'build'],
+  ['修车|修車|fix car|車修理|차량 수리|réparer la voiture|Auto reparieren|arreglar el coche|починить машину|consertar carro', 'build'],
+  ['换轮胎|換輪胎|change tire|タイヤ交換|타이어 교체|changer un pneu|Reifen wechseln|cambiar rueda|сменить шину|trocar pneu', 'directions_car'],
+  ['洗轮胎|洗輪胎|clean wheels|ホイール洗浄|휠 세척|nettoyer les roues|Räder reinigen|limpiar ruedas|мыть колёса|limpar as rodas', 'local_car_wash'],
+  ['打气|打氣|inflate|空気入れ|공기 주입|gonfler|aufpumpen|inflar|накачать|encher', 'directions_bike'],
+  ['汽车保养|汽車保養|car service|車メンテナンス|차량 정비|entretien auto|Auto-Service|servicio del coche|обслуживание авто|manutenção do carro', 'build'],
+  ['交车险|交車險|car insurance payment|保険料支払い|보험료 납부|paiement assurance|Versicherung zahlen|pagar seguro|оплатить страховку|pagar seguro', 'payments'],
+  ['买车|買車|buy a car|車購入|차 구매|acheter une voiture|Auto kaufen|comprar coche|купить машину|comprar carro', 'directions_car'],
+];
+
+/* ---------- 多语言 i18n ---------- */
+const I18N = {
+  'zh-CN':{
+    app_name:'检查单', app_suffix:'检查单',
+    checklist:'检查单', checklists:'检查单',
+    config:'配置', search:'搜索', settings:'设置',
+    back_home:'返回主页', new_checklist:'新建检查单', edit_checklist:'编辑检查单',
+    checklist_name:'检查单名称', checklist_icon:'检查单图标',
+    auto_icon:'自动选择图标', reset_time:'自动重置时间',
+    reset_time_sub:'完成后经过此时长自动重置',
+    never_reset:'不自动重置', hours:'小时',
+    add_check_item:'添加检查项', check_item_placeholder:'输入检查项内容',
+    item_icon:'检查项图标', confirm:'确认', save:'保存', delete:'删除',
+    cancel:'取消', add:'添加',
+    delete_confirm_title:'删除检查单', delete_confirm_body:'再按一次「删除」以确认删除此检查单',
+    delete_checklist:'删除检查单', save_changes:'保存更改', enter_checklist_name:'请输入检查单名称', enter_check_item:'请添加检查项', export_checklist:'导出检查单', import_checklist:'导入检查单', export_success:'检查单导出成功', export_fail:'检查单导出失败', import_success:'检查单导入成功', import_fail:'检查单导入失败',
+    reset_checklist:'重置检查单',
+    all_done_title:'做得好，我们可以休息一会儿了', all_done_sub:'全部检查项已完成',
+    empty_title:'点击新建检查单以添加第一个检查单',
+    empty_sub:'还没有检查单',
+    reset_toast:'检查单已重置', added_toast:'检查单已添加', saved_toast:'检查单已保存', deleted_toast:'检查单已删除',
+    pull_to_reset:'下拉重置', release_to_reset:'松手重置', refreshing:'重置中…',
+    new_tab:'新建',
+    settings_theme:'主题', settings_follow_system:'跟随系统主题',
+    settings_light:'浅色模式', settings_dark:'深色模式',
+    settings_item_height:'检查项单条高度', settings_item_height_sub:'拖动滑块调整检查项高度',
+    settings_first_only:'仅应用到第一个检查项', settings_first_only_sub:'仅当前待完成的第一个检查项使用此高度',
+    settings_language:'语言', settings_language_sub:'选择界面语言',
+    settings_about:'关于',
+    follow_system:'跟随系统',
+    mit_license_title:'本软件使用 MIT LICENSE 开源',
+    oss_license_title:'开放源代码许可',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'无搜索结果', search_placeholder:'搜索检查项',
+    select_icon:'选择图标', icon_search:'搜索图标',
+    auto_select:'自动',
+    add_first_item:'添加检查项',
+    items_count:'项',
+    completed_count:'已完成',
+    back:'返回', support_title:'给 Sue 买一杯咖啡', support_title_afdian:'给 Sue 狠狠的发电',
+    support_sub:'如果你觉得这个应用对你有帮助，请支持我！谢谢你！',
+    icon_cat_daily:'日常', icon_cat_travel:'出行', icon_cat_shopping:'购物',
+    icon_cat_sports:'运动', icon_cat_leisure:'休闲', icon_cat_food:'饮食',
+    icon_cat_health:'健康', icon_cat_work:'工作', icon_cat_other:'其他',
+  },
+  'zh-TW':{
+    app_name:'檢查單', app_suffix:'檢查單',
+    checklist:'檢查單', checklists:'檢查單',
+    config:'設定', search:'搜尋', settings:'設定',
+    back_home:'返回主頁', new_checklist:'新建檢查單', edit_checklist:'編輯檢查單',
+    checklist_name:'檢查單名稱', checklist_icon:'檢查單圖示',
+    auto_icon:'自動選擇圖示', reset_time:'自動重置時間',
+    reset_time_sub:'完成後經過此時長自動重置',
+    never_reset:'不自動重置', hours:'小時',
+    add_check_item:'新增檢查項', check_item_placeholder:'輸入檢查項內容',
+    item_icon:'檢查項圖示', confirm:'確認', save:'儲存', delete:'刪除',
+    cancel:'取消', add:'新增',
+    delete_confirm_title:'刪除檢查單', delete_confirm_body:'再按一次「刪除」以確認刪除此檢查單',
+    delete_checklist:'刪除檢查單', save_changes:'儲存變更', enter_checklist_name:'請輸入檢查單名稱', enter_check_item:'請新增檢查項', export_checklist:'匯出檢查單', import_checklist:'匯入檢查單', export_success:'檢查單匯出成功', export_fail:'檢查單匯出失敗', import_success:'檢查單匯入成功', import_fail:'檢查單匯入失敗',
+    reset_checklist:'重置檢查單',
+    all_done_title:'做得好，我們可以休息一會兒了', all_done_sub:'全部檢查項已完成',
+    empty_title:'點擊新建檢查單以新增第一個檢查單',
+    empty_sub:'還沒有檢查單',
+    reset_toast:'檢查單已重置', added_toast:'檢查單已新增', saved_toast:'檢查單已儲存', deleted_toast:'檢查單已刪除',
+    pull_to_reset:'下拉重置', release_to_reset:'放手重置', refreshing:'重置中…',
+    new_tab:'新建',
+    settings_theme:'主題', settings_follow_system:'跟隨系統主題',
+    settings_light:'淺色模式', settings_dark:'深色模式',
+    settings_item_height:'檢查項單條高度', settings_item_height_sub:'拖動滑塊調整檢查項高度',
+    settings_first_only:'僅套用到第一個檢查項', settings_first_only_sub:'僅當前待完成的第一個檢查項使用此高度',
+    settings_language:'語言', settings_language_sub:'選擇介面語言',
+    settings_about:'關於',
+    follow_system:'跟隨系統',
+    mit_license_title:'本軟體使用 MIT LICENSE 開源',
+    oss_license_title:'開放原始碼授權',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'無搜尋結果', search_placeholder:'搜尋檢查項',
+    select_icon:'選擇圖示', icon_search:'搜尋圖示',
+    auto_select:'自動',
+    add_first_item:'新增檢查項',
+    items_count:'項',
+    completed_count:'已完成',
+    back:'返回', support_title:'給 Sue 買一杯咖啡', support_title_afdian:'給 Sue 狠狠發電',
+    support_sub:'如果你覺得這個應用對你有幫助，請支持我！謝謝你！',
+    icon_cat_daily:'日常', icon_cat_travel:'出行', icon_cat_shopping:'購物',
+    icon_cat_sports:'運動', icon_cat_leisure:'休閒', icon_cat_food:'飲食',
+    icon_cat_health:'健康', icon_cat_work:'工作', icon_cat_other:'其他',
+  },
+  'en':{
+    app_name:'Checklist', app_suffix:' Checklist',
+    checklist:'Checklist', checklists:'Checklists',
+    config:'Configure', search:'Search', settings:'Settings',
+    back_home:'Home', new_checklist:'New Checklist', edit_checklist:'Edit Checklist',
+    checklist_name:'Checklist name', checklist_icon:'Checklist icon',
+    auto_icon:'Auto-select icon', reset_time:'Auto-reset time',
+    reset_time_sub:'Auto-reset after this duration once completed',
+    never_reset:'No auto-reset', hours:'h',
+    add_check_item:'Add check item', check_item_placeholder:'Enter check item',
+    item_icon:'Item icon', confirm:'Confirm', save:'Save', delete:'Delete',
+    cancel:'Cancel', add:'Add',
+    delete_confirm_title:'Delete checklist', delete_confirm_body:'Press "Delete" again to confirm deletion',
+    delete_checklist:'Delete checklist', save_changes:'Save changes', enter_checklist_name:'Please enter a checklist name', enter_check_item:'Please add a check item', export_checklist:'Export checklist', import_checklist:'Import checklist', export_success:'Checklist exported successfully', export_fail:'Checklist export failed', import_success:'Checklist imported successfully', import_fail:'Checklist import failed',
+    reset_checklist:'Reset checklist',
+    all_done_title:'Well done, let\'s take a break', all_done_sub:'All check items completed',
+    empty_title:'Tap "New Checklist" to add your first one',
+    empty_sub:'No checklists yet',
+    reset_toast:'Checklist reset', added_toast:'Checklist added', saved_toast:'Checklist saved', deleted_toast:'Checklist deleted',
+    pull_to_reset:'Pull to reset', release_to_reset:'Release to reset', refreshing:'Resetting…',
+    new_tab:'New',
+    settings_theme:'Theme', settings_follow_system:'Follow system theme',
+    settings_light:'Light mode', settings_dark:'Dark mode',
+    settings_item_height:'Item row height', settings_item_height_sub:'Drag the slider to adjust item height',
+    settings_first_only:'Apply to first item only', settings_first_only_sub:'Only the next pending item uses this height',
+    settings_language:'Language', settings_language_sub:'Choose interface language',
+    settings_about:'About',
+    follow_system:'Follow system',
+    mit_license_title:'Open source under the MIT LICENSE',
+    oss_license_title:'Open source licenses',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'No results', search_placeholder:'Search items',
+    select_icon:'Select icon', icon_search:'Search icons',
+    auto_select:'Auto',
+    add_first_item:'Add check item',
+    items_count:'items',
+    completed_count:'completed',
+    back:'Back', support_title:'Buy Sue a coffee',
+    support_sub:'If this app helps you, please support me! Thank you!',
+    icon_cat_daily:'Daily', icon_cat_travel:'Travel', icon_cat_shopping:'Shopping',
+    icon_cat_sports:'Sports', icon_cat_leisure:'Leisure', icon_cat_food:'Food & Drink',
+    icon_cat_health:'Health', icon_cat_work:'Work', icon_cat_other:'Other',
+  },
+  'ja':{
+    app_name:'チェックリスト', app_suffix:'チェックリスト',
+    checklist:'チェックリスト', checklists:'チェックリスト',
+    config:'設定', search:'検索', settings:'設定',
+    back_home:'ホームに戻る', new_checklist:'新規チェックリスト', edit_checklist:'チェックリストを編集',
+    checklist_name:'チェックリスト名', checklist_icon:'チェックリストアイコン',
+    auto_icon:'アイコンを自動選択', reset_time:'自動リセット時間',
+    reset_time_sub:'完了後にこの時間で自動リセット',
+    never_reset:'自動リセットしない', hours:'時間',
+    add_check_item:'チェック項目を追加', check_item_placeholder:'チェック項目を入力',
+    item_icon:'項目アイコン', confirm:'確認', save:'保存', delete:'削除',
+    cancel:'キャンセル', add:'追加',
+    delete_confirm_title:'チェックリストを削除', delete_confirm_body:'もう一度「削除」を押して削除を確認',
+    delete_checklist:'チェックリストを削除', save_changes:'変更を保存', enter_checklist_name:'チェックリスト名を入力してください', enter_check_item:'チェック項目を追加してください', export_checklist:'チェックリストをエクスポート', import_checklist:'チェックリストをインポート', export_success:'チェックリストをエクスポートしました', export_fail:'エクスポートに失敗しました', import_success:'チェックリストをインポートしました', import_fail:'インポートに失敗しました',
+    reset_checklist:'チェックリストをリセット',
+    all_done_title:'よくできました、少し休みましょう', all_done_sub:'すべてのチェック項目が完了しました',
+    empty_title:'「新規チェックリスト」をタップして最初のものを追加',
+    empty_sub:'まだチェックリストがありません',
+    reset_toast:'チェックリストをリセットしました', added_toast:'チェックリストを追加しました', saved_toast:'チェックリストを保存しました', deleted_toast:'チェックリストを削除しました',
+    pull_to_reset:'引いてリセット', release_to_reset:'離してリセット', refreshing:'リセット中…',
+    new_tab:'新規',
+    settings_theme:'テーマ', settings_follow_system:'システムテーマに従う',
+    settings_light:'ライトモード', settings_dark:'ダークモード',
+    settings_item_height:'項目の行の高さ', settings_item_height_sub:'スライダーをドラッグして項目の高さを調整',
+    settings_first_only:'最初の項目のみに適用', settings_first_only_sub:'次の保留中の項目のみこの高さを使用します',
+    settings_language:'言語', settings_language_sub:'インターフェース言語を選択',
+    settings_about:'について',
+    follow_system:'システムに従う',
+    mit_license_title:'本ソフトウェアは MIT LICENSE でオープンソースです',
+    oss_license_title:'オープンソースライセンス',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'結果なし', search_placeholder:'項目を検索',
+    select_icon:'アイコンを選択', icon_search:'アイコンを検索',
+    auto_select:'自動',
+    add_first_item:'チェック項目を追加',
+    items_count:'項目',
+    completed_count:'完了',
+    back:'戻る', support_title:'Sueにコーヒーを',
+    support_sub:'このアプリが役に立ったら、ぜひサポートしてください！ありがとう！',
+    icon_cat_daily:'日常', icon_cat_travel:'旅行', icon_cat_shopping:'買い物',
+    icon_cat_sports:'スポーツ', icon_cat_leisure:'レジャー', icon_cat_food:'飲食',
+    icon_cat_health:'健康', icon_cat_work:'仕事', icon_cat_other:'その他',
+  },
+  'ko':{
+    app_name:'체크리스트', app_suffix:' 체크리스트',
+    checklist:'체크리스트', checklists:'체크리스트',
+    config:'설정', search:'검색', settings:'설정',
+    back_home:'홈으로', new_checklist:'새 체크리스트', edit_checklist:'체크리스트 편집',
+    checklist_name:'체크리스트 이름', checklist_icon:'체크리스트 아이콘',
+    auto_icon:'아이콘 자동 선택', reset_time:'자동 리셋 시간',
+    reset_time_sub:'완료 후 이 시간이 지나면 자동 리셋',
+    never_reset:'자동 리셋 안 함', hours:'시간',
+    add_check_item:'체크 항목 추가', check_item_placeholder:'체크 항목 입력',
+    item_icon:'항목 아이콘', confirm:'확인', save:'저장', delete:'삭제',
+    cancel:'취소', add:'추가',
+    delete_confirm_title:'체크리스트 삭제', delete_confirm_body:'삭제하려면 "삭제"를 한 번 더 누르세요',
+    delete_checklist:'체크리스트 삭제', save_changes:'변경 사항 저장', enter_checklist_name:'체크리스트 이름을 입력하세요', enter_check_item:'체크 항목을 추가하세요', export_checklist:'체크리스트 내보내기', import_checklist:'체크리스트 가져오기', export_success:'체크리스트를 내보냈습니다', export_fail:'내보내기 실패', import_success:'체크리스트를 가져왔습니다', import_fail:'가져오기 실패',
+    reset_checklist:'체크리스트 리셋',
+    all_done_title:'잘했어요, 잠시 쉬어요', all_done_sub:'모든 체크 항목이 완료되었습니다',
+    empty_title:'"새 체크리스트"를 눌러 첫 항목을 추가하세요',
+    empty_sub:'아직 체크리스트가 없습니다',
+    reset_toast:'체크리스트가 리셋되었습니다', added_toast:'체크리스트가 추가되었습니다', saved_toast:'체크리스트가 저장되었습니다', deleted_toast:'체크리스트가 삭제되었습니다',
+    pull_to_reset:'당겨서 리셋', release_to_reset:'놓아서 리셋', refreshing:'리셋 중…',
+    new_tab:'새로',
+    settings_theme:'테마', settings_follow_system:'시스템 테마 따르기',
+    settings_light:'라이트 모드', settings_dark:'다크 모드',
+    settings_item_height:'항목 행 높이', settings_item_height_sub:'슬라이더를 드래그하여 항목 높이 조정',
+    settings_first_only:'첫 항목에만 적용', settings_first_only_sub:'다음 대기 중인 항목만 이 높이를 사용합니다',
+    settings_language:'언어', settings_language_sub:'인터페이스 언어 선택',
+    settings_about:'정보',
+    follow_system:'시스템 따르기',
+    mit_license_title:'이 소프트웨어는 MIT LICENSE 오픈소스입니다',
+    oss_license_title:'오픈소스 라이선스',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'결과 없음', search_placeholder:'항목 검색',
+    select_icon:'아이콘 선택', icon_search:'아이콘 검색',
+    auto_select:'자동',
+    add_first_item:'체크 항목 추가',
+    items_count:'항목',
+    completed_count:'완료',
+    back:'뒤로', support_title:'Sue에게 커피 한 잔',
+    support_sub:'이 앱이 도움이 되셨다면 저를 응원해 주세요! 감사합니다!',
+    icon_cat_daily:'일상', icon_cat_travel:'여행', icon_cat_shopping:'쇼핑',
+    icon_cat_sports:'스포츠', icon_cat_leisure:'여가', icon_cat_food:'음식',
+    icon_cat_health:'건강', icon_cat_work:'업무', icon_cat_other:'기타',
+  },
+  'fr':{
+    app_name:'Liste', app_suffix:' de contrôle',
+    checklist:'Liste de contrôle', checklists:'Listes de contrôle',
+    config:'Configurer', search:'Rechercher', settings:'Paramètres',
+    back_home:'Accueil', new_checklist:'Nouvelle liste', edit_checklist:'Modifier la liste',
+    checklist_name:'Nom de la liste', checklist_icon:'Icône de la liste',
+    auto_icon:'Sélection auto de l\'icône', reset_time:'Durée de réinitialisation auto',
+    reset_time_sub:'Réinitialisation auto après cette durée une fois terminé',
+    never_reset:'Pas de réinit. auto', hours:'h',
+    add_check_item:'Ajouter un élément', check_item_placeholder:'Saisir un élément',
+    item_icon:'Icône de l\'élément', confirm:'Confirmer', save:'Enregistrer', delete:'Supprimer',
+    cancel:'Annuler', add:'Ajouter',
+    delete_confirm_title:'Supprimer la liste', delete_confirm_body:'Appuyez à nouveau sur « Supprimer » pour confirmer',
+    delete_checklist:'Supprimer la liste', save_changes:'Enregistrer les modifications', enter_checklist_name:'Veuillez saisir un nom de liste', enter_check_item:'Veuillez ajouter un élément', export_checklist:'Exporter la liste', import_checklist:'Importer une liste', export_success:'Liste exportée avec succès', export_fail:'Échec de l export', import_success:'Liste importée avec succès', import_fail:'Échec de l import',
+    reset_checklist:'Réinitialiser la liste',
+    all_done_title:'Bien joué, faisons une pause', all_done_sub:'Tous les éléments sont complétés',
+    empty_title:'Appuyez sur « Nouvelle liste » pour ajouter la première',
+    empty_sub:'Aucune liste pour l\'instant',
+    reset_toast:'Liste réinitialisée', added_toast:'Liste ajoutée', saved_toast:'Liste enregistrée', deleted_toast:'Liste supprimée',
+    pull_to_reset:'Tirer pour réinitialiser', release_to_reset:'Relâcher pour réinitialiser', refreshing:'Réinitialisation…',
+    new_tab:'Nouv.',
+    settings_theme:'Thème', settings_follow_system:'Suivre le thème système',
+    settings_light:'Mode clair', settings_dark:'Mode sombre',
+    settings_item_height:'Hauteur de ligne des éléments', settings_item_height_sub:'Glissez le curseur pour ajuster la hauteur',
+    settings_first_only:'Appliquer au premier élément seulement', settings_first_only_sub:'Seul le prochain élément en attente utilise cette hauteur',
+    settings_language:'Langue', settings_language_sub:'Choisir la langue de l\'interface',
+    settings_about:'À propos',
+    follow_system:'Suivre le système',
+    mit_license_title:'Open source sous licence MIT',
+    oss_license_title:'Licences open source',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Aucun résultat', search_placeholder:'Rechercher des éléments',
+    select_icon:'Choisir l\'icône', icon_search:'Rechercher des icônes',
+    auto_select:'Auto',
+    add_first_item:'Ajouter un élément',
+    items_count:'éléments',
+    completed_count:'complétés',
+    back:'Retour', support_title:'Offrir un café à Sue',
+    support_sub:'Si cette application vous aide, soutenez-moi ! Merci !',
+    icon_cat_daily:'Quotidien', icon_cat_travel:'Voyage', icon_cat_shopping:'Shopping',
+    icon_cat_sports:'Sport', icon_cat_leisure:'Loisirs', icon_cat_food:'Nourriture',
+    icon_cat_health:'Santé', icon_cat_work:'Travail', icon_cat_other:'Autres',
+  },
+  'de':{
+    app_name:'Checkliste', app_suffix:'-Checkliste',
+    checklist:'Checkliste', checklists:'Checklisten',
+    config:'Konfigurieren', search:'Suchen', settings:'Einstellungen',
+    back_home:'Start', new_checklist:'Neue Checkliste', edit_checklist:'Checkliste bearbeiten',
+    checklist_name:'Name der Checkliste', checklist_icon:'Checklisten-Symbol',
+    auto_icon:'Symbol automatisch wählen', reset_time:'Auto-Zurücksetzzeit',
+    reset_time_sub:'Nach Ablauf automatisch zurücksetzen',
+    never_reset:'Kein Auto-Reset', hours:'Std',
+    add_check_item:'Prüfpunkt hinzufügen', check_item_placeholder:'Prüfpunkt eingeben',
+    item_icon:'Element-Symbol', confirm:'Bestätigen', save:'Speichern', delete:'Löschen',
+    cancel:'Abbrechen', add:'Hinzufügen',
+    delete_confirm_title:'Checkliste löschen', delete_confirm_body:'Erneut „Löschen“ drücken, um zu bestätigen',
+    delete_checklist:'Checkliste löschen', save_changes:'Änderungen speichern', enter_checklist_name:'Bitte einen Checklistennamen eingeben', enter_check_item:'Bitte ein Prüfelement hinzufügen', export_checklist:'Checkliste exportieren', import_checklist:'Checkliste importieren', export_success:'Checkliste erfolgreich exportiert', export_fail:'Export fehlgeschlagen', import_success:'Checkliste erfolgreich importiert', import_fail:'Import fehlgeschlagen',
+    reset_checklist:'Checkliste zurücksetzen',
+    all_done_title:'Gut gemacht, machen wir eine Pause', all_done_sub:'Alle Prüfpunkte erledigt',
+    empty_title:'Auf „Neue Checkliste“ tippen, um die erste hinzuzufügen',
+    empty_sub:'Noch keine Checklisten',
+    reset_toast:'Checkliste zurückgesetzt', added_toast:'Checkliste hinzugefügt', saved_toast:'Checkliste gespeichert', deleted_toast:'Checkliste gelöscht',
+    pull_to_reset:'Zum Zurücksetzen ziehen', release_to_reset:'Loslassen zum Zurücksetzen', refreshing:'Zurücksetzen…',
+    new_tab:'Neu',
+    settings_theme:'Design', settings_follow_system:'Systemdesign folgen',
+    settings_light:'Heller Modus', settings_dark:'Dunkler Modus',
+    settings_item_height:'Zeilenhöhe der Elemente', settings_item_height_sub:'Schieber ziehen, um die Höhe einzustellen',
+    settings_first_only:'Nur auf erstes Element anwenden', settings_first_only_sub:'Nur das nächste offene Element verwendet diese Höhe',
+    settings_language:'Sprache', settings_language_sub:'Oberflächensprache wählen',
+    settings_about:'Über',
+    follow_system:'System folgen',
+    mit_license_title:'Open Source unter der MIT-Lizenz',
+    oss_license_title:'Open-Source-Lizenzen',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Keine Ergebnisse', search_placeholder:'Elemente suchen',
+    select_icon:'Symbol wählen', icon_search:'Symbole suchen',
+    auto_select:'Auto',
+    add_first_item:'Prüfpunkt hinzufügen',
+    items_count:'Elemente',
+    completed_count:'erledigt',
+    back:'Zurück', support_title:'Sue einen Kaffee kaufen',
+    support_sub:'Wenn dir diese App hilft, unterstütze mich bitte! Danke!',
+    icon_cat_daily:'Alltag', icon_cat_travel:'Reisen', icon_cat_shopping:'Einkaufen',
+    icon_cat_sports:'Sport', icon_cat_leisure:'Freizeit', icon_cat_food:'Essen & Trinken',
+    icon_cat_health:'Gesundheit', icon_cat_work:'Arbeit', icon_cat_other:'Sonstiges',
+  },
+  'es':{
+    app_name:'Lista', app_suffix:' de verificación',
+    checklist:'Lista de verificación', checklists:'Listas de verificación',
+    config:'Configurar', search:'Buscar', settings:'Ajustes',
+    back_home:'Inicio', new_checklist:'Nueva lista', edit_checklist:'Editar lista',
+    checklist_name:'Nombre de la lista', checklist_icon:'Icono de la lista',
+    auto_icon:'Selección automática de icono', reset_time:'Tiempo de reinicio automático',
+    reset_time_sub:'Reinicio automático tras esta duración al completar',
+    never_reset:'Sin reinicio auto', hours:'h',
+    add_check_item:'Añadir elemento', check_item_placeholder:'Introducir elemento',
+    item_icon:'Icono del elemento', confirm:'Confirmar', save:'Guardar', delete:'Eliminar',
+    cancel:'Cancelar', add:'Añadir',
+    delete_confirm_title:'Eliminar lista', delete_confirm_body:'Pulsa «Eliminar» otra vez para confirmar',
+    delete_checklist:'Eliminar lista', save_changes:'Guardar cambios', enter_checklist_name:'Introduzca un nombre de lista', enter_check_item:'Añada un elemento', export_checklist:'Exportar lista', import_checklist:'Importar lista', export_success:'Lista exportada con éxito', export_fail:'Error al exportar', import_success:'Lista importada con éxito', import_fail:'Error al importar',
+    reset_checklist:'Reiniciar lista',
+    all_done_title:'Bien hecho, tomemos un descanso', all_done_sub:'Todos los elementos completados',
+    empty_title:'Pulsa «Nueva lista» para añadir la primera',
+    empty_sub:'Aún no hay listas',
+    reset_toast:'Lista reiniciada', added_toast:'Lista añadida', saved_toast:'Lista guardada', deleted_toast:'Lista eliminada',
+    pull_to_reset:'Desliza para reiniciar', release_to_reset:'Suelta para reiniciar', refreshing:'Reiniciando…',
+    new_tab:'Nueva',
+    settings_theme:'Tema', settings_follow_system:'Seguir tema del sistema',
+    settings_light:'Modo claro', settings_dark:'Modo oscuro',
+    settings_item_height:'Altura de fila de elementos', settings_item_height_sub:'Arrastra el control para ajustar la altura',
+    settings_first_only:'Aplicar solo al primer elemento', settings_first_only_sub:'Solo el siguiente elemento pendiente usa esta altura',
+    settings_language:'Idioma', settings_language_sub:'Elegir idioma de la interfaz',
+    settings_about:'Acerca de',
+    follow_system:'Seguir sistema',
+    mit_license_title:'Código abierto bajo la licencia MIT',
+    oss_license_title:'Licencias de código abierto',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Sin resultados', search_placeholder:'Buscar elementos',
+    select_icon:'Elegir icono', icon_search:'Buscar iconos',
+    auto_select:'Auto',
+    add_first_item:'Añadir elemento',
+    items_count:'elementos',
+    completed_count:'completados',
+    back:'Atrás', support_title:'Invita a Sue a un café',
+    support_sub:'Si esta app te ayuda, ¡apóyame! ¡Gracias!',
+    icon_cat_daily:'Diario', icon_cat_travel:'Viajes', icon_cat_shopping:'Compras',
+    icon_cat_sports:'Deportes', icon_cat_leisure:'Ocio', icon_cat_food:'Comida',
+    icon_cat_health:'Salud', icon_cat_work:'Trabajo', icon_cat_other:'Otros',
+  },
+  'ru':{
+    app_name:'Чек-лист', app_suffix:' чек-лист',
+    checklist:'Чек-лист', checklists:'Чек-листы',
+    config:'Настроить', search:'Поиск', settings:'Настройки',
+    back_home:'Главная', new_checklist:'Новый чек-лист', edit_checklist:'Изменить чек-лист',
+    checklist_name:'Название чек-листа', checklist_icon:'Значок чек-листа',
+    auto_icon:'Авто-выбор значка', reset_time:'Время авто-сброса',
+    reset_time_sub:'Авто-сброс по истечении этого времени после завершения',
+    never_reset:'Без авто-сброса', hours:'ч',
+    add_check_item:'Добавить пункт', check_item_placeholder:'Введите пункт',
+    item_icon:'Значок пункта', confirm:'Подтвердить', save:'Сохранить', delete:'Удалить',
+    cancel:'Отмена', add:'Добавить',
+    delete_confirm_title:'Удалить чек-лист', delete_confirm_body:'Нажмите «Удалить» ещё раз для подтверждения',
+    delete_checklist:'Удалить чек-лист', save_changes:'Сохранить изменения', enter_checklist_name:'Введите название чек-листа', enter_check_item:'Добавьте пункт', export_checklist:'Экспортировать чек-лист', import_checklist:'Импортировать чек-лист', export_success:'Чек-лист экспортирован', export_fail:'Ошибка экспорта', import_success:'Чек-лист импортирован', import_fail:'Ошибка импорта',
+    reset_checklist:'Сбросить чек-лист',
+    all_done_title:'Отлично, давайте отдохнём', all_done_sub:'Все пункты выполнены',
+    empty_title:'Нажмите «Новый чек-лист», чтобы добавить первый',
+    empty_sub:'Пока нет чек-листов',
+    reset_toast:'Чек-лист сброшен', added_toast:'Чек-лист добавлен', saved_toast:'Чек-лист сохранён', deleted_toast:'Чек-лист удалён',
+    pull_to_reset:'Потяните для сброса', release_to_reset:'Отпустите для сброса', refreshing:'Сброс…',
+    new_tab:'Новый',
+    settings_theme:'Тема', settings_follow_system:'Системная тема',
+    settings_light:'Светлая тема', settings_dark:'Тёмная тема',
+    settings_item_height:'Высота строки пунктов', settings_item_height_sub:'Перетащите ползунок для настройки высоты',
+    settings_first_only:'Только к первому пункту', settings_first_only_sub:'Только следующий ожидающий пункт использует эту высоту',
+    settings_language:'Язык', settings_language_sub:'Выбрать язык интерфейса',
+    settings_about:'О приложении',
+    follow_system:'Системный',
+    mit_license_title:'Открытый исходный код под лицензией MIT',
+    oss_license_title:'Лицензии открытого кода',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Нет результатов', search_placeholder:'Поиск пунктов',
+    select_icon:'Выбрать значок', icon_search:'Поиск значков',
+    auto_select:'Авто',
+    add_first_item:'Добавить пункт',
+    items_count:'пунктов',
+    completed_count:'выполнено',
+    back:'Назад', support_title:'Угостите Сью кофе',
+    support_sub:'Если это приложение вам помогло, поддержите меня! Спасибо!',
+    icon_cat_daily:'Повседневное', icon_cat_travel:'Путешествия', icon_cat_shopping:'Покупки',
+    icon_cat_sports:'Спорт', icon_cat_leisure:'Досуг', icon_cat_food:'Еда',
+    icon_cat_health:'Здоровье', icon_cat_work:'Работа', icon_cat_other:'Другое',
+  },
+  'pt':{
+    app_name:'Lista', app_suffix:' de verificação',
+    checklist:'Lista de verificação', checklists:'Listas de verificação',
+    config:'Configurar', search:'Buscar', settings:'Configurações',
+    back_home:'Início', new_checklist:'Nova lista', edit_checklist:'Editar lista',
+    checklist_name:'Nome da lista', checklist_icon:'Ícone da lista',
+    auto_icon:'Seleção automática de ícone', reset_time:'Tempo de redefinição automática',
+    reset_time_sub:'Redefinição automática após essa duração ao concluir',
+    never_reset:'Sem redef. auto', hours:'h',
+    add_check_item:'Adicionar item', check_item_placeholder:'Digite o item',
+    item_icon:'Ícone do item', confirm:'Confirmar', save:'Salvar', delete:'Excluir',
+    cancel:'Cancelar', add:'Adicionar',
+    delete_confirm_title:'Excluir lista', delete_confirm_body:'Pressione «Excluir» novamente para confirmar',
+    delete_checklist:'Excluir lista', save_changes:'Salvar alterações', enter_checklist_name:'Introduza um nome de lista', enter_check_item:'Adicione um item', export_checklist:'Exportar lista', import_checklist:'Importar lista', export_success:'Lista exportada com sucesso', export_fail:'Erro ao exportar', import_success:'Lista importada com sucesso', import_fail:'Erro ao importar',
+    reset_checklist:'Redefinir lista',
+    all_done_title:'Muito bem, vamos fazer uma pausa', all_done_sub:'Todos os itens concluídos',
+    empty_title:'Toque em «Nova lista» para adicionar a primeira',
+    empty_sub:'Nenhuma lista ainda',
+    reset_toast:'Lista redefinida', added_toast:'Lista adicionada', saved_toast:'Lista salva', deleted_toast:'Lista excluída',
+    pull_to_reset:'Puxe para redefinir', release_to_reset:'Solte para redefinir', refreshing:'Redefinindo…',
+    new_tab:'Nova',
+    settings_theme:'Tema', settings_follow_system:'Seguir tema do sistema',
+    settings_light:'Modo claro', settings_dark:'Modo escuro',
+    settings_item_height:'Altura da linha dos itens', settings_item_height_sub:'Arraste o controle para ajustar a altura',
+    settings_first_only:'Aplicar apenas ao primeiro item', settings_first_only_sub:'Apenas o próximo item pendente usa esta altura',
+    settings_language:'Idioma', settings_language_sub:'Escolher idioma da interface',
+    settings_about:'Sobre',
+    follow_system:'Sistema',
+    mit_license_title:'Código aberto sob a licença MIT',
+    oss_license_title:'Licenças de código aberto',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Sem resultados', search_placeholder:'Buscar itens',
+    select_icon:'Escolher ícone', icon_search:'Buscar ícones',
+    auto_select:'Auto',
+    add_first_item:'Adicionar item',
+    items_count:'itens',
+    completed_count:'concluídos',
+    back:'Voltar', support_title:'Compre um café para a Sue',
+    support_sub:'Se este aplicativo te ajuda, apoie-me! Obrigado!',
+    icon_cat_daily:'Diário', icon_cat_travel:'Viagem', icon_cat_shopping:'Compras',
+    icon_cat_sports:'Esportes', icon_cat_leisure:'Lazer', icon_cat_food:'Comida e bebida',
+    icon_cat_health:'Saúde', icon_cat_work:'Trabalho', icon_cat_other:'Outros',
+  },
+};
+const LANGUAGES = [
+  {code:'auto', name:'跟随系统', nativeName:'跟随系统 / Follow System'},
+  {code:'zh-CN', name:'简体中文', nativeName:'简体中文'},
+  {code:'zh-TW', name:'繁體中文', nativeName:'繁體中文'},
+  {code:'en', name:'English', nativeName:'English'},
+  {code:'ja', name:'日本語', nativeName:'日本語'},
+  {code:'ko', name:'한국어', nativeName:'한국어'},
+  {code:'fr', name:'Français', nativeName:'Français'},
+  {code:'de', name:'Deutsch', nativeName:'Deutsch'},
+  {code:'es', name:'Español', nativeName:'Español'},
+  {code:'ru', name:'Русский', nativeName:'Русский'},
+  {code:'pt', name:'Português', nativeName:'Português'},
+];
+
+/* ---------- MIT 许可证原文 ---------- */
+const MIT_LICENSE_TEXT = `MIT License
+
+Copyright (c) 2026 Crazy Sue
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`;
+
+/* ---------- 开源组件许可 ---------- */
+const OSS_LICENSES = [
+  {name:'Material Symbols Rounded (Google)', license:'Apache License 2.0', text:`Apache License 2.0
+
+Copyright 2022 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.`},
+  {name:'Material Design 3 (Google)', license:'Apache License 2.0', text:'Material Design 3 is a design system published by Google, licensed under the Apache License 2.0. This application implements its UI and interaction patterns in accordance with the MD3 design specification.'},
+  {name:'HarmonyOS Sans SC (Huawei)', license:'HarmonyOS Sans Font License', text:`HarmonyOS Sans SC is a typeface developed by Huawei.
+
+According to the font license published by Huawei, the HarmonyOS Sans font is free for both commercial and personal use.
+
+This application embeds the HarmonyOS Sans SC font files to ensure consistent typography across devices.`},
+];
+
+/* ---------- 默认设置 ---------- */
+const DEFAULT_SETTINGS = {
+  theme:'auto',          // auto | light | dark
+  itemHeight:64,         // 单条高度（px）
+  firstOnly:false,       // 仅首条应用高度
+  language:'auto',       // auto | 语言代码
+};
+const ITEM_HEIGHT_MIN = 56;
+const ITEM_HEIGHT_MAX = 120;
+
+/* ---------- 数据模型 ---------- */
+/*
+  state = {
+    checklists: [
+      { id, name, icon, resetHours, items:[{id, text, icon, done}], completedAt, createdAt }
+    ],
+    activeChecklistId: id | null,
+    settings: {...DEFAULT_SETTINGS}
+  }
+*/
+
+/* ---------- 状态管理 ---------- */
+const Store = {
+  key:'checklist_app_state_v1',
+  state:null,
+  listeners:[],
+  load(){
+    try{
+      const raw = localStorage.getItem(this.key);
+      if(raw){
+        this.state = JSON.parse(raw);
+        // 合并默认设置（防止旧版本字段缺失）
+        this.state.settings = Object.assign({...DEFAULT_SETTINGS}, this.state.settings||{});
+      }else{
+        this.state = {checklists:[], activeChecklistId:null, settings:{...DEFAULT_SETTINGS}};
+      }
+    }catch(e){
+      this.state = {checklists:[], activeChecklistId:null, settings:{...DEFAULT_SETTINGS}};
+    }
+    // 数据校验
+    if(!Array.isArray(this.state.checklists)) this.state.checklists = [];
+    if(!this.state.settings) this.state.settings = {...DEFAULT_SETTINGS};
+  },
+  save(){
+    try{ localStorage.setItem(this.key, JSON.stringify(this.state)); }catch(e){}
+  },
+  subscribe(fn){ this.listeners.push(fn); },
+  emit(){ this.listeners.forEach(fn=>fn(this.state)); },
+  set(partial){ Object.assign(this.state, partial); this.save(); this.emit(); },
+};
+
+/* ---------- 工具函数 ---------- */
+const uid = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const $ = (sel,root=document)=> root.querySelector(sel);
+const $$ = (sel,root=document)=> Array.from(root.querySelectorAll(sel));
+function el(tag, props={}, children=[]){
+  const e = document.createElement(tag);
+  // 布尔属性：值为 false 时不设置（HTML 规范中属性存在即为真）
+  const BOOL_ATTRS = ['disabled','checked','selected','readonly','multiple','hidden','autoplay','controls','loop','muted','open','required'];
+  Object.entries(props).forEach(([k,v])=>{
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else if(k==='text') e.textContent=v;
+    else if(k.startsWith('on')&&typeof v==='function') e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if(k==='dataset') Object.entries(v).forEach(([dk,dv])=>e.dataset[dk]=dv);
+    else if(BOOL_ATTRS.includes(k)){
+      if(v) e.setAttribute(k,''); else e.removeAttribute(k);
+    }
+    else if(v!==null&&v!==undefined&&v!==false) e.setAttribute(k,v);
+  });
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    if(typeof c==='string') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+/* ---------- MD3 水滴效果（Ripple） ----------
+   为可交互元素附加点击水滴动画。元素需有 position:relative 和 overflow:hidden。
+   水滴会被父元素的 border-radius 裁剪，确保圆角区域不溢出。 */
+function attachRipple(el){
+  el._rippleAttached = true;
+  el.addEventListener('pointerdown', e=>{
+    // 仅对主按键响应
+    if(e.button!==0 && e.pointerType==='mouse') return;
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size/2;
+    const y = e.clientY - rect.top - size/2;
+    const ripple = document.createElement('span');
+    ripple.className = 'md-ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.width = ripple.style.height = size + 'px';
+    el.appendChild(ripple);
+    // 主动画结束后移除
+    const cleanup = ()=>{ ripple.remove(); el.removeEventListener('pointerup', cleanup); el.removeEventListener('pointerleave', cleanup); };
+    el.addEventListener('pointerup', cleanup);
+    el.addEventListener('pointerleave', cleanup);
+    // 兜底清理
+    setTimeout(()=>ripple.remove(), 700);
+  });
+}
+/* 全局水波效果委托：自动给匹配选择器的元素添加 ripple，无需手动 attach。
+   匹配的元素需要 position:relative + overflow:hidden 以裁剪圆角。 */
+const RIPPLE_SELECTOR = '.btn,.seg-btn,.chip,.settings-item.clickable,.dropdown-header.clickable,.lang-item,.icon-option,.icon-circle-btn,.nav-tab .tab-icon-pill,.icon-btn,.fab,.ci-check,.check-item,.fi-icon-btn,.fi-remove';
+function initGlobalRipple(){
+  document.addEventListener('pointerdown', e=>{
+    if(e.button!==0 && e.pointerType==='mouse') return;
+    const target = e.target.closest(RIPPLE_SELECTOR);
+    if(!target) return;
+    // 已通过 attachRipple 处理的元素跳过（避免重复）
+    if(target._rippleAttached) return;
+    const rect = target.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size/2;
+    const y = e.clientY - rect.top - size/2;
+    const ripple = document.createElement('span');
+    ripple.className = 'md-ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.width = ripple.style.height = size + 'px';
+    target.appendChild(ripple);
+    setTimeout(()=>ripple.remove(), 550);
+  }, {capture:true});
+}
+function autoIconFor(text){
+  if(!text) return 'checklist';
+  const lower = text.toLowerCase();
+  for(const [pattern, icon] of AUTO_ICON_KEYWORDS){
+    const parts = pattern.split('|');
+    for(const p of parts){
+      if(lower.includes(p.toLowerCase())) return icon;
+    }
+  }
+  return 'checklist';
+}
+function resolveIcon(iconName, fallbackText){
+  // 返回实际图标名：若用户提供则用，否则自动选
+  if(iconName && iconName!=='auto' && ICON_LIST.includes(iconName)) return iconName;
+  return autoIconFor(fallbackText||'');
+}
+
+/* ---------- i18n 取词 ---------- */
+function getLang(){
+  const s = Store.state.settings.language;
+  if(s==='auto'){
+    const nav = navigator.language || 'zh-CN';
+    // 精确匹配
+    if(I18N[nav]) return nav;
+    // 前缀匹配
+    const prefix = nav.split('-')[0];
+    if(I18N[prefix]) return prefix;
+    return 'zh-CN';
+  }
+  return I18N[s] ? s : 'zh-CN';
+}
+function t(key){
+  const lang = getLang();
+  return (I18N[lang] && I18N[lang][key]) || I18N['zh-CN'][key] || key;
+}
+
+/* ---------- 主题应用 ---------- */
+function applyTheme(){
+  const s = Store.state.settings.theme;
+  let dark;
+  if(s==='auto'){
+    // 多重检测：matchMedia + color-scheme CSS 属性 + Android WebView 兼容
+    dark = false;
+    if(window.matchMedia){
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      dark = mq.matches;
+    }
+    // Android WebView 回退：检查 color-scheme CSS 属性
+    if(!dark){
+      const cs = getComputedStyle(document.documentElement).colorScheme || getComputedStyle(document.body).colorScheme;
+      if(cs && cs.indexOf('dark')>=0) dark = true;
+    }
+    // 最终回退：检查背景色亮度
+    if(!dark){
+      const bg = getComputedStyle(document.body).backgroundColor;
+      const m = bg.match(/\d+/g);
+      if(m && m.length>=3){
+        const lum = (0.299*+m[0] + 0.587*+m[1] + 0.114*+m[2]);
+        dark = lum < 128;
+      }
+    }
+  }else{
+    dark = s==='dark';
+  }
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  const meta = document.querySelector('meta[name=theme-color]');
+  if(meta) meta.content = dark?'#131318':'#FCF8FF';
+}
+
+/* ============================================================
+   渲染层
+   ============================================================ */
+
+/* ---------- 顶栏渲染 ---------- */
+function renderTopbar(pageType){
+  const titleText = $('#topbarTitleText');
+  const titleSuffix = $('#topbarTitleSuffix');
+  const btnConfig = $('#btnConfig');
+  const btnSearch = $('#btnSearch');
+  const btnSettings = $('#btnSettings');
+
+  if(pageType==='home'){
+    const cl = getActiveChecklist();
+    if(cl){
+      titleText.textContent = cl.name;
+      titleSuffix.textContent = t('app_suffix');
+    }else{
+      titleText.textContent = t('app_name');
+      titleSuffix.textContent = '';
+    }
+    btnConfig.style.display='';
+    btnSearch.style.display='';
+    btnSettings.style.display='';
+    btnSettings.querySelector('.icon').textContent='settings';
+    btnSettings.setAttribute('aria-label', t('settings'));
+    btnSettings.classList.remove('is-active');
+    btnConfig.querySelector('.icon').textContent='menu';
+    btnConfig.setAttribute('aria-label', t('config'));
+    btnSearch.querySelector('.icon').textContent='search';
+    btnSearch.setAttribute('aria-label', t('search'));
+    // 配置按钮在有检查单时可用
+    btnConfig.style.opacity = cl? '1':'.38';
+    btnConfig.style.pointerEvents = cl? 'auto':'none';
+    btnSearch.style.opacity = cl? '1':'.38';
+    btnSearch.style.pointerEvents = cl? 'auto':'none';
+  }else if(pageType==='form'){
+    const editing = Store.state._editing;
+    titleText.textContent = editing? t('edit_checklist') : t('new_checklist');
+    titleSuffix.textContent='';
+    btnConfig.style.display='none';
+    btnSearch.style.display='none';
+    btnSettings.style.display='';
+    if(editing){
+      // 编辑检查单页：顶栏用返回按钮（左箭头）替代设置按钮，点击返回检查单页面
+      btnSettings.querySelector('.icon').textContent='arrow_back';
+      btnSettings.setAttribute('aria-label', t('back'));
+      btnSettings.classList.remove('is-active');
+    }else{
+      // 新建检查单页：保留设置按钮
+      btnSettings.querySelector('.icon').textContent='settings';
+      btnSettings.setAttribute('aria-label', t('settings'));
+      btnSettings.classList.add('is-active');
+    }
+  }else if(pageType==='settings'){
+    titleText.textContent = t('settings');
+    titleSuffix.textContent='';
+    btnConfig.style.display='none';
+    btnSearch.style.display='none';
+    // 设置页顶栏改为返回按钮（左箭头），返回进入设置前的页面
+    btnSettings.style.display='';
+    btnSettings.querySelector('.icon').textContent='arrow_back';
+    btnSettings.setAttribute('aria-label', t('back'));
+    btnSettings.classList.remove('is-active');
+  }
+  // 重置搜索栏状态
+  if(pageType!=='home'){
+    closeSearch(true);
+  }
+}
+
+/* ---------- 获取当前活动检查单 ---------- */
+function getActiveChecklist(){
+  const id = Store.state.activeChecklistId;
+  if(!id) return null;
+  return Store.state.checklists.find(c=>c.id===id) || null;
+}
+
+/* ---------- 主页面渲染 ---------- */
+let currentHomeView = 'list'; // list | empty | alldone
+
+function renderHome(){
+  const container = $('#listContainer');
+  const resetFab = $('#btnResetList');
+  const cl = getActiveChecklist();
+
+  // 清空（同时取消全部完成态的高度撑满，恢复普通列表布局）
+  container.innerHTML='';
+  container.style.height='';
+
+  if(!cl){
+    // 无检查单 - 自动跳到新建页面，不显示空状态
+    resetFab.classList.remove('visible');
+    if(currentPage==='home'){
+      openForm(null);
+    }
+    return;
+  }
+
+  const pendingItems = cl.items.filter(i=>!i.done);
+  if(cl.items.length===0 || pendingItems.length===0){
+    // 全部完成 - 显示重置 FAB
+    showHomeView('alldone');
+    resetFab.classList.add('visible');
+    return;
+  }
+
+  showHomeView('list');
+  resetFab.classList.remove('visible');
+
+  const settings = Store.state.settings;
+  // FLIP：记录旧位置
+  const oldRects = new Map();
+  $$('.check-item', container).forEach(node=>{
+    oldRects.set(node.dataset.id, node.getBoundingClientRect());
+  });
+
+  // 渲染待办项
+  pendingItems.forEach((item, idx)=>{
+    const isFirst = idx===0;
+    const useCustom = isFirst || !settings.firstOnly;
+    const height = useCustom? settings.itemHeight : 64;
+    const iconName = resolveIcon(item.icon, item.text);
+
+    const node = el('div', {class:'check-item', dataset:{id:item.id}});
+    node.style.height = height+'px';
+
+    const iconEl = el('span', {class:'icon ci-icon'}, iconName);
+    const textEl = el('div', {class:'ci-text'}, item.text);
+    const checkBtn = el('button', {class:'ci-check', 'aria-label':t('confirm'), onclick:(e)=>{
+      e.stopPropagation();
+      completeItem(cl.id, item.id);
+    }});
+    checkBtn.appendChild(el('span', {class:'icon ci-check-icon'}, 'check'));
+    // 附加水滴效果
+    attachRipple(checkBtn);
+
+    node.appendChild(iconEl);
+    node.appendChild(textEl);
+    node.appendChild(checkBtn);
+    container.appendChild(node);
+  });
+
+  // FLIP 补位动画
+  requestAnimationFrame(()=>{
+    $$('.check-item', container).forEach(node=>{
+      const old = oldRects.get(node.dataset.id);
+      if(old){
+        const neW = node.getBoundingClientRect();
+        const dy = old.top - neW.top;
+        if(Math.abs(dy)>1){
+          node.style.transform = `translateY(${dy}px)`;
+          node.style.transition='none';
+          requestAnimationFrame(()=>{
+            node.style.transition='';
+            node.style.transform='';
+          });
+        }
+      }
+    });
+  });
+}
+
+function showHomeView(view){
+  const container = $('#listContainer');
+  // 若视图类型相同，仅更新文本（用于语言切换时刷新文案）
+  if(view===currentHomeView){
+    if(view==='alldone'){
+      const dt = $('#allDoneView .done-title'), ds = $('#allDoneView .done-sub');
+      if(dt) dt.textContent = t('all_done_title');
+      if(ds) ds.textContent = t('all_done_sub');
+    }
+    return;
+  }
+  currentHomeView = view;
+
+  // 移除旧的完成视图
+  const oldDone = $('#allDoneView');
+  if(oldDone){ oldDone.classList.remove('show'); setTimeout(()=>oldDone.remove(), 400); }
+
+  if(view==='alldone'){
+    const v = el('div', {class:'all-done', id:'allDoneView'});
+    v.appendChild(el('span', {class:'icon big-icon'}, 'coffee'));
+    v.appendChild(el('div', {class:'done-title'}, t('all_done_title')));
+    v.appendChild(el('div', {class:'done-sub'}, t('all_done_sub')));
+    // 咖啡视图放入 listContainer 内，使其参与检查单切换的左右翻动动画；
+    // 同时让容器撑满列表区，保证咖啡页垂直居中
+    container.style.height='100%';
+    container.appendChild(v);
+    requestAnimationFrame(()=>v.classList.add('show'));
+  }
+}
+
+/* ---------- 完成检查项（带动画） ----------
+   彻底重写：直接操作 DOM，不重新渲染整个列表。
+   流程：1.勾选填充 → 2.右滑淡出+高度收缩 → 3.移除节点 → 4.新的第一项布局过渡
+   这样下方项会随高度收缩自然上移，无需 FLIP，不会瞬移。 */
+function completeItem(clId, itemId){
+  const cl = Store.state.checklists.find(c=>c.id===clId);
+  if(!cl) return;
+  const item = cl.items.find(i=>i.id===itemId);
+  if(!item) return;
+
+  const node = $(`.check-item[data-id="${itemId}"]`);
+  if(node){
+    // 1. 勾选填充动画（200ms）
+    node.classList.add('completed');
+    setTimeout(()=>{
+      // 2. 移除动画：右滑淡出 + 高度收缩（CSS transition 自然带动下方项上移）
+      node.classList.add('removing');
+      // 3. 等待移除动画完成
+      setTimeout(()=>{
+        // 更新数据
+        item.done = true;
+        const allDone = cl.items.every(i=>i.done);
+        if(allDone) cl.completedAt = Date.now();
+        Store.save();
+        // 从 DOM 移除已完成节点
+        node.remove();
+        renderBottombar();
+        checkAutoReset();
+        // 4. 如果还有待办项，新的第一项高度可能需要更新
+        const pendingItems = cl.items.filter(i=>!i.done);
+        if(pendingItems.length === 0){
+          // 全部完成：显示咖啡态
+          showHomeView('alldone');
+          $('#btnResetList').classList.add('visible');
+        }else{
+          // 更新新的第一项的高度
+          updateFirstItemHeight();
+        }
+      }, 400);
+    }, 200);
+  }else{
+    item.done = true;
+    const allDone = cl.items.every(i=>i.done);
+    if(allDone) cl.completedAt = Date.now();
+    Store.save();
+    renderHome();
+    renderBottombar();
+  }
+}
+
+/* 更新第一项的高度（firstOnly 模式下，新的第一项使用自定义高度） */
+function updateFirstItemHeight(){
+  const settings = Store.state.settings;
+  const container = $('#listContainer');
+  const firstNode = container.querySelector('.check-item');
+  if(!firstNode) return;
+  firstNode.style.height = settings.itemHeight + 'px';
+}
+
+
+/* ---------- 重置检查单 ---------- */
+function resetChecklist(clId){
+  const cl = Store.state.checklists.find(c=>c.id===clId);
+  if(!cl) return;
+  cl.items.forEach(i=>i.done=false);
+  cl.completedAt = null;
+  Store.save();
+  // 咖啡页一边向下移动一边淡出，动画结束后再渲染列表（需求：不能突然消失）
+  const doneView = $('#allDoneView');
+  if(doneView){
+    doneView.classList.remove('show');
+    doneView.classList.add('leaving');
+    $('#btnResetList').classList.remove('visible');
+    setTimeout(()=>{
+      renderHome();
+      renderBottombar();
+      showToast(t('reset_toast'));
+    }, 380);
+  }else{
+    renderHome();
+    renderBottombar();
+    showToast(t('reset_toast'));
+  }
+}
+
+/* ---------- 自动重置检查 ---------- */
+function checkAutoReset(){
+  const now = Date.now();
+  let changed = false;
+  Store.state.checklists.forEach(cl=>{
+    if(cl.completedAt && cl.resetHours && cl.resetHours>0){
+      const elapsed = (now - cl.completedAt)/3600000;
+      if(elapsed >= cl.resetHours){
+        cl.items.forEach(i=>i.done=false);
+        cl.completedAt = null;
+        changed = true;
+      }
+    }
+  });
+  if(changed){ Store.save(); renderHome(); renderBottombar(); }
+}
+// 每分钟检查一次自动重置
+setInterval(checkAutoReset, 60000);
+
+/* ---------- 底栏渲染 ---------- */
+function renderBottombar(newTabId){
+  const scroll = $('#bottombarScroll');
+  scroll.innerHTML='';
+
+  // 检查单标签高亮：主页时高亮活动检查单，编辑页时高亮正在编辑的检查单
+  Store.state.checklists.forEach(cl=>{
+    const active = (currentPage==='home' && cl.id===Store.state.activeChecklistId) ||
+                   (currentPage==='form' && Store.state._editing===cl.id);
+    const iconName = resolveIcon(cl.icon, cl.name);
+    // 新增的标签应用入场动画
+    const isNew = cl.id===newTabId;
+    const tab = el('button', {class:'nav-tab'+(active?' is-active':'')+(isNew?' tab-enter':''), dataset:{id:cl.id}, onclick:()=>{
+      if(Store.state._editing===cl.id){
+        // 正在编辑该检查单：从主页点它的标签回到编辑页（不重新加载，保留未保存内容）
+        if(currentPage==='home') showEditPage();
+        return;
+      }
+      switchChecklist(cl.id);
+    }});
+    const pill = el('div', {class:'tab-icon-pill'}, el('span', {class:'icon'}, iconName));
+    attachRipple(pill);
+    const label = el('div', {class:'tab-label'}, cl.name || t('checklist'));
+    tab.appendChild(pill);
+    tab.appendChild(label);
+    scroll.appendChild(tab);
+    // 动画结束后移除入场类
+    if(isNew){
+      tab.addEventListener('animationend', ()=>tab.classList.remove('tab-enter'), {once:true});
+    }
+  });
+
+  // 新建标签 —— 在表单页（新建模式）时高亮
+  const newTabActive = currentPage==='form' && !Store.state._editing;
+  const newTab = el('button', {class:'nav-tab'+(newTabActive?' is-active':''), id:'newTab', onclick:()=>openForm(null)});
+  const newPill = el('div', {class:'tab-icon-pill'}, el('span', {class:'icon'}, 'add'));
+  attachRipple(newPill);
+  newTab.appendChild(newPill);
+  newTab.appendChild(el('div', {class:'tab-label'}, t('new_tab')));
+  scroll.appendChild(newTab);
+
+  // 滚动到活动标签
+  setTimeout(()=>{
+    const active = $('.nav-tab.is-active', scroll);
+    if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  }, 50);
+}
+
+/* 切换动画 token：用于中断之前的切换动画 */
+let switchAnimToken = 0;
+function switchChecklist(clId){
+  const oldId = Store.state.activeChecklistId;
+  if(oldId === clId && currentPage === 'home') return;
+  const lists = Store.state.checklists;
+  const oldIdx = lists.findIndex(c=>c.id===oldId);
+  const newIdx = lists.findIndex(c=>c.id===clId);
+  const goRight = newIdx > oldIdx;
+
+  // 中断之前的切换动画
+  switchAnimToken++;
+  const myToken = switchAnimToken;
+
+  Store.set({activeChecklistId:clId});
+  if(currentPage!=='home'){
+    switchPage('home');
+  }
+  renderTopbar('home');
+  renderBottombar();
+  closeSearch(true);
+
+  // 丝滑左右滑动切换：旧内容滑出 → 渲染新内容 → 新内容滑入
+  const container = $('#listContainer');
+  if(container && oldId !== clId){
+    const dir = goRight ? -1 : 1;
+    const enterDir = goRight ? 1 : -1;
+    // 1. 旧内容滑出（150ms加速）
+    container.style.transition = 'transform 150ms cubic-bezier(.3,0,.8,.15), opacity 120ms cubic-bezier(.3,0,.8,.15)';
+    container.style.transform = `translateX(${dir*40}px)`;
+    container.style.opacity = '0';
+    setTimeout(()=>{
+      if(myToken !== switchAnimToken) return; // 被中断
+      // 2. 渲染新内容
+      renderHome();
+      // 3. 从反方向无过渡定位
+      container.style.transition = 'none';
+      container.style.transform = `translateX(${enterDir*40}px)`;
+      container.style.opacity = '0';
+      // 4. 滑入（300ms减速）
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(myToken !== switchAnimToken) return; // 被中断
+        container.style.transition = 'transform 300ms cubic-bezier(.05,.7,.1,1), opacity 250ms cubic-bezier(.05,.7,.1,1)';
+        container.style.transform = 'translateX(0)';
+        container.style.opacity = '1';
+        setTimeout(()=>{
+          if(myToken !== switchAnimToken) return;
+          container.style.transition = '';
+          container.style.transform = '';
+          container.style.opacity = '';
+        }, 320);
+      }));
+    }, 150);
+  }else{
+    renderHome();
+  }
+}
+
+/* ---------- 新建/编辑表单 ---------- */
+let formState = {name:'', icon:'auto', resetHours:0, items:[{id:uid(), text:'', icon:'auto'}]};
+
+/* 从主页重新打开正在编辑的检查单的编辑页（保留 formState 未保存内容） */
+function showEditPage(){
+  switchPage('form');
+  renderTopbar('form');
+  renderBottombar();
+}
+
+function openForm(checklistId){
+  // checklistId 为 null 表示新建
+  Store.state._editing = checklistId;
+  if(checklistId){
+    const cl = Store.state.checklists.find(c=>c.id===checklistId);
+    formState = {
+      name:cl.name,
+      icon:cl.icon||'auto',
+      resetHours:cl.resetHours||0,
+      items: cl.items.map(i=>({id:i.id, text:i.text, icon:i.icon||'auto', done:i.done}))
+    };
+  }else{
+    formState = {name:'', icon:'auto', resetHours:0, items:[{id:uid(), text:'', icon:'auto'}]};
+  }
+  if(currentPage === 'form'){
+    // 已在表单页（如从编辑切到新建）：内容向左滑出 → 渲染新内容 → 从右侧滑入（翻页感）
+    const content = $('#formContent');
+    content.style.transition = 'transform 150ms cubic-bezier(.3,0,.8,.15), opacity 120ms cubic-bezier(.3,0,.8,.15)';
+    content.style.transform = 'translateX(-48px)';
+    content.style.opacity = '0';
+    setTimeout(()=>{
+      renderForm();
+      renderTopbar('form');
+      renderBottombar();
+      content.style.transition = 'none';
+      content.style.transform = 'translateX(48px)';
+      content.style.opacity = '0';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        content.style.transition = 'transform 280ms cubic-bezier(.05,.7,.1,1), opacity 240ms cubic-bezier(.05,.7,.1,1)';
+        content.style.transform = 'translateX(0)';
+        content.style.opacity = '1';
+        setTimeout(()=>{
+          content.style.transition = '';
+          content.style.transform = '';
+          content.style.opacity = '';
+        }, 300);
+      }));
+    }, 150);
+  }else{
+    renderForm();
+    switchPage('form');
+    renderTopbar('form');
+    renderBottombar();
+  }
+}
+
+/* 渲染检查单图标选择行（6常用 + 预览/更多） */
+const CHECKLIST_COMMON_ICONS = ['checklist','home','work','school','shopping_bag','directions_car','flight','restaurant','local_cafe','fitness_center'];
+function renderChecklistIconRow(){
+  const row = el('div', {class:'icon-circle-row', id:'checklistIconRow'});
+  // 计算当前实际显示的图标
+  const isAuto = formState.icon==='auto';
+  const autoIcon = autoIconFor(formState.name);
+  const curIcon = isAuto ? autoIcon : formState.icon;
+  // 判断自动图标是否在常用列表中
+  const autoInCommon = CHECKLIST_COMMON_ICONS.includes(autoIcon);
+
+  CHECKLIST_COMMON_ICONS.forEach(ic=>{
+    // 选中状态：手动选了该图标，或 auto 模式下该图标恰好是自动图标
+    const sel = (!isAuto && formState.icon===ic) || (isAuto && autoInCommon && ic===autoIcon);
+    const btn = el('button', {class:'icon-circle-btn'+(sel?' selected':''), onclick:()=>{
+      // 点击已选中的图标时取消选择（回到 auto）；否则选择该图标
+      if(formState.icon===ic){
+        formState.icon = 'auto';
+      }else{
+        formState.icon = ic;
+      }
+      refreshChecklistIconRow();
+    }});
+    btn.appendChild(el('span', {class:'icon'}, ic));
+    attachRipple(btn);
+    row.appendChild(btn);
+  });
+  // 更多按钮：打开完整图标选择弹窗
+  const moreBtn = el('button', {class:'icon-circle-btn', onclick:()=>openIconPicker('checklist')});
+  moreBtn.appendChild(el('span', {class:'icon'}, 'more_horiz'));
+  attachRipple(moreBtn);
+  row.appendChild(moreBtn);
+  // 如果 auto 模式且自动图标不在常用列表中，在更多按钮前插入高亮预览按钮
+  if(isAuto && !autoInCommon){
+    const previewBtn = el('button', {class:'icon-circle-btn selected preview-btn', onclick:()=>openIconPicker('checklist')});
+    previewBtn.appendChild(el('span', {class:'icon'}, autoIcon));
+    attachRipple(previewBtn);
+    row.insertBefore(previewBtn, moreBtn);
+  }
+  // 如果手动选了非常用图标，也显示预览按钮
+  if(!isAuto && !CHECKLIST_COMMON_ICONS.includes(formState.icon)){
+    const previewBtn = el('button', {class:'icon-circle-btn selected preview-btn', onclick:()=>{
+      // 点击预览按钮取消选择（回到 auto）
+      formState.icon = 'auto';
+      refreshChecklistIconRow();
+    }});
+    previewBtn.appendChild(el('span', {class:'icon'}, formState.icon));
+    attachRipple(previewBtn);
+    row.insertBefore(previewBtn, moreBtn);
+  }
+  return row;
+}
+/* 自动图标切换动画：原图标放大 → 换成新图标 → 缩回（MD3 强调曲线） */
+function animateIconSwap(iconEl, newGlyph){
+  if(!iconEl || iconEl.textContent===newGlyph) return;
+  const out = iconEl.animate([
+    {transform:'scale(1)', opacity:1},
+    {transform:'scale(1.45)', opacity:.4}
+  ], {duration:130, easing:'cubic-bezier(.3,0,.8,.15)', fill:'forwards'});
+  out.onfinish = ()=>{
+    iconEl.textContent = newGlyph;
+    iconEl.animate([
+      {transform:'scale(1.45)', opacity:.4},
+      {transform:'scale(1)', opacity:1}
+    ], {duration:190, easing:'cubic-bezier(.05,.7,.1,1)'});
+  };
+}
+/* 刷新检查单图标行（不重新渲染整个表单，保持输入焦点） */
+function refreshChecklistIconRow(){
+  const oldRow = $('#checklistIconRow');
+  if(!oldRow) return;
+  const newRow = renderChecklistIconRow();
+  const oldIconEl = oldRow.querySelector('.icon-circle-btn.selected .icon');
+  const newIconEl = newRow.querySelector('.icon-circle-btn.selected .icon');
+  // 自动图标变化时播放放大→替换→缩回动画
+  if(oldIconEl && newIconEl && oldIconEl.textContent !== newIconEl.textContent){
+    oldRow.style.pointerEvents = 'none';
+    const out = oldIconEl.animate([
+      {transform:'scale(1)', opacity:1},
+      {transform:'scale(1.45)', opacity:.4}
+    ], {duration:130, easing:'cubic-bezier(.3,0,.8,.15)', fill:'forwards'});
+    out.onfinish = ()=>{
+      oldRow.replaceWith(newRow);
+      newIconEl.animate([
+        {transform:'scale(1.45)', opacity:.4},
+        {transform:'scale(1)', opacity:1}
+      ], {duration:190, easing:'cubic-bezier(.05,.7,.1,1)'});
+    };
+  }else{
+    oldRow.replaceWith(newRow);
+  }
+}
+
+function renderForm(){
+  const content = $('#formContent');
+  const editing = Store.state._editing;
+
+  content.innerHTML='';
+  // 表单内容区 + 底部按钮区（按钮跟随滚动）
+  const formBody = el('div', {class:'form-body'});
+
+  // 检查单图标选择 —— 7个圆按钮（6常用图标 + 更多按钮）
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('checklist_icon')),
+    renderChecklistIconRow()
+  ]));
+
+  // 名称输入
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('checklist_name')),
+    el('div', {class:'text-field'}, [
+      (()=>{
+        const input = el('input', {type:'text', value:formState.name, placeholder:t('checklist_name')});
+        input.addEventListener('input', e=>{
+          formState.name = e.target.value;
+          // 若检查单图标为自动，即时更新图标行预览（不重新渲染整个表单，保持焦点）
+          if(formState.icon==='auto'){
+            refreshChecklistIconRow();
+          }
+        });
+        return input;
+      })()
+    ])
+  ]));
+
+  // 重置时间 —— 下拉菜单选择（需求3）
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('reset_time')),
+    (()=>{
+      const dd = el('div', {class:'dropdown form-dropdown'});
+      const header = el('div', {class:'dropdown-header clickable', onclick:()=>{
+        const willOpen = !dd.classList.contains('open');
+        const body = dd.querySelector('.dropdown-body');
+        if(willOpen){
+          dd.classList.add('open');
+          body.style.maxHeight = body.scrollHeight + 'px';
+        }else{
+          body.style.maxHeight = body.scrollHeight + 'px';
+          void body.offsetHeight;
+          body.style.maxHeight = '0px';
+          dd.classList.remove('open');
+        }
+      }});
+      const curText = formState.resetHours>0 ? `${formState.resetHours} ${t('hours')}` : t('never_reset');
+      header.appendChild(el('span', {class:'icon dh-icon'}, 'schedule'));
+      header.appendChild(el('span', {class:'dh-title'}, curText));
+      header.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+      // 不使用 attachRipple：与设置页 MIT/OSS 下拉一致，统一走 initGlobalRipple 委托，
+      // 保证水滴完整播放且被 .dropdown 的 overflow:hidden 裁剪
+      dd.appendChild(header);
+      const body = el('div', {class:'dropdown-body'});
+      const inner = el('div', {class:'dropdown-body-inner'});
+      const options = [0,1,2,4,6,8,12,24,48,72];
+      options.forEach(h=>{
+        const sel = formState.resetHours===h;
+        const opt = el('div', {class:'lang-item'+(sel?' selected':''), onclick:()=>{
+          formState.resetHours=h;
+          // 更新 header 文本（即时反馈）
+          header.querySelector('.dh-title').textContent = h===0 ? t('never_reset') : `${h} ${t('hours')}`;
+          // 延迟收起，让水波效果先播放
+          setTimeout(()=>{
+            const bodyEl = dd.querySelector('.dropdown-body');
+            bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+            void bodyEl.offsetHeight;
+            bodyEl.style.maxHeight = '0px';
+            dd.classList.remove('open');
+            // 收起动画结束后重新渲染（更新选项选中状态）
+            setTimeout(()=>renderForm(), 400);
+          }, 100);
+        }});
+        opt.appendChild(el('span', {class:'icon si-icon', style:sel?'color:var(--md-primary)':''}, sel?'check':'schedule'));
+        opt.appendChild(el('div', {class:'si-text'}, el('div', {class:'si-title'}, h===0? t('never_reset') : `${h} ${t('hours')}`)));
+        inner.appendChild(opt);
+      });
+      body.appendChild(inner);
+      dd.appendChild(body);
+      return dd;
+    })()
+  ]));
+
+  // 检查项
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('add_check_item')),
+    (()=>{
+      const wrap = el('div', {id:'formItemsWrap'});
+      renderFormItems(wrap);
+      return wrap;
+    })()
+  ]));
+
+  content.appendChild(formBody);
+
+  // 按钮 —— 嵌入 formContent 末尾，跟随滚动
+  const actions = el('div', {class:'form-actions', id:'formActions'});
+  if(editing){
+    actions.appendChild(el('button', {class:'btn btn-large btn-error', id:'btnDelete', onclick:handleDelete}, [
+      el('span', {class:'icon'}, 'delete'), t('delete_checklist')
+    ]));
+    actions.appendChild(el('button', {class:'btn btn-large', onclick:handleSave}, [
+      el('span', {class:'icon'}, 'save'), t('save_changes')
+    ]));
+    // 导出按钮（编辑模式，第二行）
+    const exportRow = el('div', {class:'form-actions', style:'padding-top:0;'});
+    exportRow.appendChild(el('button', {class:'btn btn-large btn-outlined', onclick:handleExport}, [
+      el('span', {class:'icon'}, 'file_download'), t('export_checklist')
+    ]));
+    content.appendChild(actions);
+    content.appendChild(exportRow);
+  }else{
+    actions.appendChild(el('button', {class:'btn btn-large', onclick:handleConfirm}, [
+      el('span', {class:'icon'}, 'check'), t('confirm')
+    ]));
+    // 导入按钮（新建模式，确认按钮上方）
+    const importRow = el('div', {class:'form-actions', style:'padding-top:0;'});
+    importRow.appendChild(el('button', {class:'btn btn-large btn-outlined', onclick:handleImport}, [
+      el('span', {class:'icon'}, 'file_upload'), t('import_checklist')
+    ]));
+    content.appendChild(importRow);
+    content.appendChild(actions);
+  }
+}
+
+function renderFormItems(wrap){
+  wrap.innerHTML='';
+  // 确保最后总有一个空行供继续输入
+  const last = formState.items[formState.items.length-1];
+  if(!last || last.text.trim()) {
+    formState.items.push({id:uid(), text:'', icon:'auto'});
+  }
+  formState.items.forEach((item, idx)=>{
+    const hasContent = item.text.trim().length>0;
+    const fi = el('div', {class:'form-item'+(hasContent?' has-content':''), dataset:{id:item.id}});
+    // 图标按钮
+    const iconBtn = el('button', {class:'fi-icon-btn'+(item.icon!=='auto'?' has-icon':''), onclick:()=>openIconPicker('item', item.id)});
+    iconBtn.appendChild(el('span', {class:'icon'}, item.icon==='auto'? (hasContent?autoIconFor(item.text):'add_circle') : resolveIcon(item.icon, item.text)));
+    attachRipple(iconBtn);
+    fi.appendChild(iconBtn);
+    // 输入框
+    const tf = el('div', {class:'text-field fi-input'});
+    const input = el('input', {type:'text', value:item.text, placeholder:t('check_item_placeholder')});
+    // 记录当前聚焦元素，避免重新渲染时丢失焦点（需求4）
+    const focusedId = document.activeElement && document.activeElement.tagName==='INPUT' ? document.activeElement.closest('.form-item')?.dataset?.id : null;
+    input.addEventListener('input', e=>{
+      item.text = e.target.value;
+      const hc = item.text.trim().length>0;
+      fi.classList.toggle('has-content', hc);
+      // 自动图标预览更新（带放大→替换→缩回动画）
+      if(item.icon==='auto'){
+        animateIconSwap(iconBtn.querySelector('.icon'), hc? autoIconFor(item.text) : 'add_circle');
+      }
+      // 若是最后一条且有内容，新增一条空行（不抢焦点，不重新渲染当前行）
+      if(idx===formState.items.length-1 && hc){
+        const newId = uid();
+        formState.items.push({id:newId, text:'', icon:'auto'});
+        // 仅追加新行，不重新渲染所有行，保持当前焦点
+        appendFormItem(wrap, newId);
+      }
+    });
+    tf.appendChild(input);
+    fi.appendChild(tf);
+    // 删除按钮
+    const rmBtn = el('button', {class:'fi-remove', onclick:()=>{
+      if(formState.items.length<=1){
+        // 仅清空
+        item.text=''; item.icon='auto';
+        renderFormItems(wrap);
+        return;
+      }
+      fi.classList.add('removing');
+      setTimeout(()=>{
+        formState.items = formState.items.filter(i=>i.id!==item.id);
+        renderFormItems(wrap);
+      }, 250);
+    }});
+    rmBtn.appendChild(el('span', {class:'icon'}, 'close'));
+    fi.appendChild(rmBtn);
+    wrap.appendChild(fi);
+    // 恢复焦点
+    if(focusedId===item.id){
+      requestAnimationFrame(()=>input.focus());
+      // 将光标放到末尾
+      const len = input.value.length;
+      requestAnimationFrame(()=>{ input.setSelectionRange(len,len); });
+    }
+  });
+}
+
+/* 追加单个表单项（不重新渲染全部，避免抢焦点） */
+function appendFormItem(wrap, itemId){
+  const item = formState.items.find(i=>i.id===itemId);
+  if(!item) return;
+  const fi = el('div', {class:'form-item', dataset:{id:item.id}});
+  const iconBtn = el('button', {class:'fi-icon-btn', onclick:()=>openIconPicker('item', item.id)});
+  iconBtn.appendChild(el('span', {class:'icon'}, 'add_circle'));
+  attachRipple(iconBtn);
+  fi.appendChild(iconBtn);
+  const tf = el('div', {class:'text-field fi-input'});
+  const input = el('input', {type:'text', value:item.text, placeholder:t('check_item_placeholder')});
+  input.addEventListener('input', e=>{
+    item.text = e.target.value;
+    const hc = item.text.trim().length>0;
+    fi.classList.toggle('has-content', hc);
+    if(item.icon==='auto'){
+      animateIconSwap(iconBtn.querySelector('.icon'), hc? autoIconFor(item.text) : 'add_circle');
+    }
+    if(item.id===formState.items[formState.items.length-1].id && hc){
+      const newId = uid();
+      formState.items.push({id:newId, text:'', icon:'auto'});
+      appendFormItem(wrap, newId);
+    }
+  });
+  tf.appendChild(input);
+  fi.appendChild(tf);
+  const rmBtn = el('button', {class:'fi-remove', onclick:()=>{
+    if(formState.items.length<=1){ item.text=''; item.icon='auto'; renderFormItems(wrap); return; }
+    fi.classList.add('removing');
+    setTimeout(()=>{ formState.items = formState.items.filter(i=>i.id!==item.id); renderFormItems(wrap); }, 250);
+  }});
+  rmBtn.appendChild(el('span', {class:'icon'}, 'close'));
+  fi.appendChild(rmBtn);
+  wrap.appendChild(fi);
+}
+
+/* 文件名校净化（去除文件系统不允许的字符） */
+function sanitizeFileName(name){
+  return String(name||'checklist').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').trim() || 'checklist';
+}
+/* ---------- 导出检查单 ----------
+   导出为 .checklist 后缀文件（内部遵循 JSON 格式）。
+   浏览器：Blob + <a download>；
+   HbuilderX 打包的 APK（5+ Runtime）：用 plus.io 写入公共下载目录。 */
+function handleExport(){
+  const editing = Store.state._editing;
+  const cl = Store.state.checklists.find(c=>c.id===editing);
+  if(!cl){ showToast(t('export_fail')); return; }
+  try {
+    // 导出数据：名称、图标、重置时间、检查项（名称+图标）
+    const data = {
+      name: cl.name,
+      icon: cl.icon,
+      resetHours: cl.resetHours,
+      items: cl.items.map(i=>({ text:i.text, icon:i.icon }))
+    };
+    const json = JSON.stringify(data, null, 2);
+    const filename = sanitizeFileName(cl.name) + '.checklist';
+    const onDone = ()=>showToast(t('export_success'));
+    const onFail = ()=>showToast(t('export_fail'));
+    if(window.plus && plus.io){
+      // APK 环境：写入公共下载目录（Download）
+      plus.io.requestFileSystem(plus.io.PUBLIC_DOWNLOADS, fs=>{
+        fs.root.getFile(filename, {create:true, exclusive:false}, entry=>{
+          entry.createWriter(writer=>{
+            writer.onwrite = onDone;
+            writer.onerror = onFail;
+            writer.write(json);
+          }, onFail);
+        }, onFail);
+      }, onFail);
+    }else{
+      const blob = new Blob([json], {type:'application/octet-stream'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      onDone();
+    }
+  } catch(e) {
+    showToast(t('export_fail'));
+  }
+}
+
+/* ---------- 导入检查单 ---------- */
+function handleImport(){
+  // 创建隐藏的 file input
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,.checklist.json,.checklist,application/json';
+  input.onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(!data.name || !Array.isArray(data.items)){ throw new Error('invalid'); }
+        // 创建新检查单
+        const newCl = {
+          id: uid(),
+          name: data.name,
+          icon: data.icon || 'auto',
+          resetHours: data.resetHours || 0,
+          items: data.items.map(i=>({ id:uid(), text:i.text, icon:i.icon||'auto', done:false })),
+          completedAt: null,
+          createdAt: Date.now()
+        };
+        Store.state.checklists.push(newCl);
+        Store.state.activeChecklistId = newCl.id;
+        Store.state._editing = null;
+        Store.save();
+        switchPage('home');
+        renderTopbar('home');
+        renderHome();
+        renderBottombar(newCl.id);
+        showToast(t('import_success'));
+      } catch(err) {
+        showToast(t('import_fail'));
+      }
+    };
+    reader.onerror = ()=>showToast(t('import_fail'));
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function handleConfirm(){
+  const name = formState.name.trim();
+  if(!name){
+    showToast(t('enter_checklist_name'));
+    return;
+  }
+  const items = formState.items.filter(i=>i.text.trim()).map(i=>({id:i.id, text:i.text.trim(), icon:i.icon, done:false}));
+  if(items.length===0){
+    showToast(t('enter_check_item'));
+    return;
+  }
+  const newCl = {
+    id:uid(), name, icon:formState.icon, resetHours:formState.resetHours,
+    items, completedAt:null, createdAt:Date.now()
+  };
+  Store.state.checklists.push(newCl);
+  Store.state.activeChecklistId = newCl.id;
+  Store.state._editing = null;
+  Store.save(); Store.emit();
+  switchPage('home');
+  renderTopbar('home');
+  renderHome();
+  renderBottombar(newCl.id);
+  showToast(t('added_toast'));
+}
+
+function handleSave(){
+  const editing = Store.state._editing;
+  const cl = Store.state.checklists.find(c=>c.id===editing);
+  if(!cl) return;
+  const name = formState.name.trim();
+  if(!name){ showToast(t('enter_checklist_name')); return; }
+  const items = formState.items.filter(i=>i.text.trim()).map(i=>{
+    const old = cl.items.find(o=>o.id===i.id);
+    return {id:i.id, text:i.text.trim(), icon:i.icon, done: old? old.done : false};
+  });
+  if(items.length===0){ showToast(t('enter_check_item')); return; }
+  cl.name = name;
+  cl.icon = formState.icon;
+  cl.resetHours = formState.resetHours;
+  cl.items = items;
+  // 检查是否仍全部完成
+  const allDone = cl.items.every(i=>i.done);
+  cl.completedAt = allDone? (cl.completedAt||Date.now()) : null;
+  Store.state._editing = null;
+  Store.save(); Store.emit();
+  switchPage('home');
+  renderTopbar('home');
+  renderHome();
+  renderBottombar();
+  showToast(t('saved_toast'));
+}
+
+let deleteConfirmTimer = null;
+function handleDelete(){
+  const btn = $('#btnDelete');
+  if(!btn) return;
+  if(!btn.dataset.armed){
+    btn.dataset.armed='1';
+    btn.textContent='';
+    btn.appendChild(el('span', {class:'icon'}, 'warning'));
+    btn.appendChild(document.createTextNode(t('delete')));
+    showToast(t('delete_confirm_body'));
+    deleteConfirmTimer = setTimeout(()=>{
+      btn.removeAttribute('data-armed');
+      btn.textContent='';
+      btn.appendChild(el('span', {class:'icon'}, 'delete'));
+      btn.appendChild(document.createTextNode(t('delete')));
+    }, 3000);
+  }else{
+    clearTimeout(deleteConfirmTimer);
+    const editing = Store.state._editing;
+    // 先播放底栏标签移除动画
+    const removingTab = $(`.nav-tab[data-id="${editing}"]`);
+    const finishDelete = ()=>{
+      Store.state.checklists = Store.state.checklists.filter(c=>c.id!==editing);
+      // 选第一个检查单或 null
+      Store.state.activeChecklistId = Store.state.checklists[0]? Store.state.checklists[0].id : null;
+      Store.state._editing = null;
+      Store.save(); Store.emit();
+      renderBottombar();
+      showToast(t('deleted_toast'));
+      if(Store.state.checklists.length === 0){
+        // 没有检查单了，直接跳到新建页面
+        openForm(null);
+      }else{
+        switchPage('home');
+        renderTopbar('home');
+        renderHome();
+      }
+    };
+    if(removingTab){
+      let done = false;
+      const finishOnce = ()=>{
+        if(done) return; done = true;
+        finishDelete();
+      };
+      removingTab.classList.add('tab-leave');
+      removingTab.addEventListener('animationend', finishOnce, {once:true});
+      // 兜底：若动画事件未触发，450ms 后强制完成
+      setTimeout(finishOnce, 450);
+    }else{
+      finishDelete();
+    }
+  }
+}
+
+/* ---------- 设置页面 ---------- */
+function renderSettings(){
+  const content = $('#settingsContent');
+  const s = Store.state.settings;
+  content.innerHTML='';
+
+  // 主题
+  content.appendChild(el('div', {class:'section-title'}, t('settings_theme')));
+  const themeGroup = el('div', {class:'settings-group'});
+  // 跟随系统
+  const followItem = el('div', {class:'settings-item'});
+  followItem.appendChild(el('span', {class:'icon si-icon'}, 'brightness_auto'));
+  followItem.appendChild(el('div', {class:'si-text'}, [el('div',{class:'si-title'}, t('settings_follow_system'))]));
+  const followSwitch = el('div', {class:'switch'+(s.theme==='auto'?' on':''), onclick:()=>{
+    s.theme = s.theme==='auto'? 'light' : 'auto';
+    Store.save(); applyTheme(); renderSettings();
+  }});
+  followSwitch.appendChild(el('div', {class:'switch-thumb'}));
+  followItem.appendChild(followSwitch);
+  themeGroup.appendChild(followItem);
+  // 浅/深色选择（跟随系统时禁用）
+  const modeDisabled = s.theme==='auto';
+  const modeRow = el('div', {class:'seg-buttons'+(modeDisabled?' disabled':'')});
+  ['light','dark'].forEach(mode=>{
+    const sel = s.theme===mode;
+    const btn = el('button', {class:'seg-btn'+(sel?' selected':'')+(modeDisabled?' disabled':''), disabled:modeDisabled, onclick:()=>{
+      if(modeDisabled) return;
+      s.theme = mode; Store.save(); applyTheme(); renderSettings();
+    }}, [
+      el('span', {class:'icon'}, mode==='light'?'light_mode':'dark_mode'),
+      mode==='light'? t('settings_light') : t('settings_dark')
+    ]);
+    modeRow.appendChild(btn);
+  });
+  themeGroup.appendChild(modeRow);
+  content.appendChild(themeGroup);
+
+  // 检查项高度
+  content.appendChild(el('div', {class:'section-title'}, t('settings_item_height')));
+  const heightGroup = el('div', {class:'settings-group'});
+  const heightItem = el('div', {class:'settings-item'});
+  heightItem.appendChild(el('span', {class:'icon si-icon'}, 'format_line_spacing'));
+  heightItem.appendChild(el('div', {class:'si-text'}, [
+    el('div', {class:'si-title'}, t('settings_item_height')),
+    el('div', {class:'si-sub'}, `${s.itemHeight}px · ${t('settings_item_height_sub')}`)
+  ]));
+  heightGroup.appendChild(heightItem);
+  const sliderWrap = el('div', {class:'slider-wrap'});
+  const slider = el('div', {class:'slider'});
+  const range = el('input', {type:'range', min:ITEM_HEIGHT_MIN, max:ITEM_HEIGHT_MAX, value:s.itemHeight});
+  // 初始化 active track 百分比
+  const updateSliderPct = ()=>{
+    const pct = ((s.itemHeight - ITEM_HEIGHT_MIN)/(ITEM_HEIGHT_MAX - ITEM_HEIGHT_MIN))*100;
+    range.style.setProperty('--slider-pct', pct+'%');
+  };
+  updateSliderPct();
+  range.addEventListener('input', e=>{
+    s.itemHeight = parseInt(e.target.value);
+    Store.save();
+    updateSliderPct();
+    // 实时更新显示
+    heightItem.querySelector('.si-sub').textContent = `${s.itemHeight}px · ${t('settings_item_height_sub')}`;
+    $('#sliderValue').textContent = s.itemHeight+'px';
+    renderHome();
+  });
+  slider.appendChild(range);
+  sliderWrap.appendChild(slider);
+  sliderWrap.appendChild(el('div', {class:'slider-value', id:'sliderValue'}, s.itemHeight+'px'));
+  heightGroup.appendChild(sliderWrap);
+  // 仅首条
+  const firstOnlyItem = el('div', {class:'settings-item'});
+  firstOnlyItem.appendChild(el('span', {class:'icon si-icon'}, 'looks_one'));
+  firstOnlyItem.appendChild(el('div', {class:'si-text'}, [
+    el('div', {class:'si-title'}, t('settings_first_only')),
+    el('div', {class:'si-sub'}, t('settings_first_only_sub'))
+  ]));
+  const foSwitch = el('div', {class:'switch'+(s.firstOnly?' on':''), onclick:()=>{
+    s.firstOnly = !s.firstOnly; Store.save(); renderSettings(); renderHome();
+  }});
+  foSwitch.appendChild(el('div', {class:'switch-thumb'}));
+  firstOnlyItem.appendChild(foSwitch);
+  heightGroup.appendChild(firstOnlyItem);
+  content.appendChild(heightGroup);
+
+  // 语言
+  content.appendChild(el('div', {class:'section-title'}, t('settings_language')));
+  const langGroup = el('div', {class:'settings-group'});
+  const langItem = el('div', {class:'settings-item'});
+  langItem.appendChild(el('span', {class:'icon si-icon'}, 'language'));
+  const sel = LANGUAGES.find(l=>l.code===s.language) || LANGUAGES[0];
+  // auto 模式下显示本地化的"跟随系统"，而非混合文本
+  const displayLang = s.language==='auto' ? t('follow_system') : sel.nativeName;
+  langItem.appendChild(el('div', {class:'si-text'}, [
+    el('div', {class:'si-title'}, t('settings_language')),
+    el('div', {class:'si-sub'}, displayLang)
+  ]));
+  langItem.appendChild(el('span', {class:'icon si-icon'}, 'chevron_right'));
+  langItem.style.cursor='pointer';
+  langItem.addEventListener('click', ()=>openLanguageMenu());
+  langGroup.appendChild(langItem);
+  content.appendChild(langGroup);
+
+  // 关于
+  content.appendChild(el('div', {class:'section-title'}, t('settings_about')));
+  // 应用图标与名称
+  const about = el('div', {class:'about-section'});
+  const iconWrap = el('div', {class:'about-icon'});
+  const img = el('img', {src:EMBEDDED_ICON_PNG, alt:'icon'});
+  iconWrap.appendChild(img);
+  about.appendChild(iconWrap);
+  about.appendChild(el('div', {class:'about-name'}, t('app_name')));
+  about.appendChild(el('div', {class:'about-version'}, APP_VERSION));
+  // Create with ❤️ by Crazy Sue
+  const credit = el('div', {class:'about-credit'});
+  credit.appendChild(document.createTextNode(t('created_by')));
+  const link = el('a', {href:'#'}, 'Crazy Sue');
+  link.addEventListener('click', e=>{
+    e.preventDefault();
+    openExternal(APP_AUTHOR_URL);
+  });
+  credit.appendChild(link);
+  about.appendChild(credit);
+  about.appendChild(el('div', {class:'about-glm'}, t('made_by')));
+  content.appendChild(about);
+
+  // 支持开发者按钮（位于 MIT 许可下拉菜单上方）
+  // 简体中文环境跳转爱发电，其他语言跳转 Buy Me a Coffee
+  const isZhCN = getLang()==='zh-CN';
+  const supportCard = el('div', {class:'settings-group support-card'});
+  const supportBtn = el('button', {class:'support-btn', onclick:()=>openExternal(isZhCN? SUPPORT_URL_AFDIAN : SUPPORT_URL_COFFEE)});
+  supportBtn.appendChild(el('span', {class:'icon'}, isZhCN? 'bolt' : 'coffee'));
+  const supportText = el('div', {class:'support-text'});
+  supportText.appendChild(el('div', {class:'support-title'}, isZhCN? t('support_title_afdian') : t('support_title')));
+  supportText.appendChild(el('div', {class:'support-sub'}, t('support_sub')));
+  supportBtn.appendChild(supportText);
+  supportBtn.appendChild(el('span', {class:'icon support-arrow'}, 'open_in_new'));
+  supportCard.appendChild(supportBtn);
+  content.appendChild(supportCard);
+
+  // MIT 许可下拉
+  const mitDd = el('div', {class:'dropdown', id:'mitDropdown'});
+  const mitHeader = el('div', {class:'dropdown-header clickable', onclick:()=>{
+    const willOpen = !mitDd.classList.contains('open');
+    const body = mitDd.querySelector('.dropdown-body');
+    if(willOpen){
+      // 先展开：设为内容高度以触发过渡
+      mitDd.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }else{
+      // 收起：先设回当前高度（覆盖 none），再强制重排，再设 0 触发过渡
+      body.style.maxHeight = body.scrollHeight + 'px';
+      void body.offsetHeight;
+      body.style.maxHeight = '0px';
+      mitDd.classList.remove('open');
+    }
+  }});
+  mitHeader.appendChild(el('span', {class:'icon dh-icon'}, 'description'));
+  mitHeader.appendChild(el('span', {class:'dh-title'}, t('mit_license_title')));
+  mitHeader.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+  mitDd.appendChild(mitHeader);
+  const mitBody = el('div', {class:'dropdown-body'});
+  mitBody.appendChild(el('div', {class:'dropdown-body-inner'}, el('div', {class:'license-text'}, MIT_LICENSE_TEXT)));
+  mitDd.appendChild(mitBody);
+  content.appendChild(mitDd);
+
+  // OSS 许可下拉
+  const ossDd = el('div', {class:'dropdown', id:'ossDropdown'});
+  const ossHeader = el('div', {class:'dropdown-header clickable', onclick:()=>{
+    const willOpen = !ossDd.classList.contains('open');
+    const body = ossDd.querySelector('.dropdown-body');
+    if(willOpen){
+      ossDd.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }else{
+      body.style.maxHeight = body.scrollHeight + 'px';
+      void body.offsetHeight;
+      body.style.maxHeight = '0px';
+      ossDd.classList.remove('open');
+    }
+  }});
+  ossHeader.appendChild(el('span', {class:'icon dh-icon'}, 'gavel'));
+  ossHeader.appendChild(el('span', {class:'dh-title'}, t('oss_license_title')));
+  ossHeader.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+  ossDd.appendChild(ossHeader);
+  const ossBody = el('div', {class:'dropdown-body'});
+  const ossInner = el('div', {class:'dropdown-body-inner'});
+  OSS_LICENSES.forEach(l=>{
+    const item = el('div', {class:'license-item'});
+    item.appendChild(el('div', {class:'li-name'}, l.name));
+    item.appendChild(el('div', {class:'li-license'}, l.license));
+    item.appendChild(el('div', {class:'license-text'}, l.text));
+    ossInner.appendChild(item);
+  });
+  ossBody.appendChild(ossInner);
+  ossDd.appendChild(ossBody);
+  content.appendChild(ossDd);
+}
+
+/* 语言选择菜单（用对话框） */
+function openLanguageMenu(){
+  const title = $('#langModalTitle');
+  const body = $('#langModalBody');
+  title.textContent = t('settings_language');
+  body.innerHTML='';
+  const list = el('div', {style:'display:flex;flex-direction:column;gap:4px;'});
+  LANGUAGES.forEach(l=>{
+    const sel = Store.state.settings.language===l.code;
+    const displayName = l.code==='auto' ? t('follow_system') : l.nativeName;
+    const item = el('div', {class:'lang-item'+(sel?' selected':''), onclick:()=>{
+      Store.state.settings.language = l.code;
+      Store.save();
+      closeLangModal();
+      updateStaticLabels();
+      renderSettings();
+      renderTopbar('settings');
+      renderBottombar();
+      renderHome();
+    }});
+    item.appendChild(el('span', {class:'icon si-icon', style:sel?'color:var(--md-primary)':''}, sel?'check':'language'));
+    item.appendChild(el('div', {class:'si-text'}, el('div', {class:'si-title'}, displayName)));
+    list.appendChild(item);
+  });
+  body.appendChild(list);
+  $('#langModalCancel').textContent = t('cancel');
+  openLangModal();
+}
+function openLangModal(){
+  $('#langScrim').classList.add('visible');
+  $('#langModal').classList.add('visible');
+}
+function closeLangModal(){
+  $('#langScrim').classList.remove('visible');
+  $('#langModal').classList.remove('visible');
+}
+
+/* ---------- 图标选择弹窗 ---------- */
+let iconPickerContext = null; // {type:'checklist'|'item', itemId?}
+function openIconPicker(type, itemId){
+  iconPickerContext = {type, itemId};
+  $('#iconPickerTitle').textContent = t('select_icon');
+  $('#iconPickerSearch').value='';
+  renderIconPickerGrid('');
+  $('#iconPickerScrim').classList.add('visible');
+  $('#iconPickerModal').classList.add('visible');
+}
+function closeIconPicker(){
+  $('#iconPickerScrim').classList.remove('visible');
+  $('#iconPickerModal').classList.remove('visible');
+}
+function renderIconPickerGrid(filter){
+  const grid = $('#iconPickerGrid');
+  grid.innerHTML='';
+  const lower = filter.toLowerCase();
+  let totalShown = 0;
+  // 按分类展示
+  for(const [category, icons] of Object.entries(ICON_LIBRARY)){
+    const filtered = icons.filter(ic=> !lower || ic.includes(lower));
+    if(filtered.length===0) continue;
+    totalShown += filtered.length;
+    // 分类标题（本地化：跟随设置中支持的语言）
+    const catKey = ICON_CATEGORY_KEYS[category] || category;
+    grid.appendChild(el('div', {class:'icon-category-title'}, t(catKey)));
+    // 图标网格
+    const catGrid = el('div', {class:'icon-category-grid'});
+    filtered.forEach(ic=>{
+      const opt = el('button', {class:'icon-option', onclick:()=>selectIcon(ic)});
+      opt.appendChild(el('span', {class:'icon'}, ic));
+      attachRipple(opt);
+      catGrid.appendChild(opt);
+    });
+    grid.appendChild(catGrid);
+  }
+  if(totalShown===0){
+    grid.appendChild(el('div', {style:'text-align:center;padding:24px;color:var(--md-on-surface-variant)'}, t('no_results')));
+  }
+}
+function selectIcon(iconName){
+  const ctx = iconPickerContext;
+  if(!ctx) return;
+  if(ctx.type==='checklist'){
+    formState.icon = iconName;
+    renderForm();
+  }else if(ctx.type==='item'){
+    const item = formState.items.find(i=>i.id===ctx.itemId);
+    if(item){ item.icon = iconName; renderForm(); }
+  }
+  closeIconPicker();
+}
+
+/* ---------- 搜索 ---------- */
+let searchActive = false;
+function toggleSearch(){
+  if(searchActive){
+    closeSearch();
+  }else{
+    openSearch();
+  }
+}
+function openSearch(){
+  searchActive = true;
+  $('#btnSearch').classList.add('is-active');
+  $('#searchBar').classList.add('visible');
+  setTimeout(()=>$('#searchInput').focus(), 250);
+}
+function closeSearch(silent){
+  if(!searchActive && silent) return;
+  searchActive = false;
+  $('#btnSearch').classList.remove('is-active');
+  $('#searchBar').classList.remove('visible');
+  $('#searchInput').value='';
+  $('#searchBar').classList.remove('has-text');
+  // 清除高亮
+  $$('.check-item.is-search-match').forEach(n=>n.classList.remove('is-search-match'));
+}
+function doSearch(q){
+  q = q.trim().toLowerCase();
+  $('#searchBar').classList.toggle('has-text', q.length>0);
+  const cl = getActiveChecklist();
+  if(!cl) return;
+  // 清除旧高亮
+  $$('.check-item.is-search-match').forEach(n=>n.classList.remove('is-search-match'));
+  if(!q){
+    return;
+  }
+  // 找第一个匹配的待办项
+  const match = cl.items.find(i=>!i.done && i.text.toLowerCase().includes(q));
+  if(match){
+    const node = $(`.check-item[data-id="${match.id}"]`);
+    if(node){
+      node.classList.add('is-search-match');
+      node.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+}
+
+/* ---------- 页面切换 ---------- */
+let currentPage = 'home'; // home | form | settings
+function switchPage(target){
+  const pages = {home:'#pageHome', form:'#pageForm', settings:'#pageSettings'};
+  const curEl = $(pages[currentPage]);
+  const tgtEl = $(pages[target]);
+  if(curEl===tgtEl) return;
+  // 判断方向：home在左，form/settings在右
+  const order = ['home','form','settings'];
+  const curIdx = order.indexOf(currentPage);
+  const tgtIdx = order.indexOf(target);
+  const goRight = tgtIdx > curIdx;
+
+  curEl.classList.remove('page-active');
+  curEl.classList.add(goRight? 'page-leave-left':'page-leave-right');
+  tgtEl.classList.remove('page-enter-right','page-enter-left','page-leave-left','page-leave-right');
+  // 先设置初始位置
+  tgtEl.classList.add(goRight? 'page-enter-right':'page-enter-left');
+  requestAnimationFrame(()=>{
+    tgtEl.classList.remove('page-enter-right','page-enter-left');
+    tgtEl.classList.add('page-active');
+  });
+
+  currentPage = target;
+}
+
+/* ---------- 对话框 ---------- */
+function openDialog(){
+  $('#dialogScrim').classList.add('visible');
+  $('#confirmDialog').classList.add('visible');
+}
+function closeDialog(){
+  $('#dialogScrim').classList.remove('visible');
+  $('#confirmDialog').classList.remove('visible');
+}
+
+/* ---------- Toast ---------- */
+let toastTimer = null;
+function showToast(msg){
+  const toast = $('#toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('visible'), 2200);
+}
+
+/* ---------- 事件绑定 ---------- */
+/* 记录从哪个页面进入设置（'home' | 'form'），设置页返回按钮据此回到原页面 */
+let settingsFromPage = 'home';
+/* 从设置页返回进入设置前的页面，并同步刷新底栏焦点（修复底栏焦点滞留问题） */
+function goBackFromSettings(){
+  if(settingsFromPage==='form'){
+    // 返回新建检查单页面
+    switchPage('form');
+    renderTopbar('form');
+    renderBottombar();
+  }else{
+    // 返回检查单页面
+    switchPage('home');
+    renderTopbar('home');
+    renderHome();
+    renderBottombar();
+  }
+}
+function bindEvents(){
+  // 顶栏按钮 —— 附加水滴效果
+  ['btnConfig','btnSearch','btnSettings','sbBack','sbClear'].forEach(id=>{
+    const el = $('#'+id);
+    if(el) attachRipple(el);
+  });
+  // 顶栏按钮
+  $('#btnConfig').addEventListener('click', ()=>{
+    const cl = getActiveChecklist();
+    if(cl) openForm(cl.id);
+  });
+  $('#btnSearch').addEventListener('click', toggleSearch);
+  $('#btnSettings').addEventListener('click', ()=>{
+    if(currentPage==='settings'){
+      // 设置页返回按钮：返回进入设置前的页面（检查单页或新建检查单页）
+      goBackFromSettings();
+    }else if(currentPage==='form'){
+      if(Store.state._editing){
+        // 编辑检查单页：顶栏返回按钮，返回检查单页面
+        Store.state._editing = null;
+        switchPage('home');
+        renderTopbar('home');
+        renderHome();
+        renderBottombar();
+      }else{
+        // 从新建页翻到设置页
+        settingsFromPage = 'form';
+        renderSettings();
+        switchPage('settings');
+        renderTopbar('settings');
+      }
+    }else{
+      // 从主页翻到设置页
+      settingsFromPage = 'home';
+      renderSettings();
+      switchPage('settings');
+      renderTopbar('settings');
+    }
+  });
+
+  // 搜索
+  $('#sbBack').addEventListener('click', ()=>closeSearch());
+  $('#sbClear').addEventListener('click', ()=>{
+    $('#searchInput').value='';
+    $('#searchBar').classList.remove('has-text');
+    doSearch('');
+    $('#searchInput').focus();
+  });
+  $('#searchInput').addEventListener('input', e=>doSearch(e.target.value));
+
+  // 重置 FAB
+  const resetFab = $('#btnResetList');
+  attachRipple(resetFab);
+  resetFab.addEventListener('click', ()=>{
+    const cl = getActiveChecklist();
+    if(cl) resetChecklist(cl.id);
+  });
+
+  // 图标选择弹窗
+  $('#iconPickerScrim').addEventListener('click', closeIconPicker);
+  $('#iconPickerCancel').addEventListener('click', closeIconPicker);
+  // 语言弹窗
+  $('#langScrim').addEventListener('click', closeLangModal);
+  $('#langModalCancel').addEventListener('click', closeLangModal);
+  $('#iconPickerSearch').addEventListener('input', e=>renderIconPickerGrid(e.target.value));
+
+  // 对话框
+  $('#dialogScrim').addEventListener('click', closeDialog);
+
+  // 系统主题变化
+  if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+      if(Store.state.settings.theme==='auto') applyTheme();
+    });
+  }
+
+  // 键盘 ESC
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape'){
+      if($('#iconPickerModal').classList.contains('visible')) closeIconPicker();
+      else if($('#confirmDialog').classList.contains('visible')) closeDialog();
+      else if(searchActive) closeSearch();
+      else if(currentPage==='settings') goBackFromSettings();
+      else if(currentPage==='form'){
+        if(Store.state._editing) Store.state._editing = null;
+        switchPage('home');
+        renderTopbar('home');
+        renderHome();
+        renderBottombar();
+      }
+    }
+  });
+
+  // 防止双击缩放
+  let lastTouch=0;
+  document.addEventListener('touchend', e=>{
+    const now=Date.now();
+    if(now-lastTouch<300){ e.preventDefault(); }
+    lastTouch=now;
+  }, {passive:false});
+}
+
+/* ---------- 更新静态元素的国际化标签 ---------- */
+function updateStaticLabels(){
+  // 搜索栏按钮
+  $('#sbBack').setAttribute('aria-label', t('search'));
+  $('#sbClear').setAttribute('aria-label', t('cancel'));
+  $('#searchInput').setAttribute('placeholder', t('search_placeholder'));
+  // 图标选择弹窗
+  $('#iconPickerTitle').textContent = t('select_icon');
+  $('#iconPickerSearch').setAttribute('placeholder', t('icon_search'));
+  $('#iconPickerCancel').textContent = t('cancel');
+  // 文档语言
+  document.documentElement.lang = getLang();
+  document.title = t('app_name');
+}
+
+/* ---------- 初始化 ---------- */
+function init(){
+  Store.load();
+  applyTheme();
+  bindEvents();
+  initGlobalRipple();
+
+  // 如果没有检查单，设置为空状态
+  if(Store.state.checklists.length===0){
+    Store.state.activeChecklistId = null;
+  }else if(!Store.state.activeChecklistId || !Store.state.checklists.find(c=>c.id===Store.state.activeChecklistId)){
+    Store.state.activeChecklistId = Store.state.checklists[0].id;
+  }
+
+  updateStaticLabels();
+  renderTopbar('home');
+  renderHome();
+  renderBottombar();
+  // 启动时检查自动重置
+  checkAutoReset();
+}
+
+document.addEventListener('DOMContentLoaded', init);

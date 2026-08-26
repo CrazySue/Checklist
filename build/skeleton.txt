@@ -1,0 +1,3148 @@
+﻿1: <!DOCTYPE html>
+2: <html lang="zh-CN">
+3: <head>
+4: <meta charset="UTF-8">
+5: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+6: <meta name="theme-color" content="#10172F">
+7: <meta name="description" content="检查单 - 极简实用的待办清单应用">
+8: <title>检查单</title>
+9: <!-- 内嵌字体（base64 由构建脚本注入） -->
+10: <style id="embedded-fonts">
+11: <LONG 11014986 chars>
+12: <LONG 10969898 chars>
+13: <LONG 7133028 chars>
+14: 
+15: </style>
+16: <style>
+17: /* ============================================================
+18:    检查单应用 - Material Design 3 单文件实现
+19:    设计令牌 / 主题 / 组件 / 动效 全部基于 MD3 规范
+20:    ============================================================ */
+21: 
+22: /* ---------- 字体族 ---------- */
+23: :root{
+24:   --md-sys-typescale-font:'HarmonyOS Sans SC','HarmonyOS Sans SC Regular','Material Symbols Rounded',system-ui,sans-serif;
+25:   --md-sys-typescale-icon-font:'Material Symbols Rounded';
+26: }
+27: 
+28: /* ---------- MD3 设计令牌：自定义种子色生成浅/深配色 ----------
+29:    用户提供的4色：#10172F #283558 #525288 #A5A8BA
+30:    以 #525288 为主色派生完整 MD3 色板（浅色/深色）
+31:    通过 color-mix 手动定义关键色板，确保跨浏览器一致。
+32: */
+33: :root{
+34:   color-scheme:light dark;
+35:   /* 主色 */
+36:   --md-primary:#525288;
+37:   --md-on-primary:#FFFFFF;
+38:   --md-primary-container:#E1E0FF;
+39:   --md-on-primary-container:#0D006B;
+40:   --md-secondary:#5D5B77;
+41:   --md-on-secondary:#FFFFFF;
+42:   --md-secondary-container:#E3E0F9;
+43:   --md-on-secondary-container:#1A183B;
+44:   --md-tertiary:#9B4069;
+45:   --md-on-tertiary:#FFFFFF;
+46:   --md-tertiary-container:#FFD9E2;
+47:   --md-on-tertiary-container:#3E001E;
+48:   --md-error:#BA1A1A;
+49:   --md-on-error:#FFFFFF;
+50:   --md-error-container:#FFDAD6;
+51:   --md-on-error-container:#410002;
+52:   /* 背景与表面 */
+53:   --md-background:#FCF8FF;
+54:   --md-on-background:#1B1B21;
+55:   --md-surface:#FCF8FF;
+56:   --md-on-surface:#1B1B21;
+57:   --md-surface-variant:#E4E1EC;
+58:   --md-on-surface-variant:#47464F;
+59:   --md-surface-dim:#DCD9E0;
+60:   --md-surface-bright:#FCF8FF;
+61:   --md-surface-container-lowest:#FFFFFF;
+62:   --md-surface-container-low:#F6F2FA;
+63:   --md-surface-container:#F1ECF4;
+64:   --md-surface-container-high:#EBE6EF;
+65:   --md-surface-container-highest:#E5E1E9;
+66:   --md-outline:#787680;
+67:   --md-outline-variant:#C8C5D0;
+68:   --md-shadow:#000000;
+69:   --md-scrim:#000000;
+70:   --md-inverse-surface:#2F3036;
+71:   --md-inverse-on-surface:#F2EFF7;
+72:   --md-inverse-primary:#C0C1FF;
+73:   /* 用户提供色直接暴露 */
+74:   --brand-1:#10172F;
+75:   --brand-2:#283558;
+76:   --brand-3:#525288;
+77:   --brand-4:#A5A8BA;
+78: }
+79: /* 深色主题：以 #283558 调性派生 */
+80: [data-theme="dark"]{
+81:   --md-primary:#C0C1FF;
+82:   --md-on-primary:#232E78;
+83:   --md-primary-container:#3A4090;
+84:   --md-on-primary-container:#E1E0FF;
+85:   --md-secondary:#C6C4DD;
+86:   --md-on-secondary:#2E2D47;
+87:   --md-secondary-container:#45455F;
+88:   --md-on-secondary-container:#E3E0F9;
+89:   --md-tertiary:#FFB1C8;
+90:   --md-on-tertiary:#5F112F;
+91:   --md-tertiary-container:#7E294A;
+92:   --md-on-tertiary-container:#FFD9E2;
+93:   --md-error:#FFB4AB;
+94:   --md-on-error:#690005;
+95:   --md-error-container:#93000A;
+96:   --md-on-error-container:#FFDAD6;
+97:   --md-background:#131318;
+98:   --md-on-background:#E5E1E9;
+99:   --md-surface:#131318;
+100:   --md-on-surface:#E5E1E9;
+101:   --md-surface-variant:#47464F;
+102:   --md-on-surface-variant:#C8C5D0;
+103:   --md-surface-dim:#131318;
+104:   --md-surface-bright:#39393F;
+105:   --md-surface-container-lowest:#0E0E13;
+106:   --md-surface-container-low:#1B1B21;
+107:   --md-surface-container:#1F1F25;
+108:   --md-surface-container-high:#2A2A30;
+109:   --md-surface-container-highest:#35353B;
+110:   --md-outline:#928F9A;
+111:   --md-outline-variant:#47464F;
+112:   --md-inverse-surface:#E5E1E9;
+113:   --md-inverse-on-surface:#2F3036;
+114:   --md-inverse-primary:#525288;
+115: }
+116: 
+117: /* ---------- 全局重置 ---------- */
+118: *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+119: html{height:100%;}
+120: body{height:100vh;height:100dvh;overflow:hidden;}
+121: body{
+122:   font-family:var(--md-sys-typescale-font);
+123:   background:var(--md-background);
+124:   color:var(--md-on-background);
+125:   font-size:16px;
+126:   line-height:1.5;
+127:   -webkit-font-smoothing:antialiased;
+128:   text-rendering:optimizeLegibility;
+129:   user-select:none;
+130:   transition:background-color .25s ease,color .25s ease;
+131:   overscroll-behavior:none;
+132: }
+133: button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer;}
+134: input{font-family:inherit;color:inherit;border:none;background:none;outline:none;}
+135: .icon{font-family:var(--md-sys-typescale-icon-font);font-weight:normal;font-style:normal;display:inline-block;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+136: .icon.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
+137: 
+138: /* ---------- MD3 通用动效曲线 ---------- */
+139: :root{
+140:   --md-easing-standard:cubic-bezier(.2,0,0,1);
+141:   --md-easing-standard-decelerate:cubic-bezier(0,0,0,1);
+142:   --md-easing-standard-accelerate:cubic-bezier(.3,0,1,1);
+143:   --md-easing-emphasized:cubic-bezier(.2,0,0,1);
+144:   --md-easing-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);
+145:   --md-easing-emphasized-accelerate:cubic-bezier(.3,0,.8,.15);
+146:   --md-dur-short:150ms;
+147:   --md-dur-medium:250ms;
+148:   --md-dur-long:400ms;
+149:   --md-dur-xlong:600ms;
+150: }
+151: 
+152: /* ---------- MD3 状态层（hover/focus/press） ---------- */
+153: .state-layer{position:relative;overflow:hidden;}
+154: .state-layer::before{
+155:   content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+156:   transition:opacity var(--md-dur-short) var(--md-easing-standard);
+157:   pointer-events:none;border-radius:inherit;
+158: }
+159: .state-layer:hover::before{opacity:.08;}
+160: .state-layer:focus-visible::before{opacity:.12;}
+161: .state-layer:active::before{opacity:.12;}
+162: 
+163: /* ---------- MD3 水滴效果（Ripple） ---------- */
+164: .md-ripple{
+165:   position:absolute;border-radius:50%;
+166:   background:currentColor;opacity:.14;
+167:   transform:scale(0);
+168:   animation:md-ripple-anim 500ms var(--md-easing-standard);
+169:   pointer-events:none;z-index:0;
+170: }
+171: @keyframes md-ripple-anim{
+172:   to{transform:scale(2.4);opacity:0;}
+173: }
+174: /* 较大卡片的水波速率更慢，更优雅 */
+175: .check-item .md-ripple{animation-duration:650ms;}
+176: .ci-check .md-ripple{animation-duration:600ms;}
+177: 
+178: /* ---------- 应用骨架 ---------- */
+179: /* 用 100vh 回退 + 100dvh 优先（dvh 在手机端动态适应地址栏，避免底栏被遮挡） */
+180: #app{
+181:   display:flex;flex-direction:column;
+182:   height:100vh;height:100dvh;
+183:   max-width:560px;margin:0 auto;position:relative;
+184:   background:var(--md-surface);
+185:   box-shadow:0 0 0 1px transparent;
+186: }
+187: @media(min-width:600px){
+188:   #app{box-shadow:0 0 24px rgba(0,0,0,.12);}
+189: }
+190: 
+191: /* ---------- 顶栏 Top App Bar ---------- */
+192: .topbar{
+193:   height:56px;display:flex;align-items:center;gap:4px;
+194:   padding:0 4px 0 16px;
+195:   background:var(--md-surface);
+196:   color:var(--md-on-surface);
+197:   position:relative;z-index:20;
+198:   transition:background-color .25s ease;
+199: }
+200: .topbar-title{
+201:   flex:1;font-size:20px;font-weight:500;letter-spacing:0;
+202:   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+203:   transition:opacity var(--md-dur-short) var(--md-easing-standard);
+204: }
+205: .topbar-title .title-suffix{opacity:.6;font-weight:400;}
+206: .icon-btn{
+207:   width:40px;height:40px;border-radius:50%;
+208:   display:flex;align-items:center;justify-content:center;
+209:   color:var(--md-on-surface-variant);
+210:   position:relative;overflow:hidden;flex-shrink:0;
+211:   transition:background-color var(--md-dur-short) var(--md-easing-standard),color var(--md-dur-short) var(--md-easing-standard),transform var(--md-dur-short) var(--md-easing-standard);
+212: }
+213: .icon-btn::before{
+214:   content:"";position:absolute;inset:0;background:var(--md-on-surface);opacity:0;
+215:   border-radius:50%;transition:opacity var(--md-dur-short) var(--md-easing-standard);
+216: }
+217: .icon-btn:hover::before{opacity:.08;}
+218: .icon-btn:active::before{opacity:.12;}
+219: .icon-btn .icon{font-size:24px;position:relative;z-index:1;transition:transform var(--md-dur-short) var(--md-easing-standard);}
+220: .icon-btn:active .icon{transform:scale(.88);}
+221: /* is-active 仅用于标识当前页面（如设置页的 home 按钮），不再填充背景色 */
+222: .icon-btn.is-active{color:var(--md-on-surface);}
+223: .icon-btn.is-active::before{display:none;}
+224: 
+225: /* ---------- 主页面容器（页面切换用） ---------- */
+226: .main-area{
+227:   flex:1;position:relative;overflow:hidden;
+228:   background:var(--md-surface);
+229: }
+230: .page{
+231:   position:absolute;inset:0;
+232:   display:flex;flex-direction:column;
+233:   overflow:hidden;
+234:   transition:transform var(--md-dur-long) var(--md-easing-emphasized),opacity var(--md-dur-medium) var(--md-easing-standard);
+235:   will-change:transform,opacity;
+236: }
+237: .page.page-enter-right{transform:translateX(100%);opacity:0;pointer-events:none;}
+238: .page.page-enter-left{transform:translateX(-100%);opacity:0;pointer-events:none;}
+239: .page.page-active{transform:translateX(0);opacity:1;}
+240: .page.page-leave-right{transform:translateX(100%);opacity:0;pointer-events:none;}
+241: .page.page-leave-left{transform:translateX(-100%);opacity:0;pointer-events:none;}
+242: 
+243: /* ---------- 检查项列表 ---------- */
+244: .list-scroll{
+245:   flex:1;overflow-y:auto;overflow-x:hidden;
+246:   padding:8px 0 16px;
+247:   scroll-behavior:smooth;
+248:   -webkit-overflow-scrolling:touch;
+249:   position:relative;
+250: }
+251: .list-scroll::-webkit-scrollbar{width:0;}
+252: 
+253: /* 检查项卡片 —— MD3 list item */
+254: .check-item{
+255:   display:flex;align-items:center;gap:16px;
+256:   margin:0 16px 8px;padding:0 16px;
+257:   height:64px;border-radius:16px;
+258:   background:var(--md-surface-container-low);
+259:   color:var(--md-on-surface);
+260:   position:relative;overflow:hidden;
+261:   transform-origin:center top;
+262:   transition:
+263:     height var(--md-dur-long) var(--md-easing-emphasized),
+264:     min-height var(--md-dur-long) var(--md-easing-emphasized),
+265:     background-color var(--md-dur-short) var(--md-easing-standard),
+266:     transform var(--md-dur-medium) var(--md-easing-emphasized),
+267:     opacity var(--md-dur-medium) var(--md-easing-standard),
+268:     margin var(--md-dur-medium) var(--md-easing-emphasized),
+269:     padding var(--md-dur-long) var(--md-easing-emphasized),
+270:     border-radius var(--md-dur-medium) var(--md-easing-emphasized);
+271: }
+272: /* MD3 state layer（hover/press）—— 圆角裁剪由 .check-item 的 overflow:hidden 保证 */
+273: .check-item::before{
+274:   content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+275:   border-radius:inherit;pointer-events:none;
+276:   transition:opacity var(--md-dur-short) var(--md-easing-standard);
+277: }
+278: .check-item:hover::before{opacity:.08;}
+279: .check-item:active::before{opacity:.12;}
+280: .check-item.is-search-match{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+281: .check-item .ci-icon{
+282:   font-size:24px;color:var(--md-primary);flex-shrink:0;width:24px;text-align:center;position:relative;z-index:1;
+283:   transition:transform var(--md-dur-medium) var(--md-easing-emphasized),font-size var(--md-dur-long) var(--md-easing-emphasized),color var(--md-dur-short);
+284: }
+285: .check-item .ci-text{
+286:   flex:1;font-size:16px;line-height:1.3;position:relative;z-index:1;
+287:   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+288: }
+289: /* ===== 检查项对勾按钮 ===== */
+290: /* 始终显示为主题色(primary)背景+背景色(on-primary)对勾，无论完成与否 */
+291: .check-item .ci-check{
+292:   width:40px;height:40px;border-radius:50%;flex-shrink:0;
+293:   display:flex;align-items:center;justify-content:center;
+294:   color:var(--md-on-primary);
+295:   border:none;
+296:   position:relative;overflow:hidden;z-index:1;
+297:   background:var(--md-primary);
+298:   transition:transform var(--md-dur-short) var(--md-easing-standard),
+299:              opacity var(--md-dur-short) var(--md-easing-standard);
+300: }
+301: /* state layer */
+302: .check-item .ci-check::before{
+303:   content:"";position:absolute;inset:0;background:var(--md-on-primary);opacity:0;border-radius:50%;
+304:   transition:opacity var(--md-dur-short) var(--md-easing-standard);
+305: }
+306: .check-item .ci-check:hover::before{opacity:.08;}
+307: .check-item .ci-check:active::before{opacity:.12;}
+308: .check-item .ci-check:active{transform:scale(.9);}
+309: /* 对勾图标始终可见 */
+310: .check-item .ci-check .ci-check-icon{
+311:   font-size:24px;position:relative;z-index:1;
+312:   opacity:1;transform:scale(1);
+313: }
+314: /* 完成状态：文字变灰+删除线 */
+315: .check-item.completed .ci-text{opacity:.5;text-decoration:line-through;}
+316: 
+317: /* 完成后移除动画：右滑淡出 → 高度收缩 */
+318: .check-item.removing{
+319:   opacity:0;transform:translateX(60px) scale(.85);
+320:   height:0!important;min-height:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important;
+321:   border-radius:0!important;pointer-events:none;
+322: }
+323: 
+324: /* 全部完成 - 咖啡态（与空状态共用大图标显示逻辑） */
+325: .all-done{
+326:   min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+327:   gap:12px;padding:48px 24px;text-align:center;
+328:   opacity:0;transform:scale(.96);
+329:   transition:opacity var(--md-dur-long) var(--md-easing-emphasized-decelerate),transform var(--md-dur-long) var(--md-easing-emphasized-decelerate);
+330: }
+331: .all-done.show{opacity:1;transform:scale(1);}
+332: .all-done .big-icon{
+333:   font-size:96px;color:var(--md-primary);
+334: }
+335: .all-done .done-title{font-size:22px;font-weight:500;color:var(--md-on-surface);}
+336: .all-done .done-sub{font-size:14px;color:var(--md-on-surface-variant);}
+337: 
+338: /* 列表项新增/移除 FLIP 容器 */
+339: .list-container{position:relative;}
+340: 
+341: /* ---------- 底栏 Navigation Bar ---------- */
+342: .bottombar{
+343:   display:flex;align-items:stretch;
+344:   background:var(--md-surface-container);
+345:   color:var(--md-on-surface);
+346:   position:relative;z-index:20;
+347:   border-top:1px solid transparent;
+348:   overflow:hidden;
+349:   transition:background-color .25s ease;
+350: }
+351: .bottombar-scroll{
+352:   display:flex;align-items:stretch;
+353:   overflow-x:auto;overflow-y:hidden;
+354:   scroll-behavior:smooth;
+355:   flex:1;
+356:   scrollbar-width:none;-ms-overflow-style:none;
+357: }
+358: .bottombar-scroll::-webkit-scrollbar{display:none;}
+359: .nav-tab{
+360:   flex:0 0 auto;min-width:0;
+361:   display:flex;flex-direction:column;align-items:center;justify-content:center;
+362:   gap:4px;padding:8px 12px 12px;
+363:   color:var(--md-on-surface-variant);
+364:   position:relative;overflow:visible;
+365:   min-width:80px;background:transparent;
+366:   transition:color var(--md-dur-short) var(--md-easing-standard);
+367: }
+368: .nav-tab .tab-icon-pill{
+369:   width:64px;height:32px;border-radius:16px;
+370:   display:flex;align-items:center;justify-content:center;
+371:   transition:background-color var(--md-dur-medium) var(--md-easing-standard);
+372:   position:relative;
+373: }
+374: .nav-tab .tab-icon-pill .icon{font-size:24px;transition:transform var(--md-dur-short) var(--md-easing-standard);}
+375: .nav-tab .tab-label{
+376:   font-size:12px;font-weight:500;max-width:72px;
+377:   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+378:   transition:opacity var(--md-dur-short);
+379: }
+380: .nav-tab.is-active{color:var(--md-on-surface);}
+381: /* MD3 胶囊：用 scale 过渡使背景出现/消失更丝滑 */
+382: .nav-tab .tab-icon-pill{position:relative;}
+383: .nav-tab .tab-icon-pill::after{
+384:   content:"";position:absolute;inset:0;border-radius:inherit;
+385:   background:var(--md-secondary-container);
+386:   transform:scale(0);transform-origin:center;
+387:   transition:transform var(--md-dur-medium) var(--md-easing-emphasized);
+388:   z-index:-1;
+389: }
+390: .nav-tab.is-active .tab-icon-pill::after{transform:scale(1);}
+391: .nav-tab.is-active .tab-icon-pill .icon{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
+392: .nav-tab.is-active .tab-label{font-weight:600;}
+393: /* MD3 state layer：限制在图标 pill 区域 */
+394: .nav-tab .tab-icon-pill::before{
+395:   content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+396:   border-radius:inherit;transition:opacity var(--md-dur-short) var(--md-easing-standard);
+397:   z-index:1;
+398: }
+399: .nav-tab:hover .tab-icon-pill::before{opacity:.08;}
+400: .nav-tab:active .tab-icon-pill::before{opacity:.12;}
+401: .nav-tab .tab-icon-pill .icon{position:relative;z-index:2;}
+402: /* 新增标签动画 */
+403: .nav-tab.tab-enter{animation:tab-grow var(--md-dur-long) var(--md-easing-emphasized-decelerate);}
+404: @keyframes tab-grow{from{opacity:0;transform:scale(.6);max-width:0;padding-left:0;padding-right:0;}to{opacity:1;transform:scale(1);}}
+405: /* 删除标签动画 */
+406: .nav-tab.tab-leave{animation:tab-shrink var(--md-dur-medium) var(--md-easing-emphasized-accelerate) forwards;pointer-events:none;}
+407: @keyframes tab-shrink{to{opacity:0;transform:scale(.6);max-width:0;padding-left:0;padding-right:0;margin:0;}}
+408: 
+409: /* ---------- 普通按钮（FAB / Button） ---------- */
+410: .btn{
+411:   display:inline-flex;align-items:center;justify-content:center;gap:8px;
+412:   height:40px;padding:0 24px;border-radius:20px;
+413:   font-size:14px;font-weight:500;letter-spacing:.1px;
+414:   background:var(--md-primary);color:var(--md-on-primary);
+415:   position:relative;overflow:hidden;
+416:   transition:background-color var(--md-dur-short) var(--md-easing-standard),box-shadow var(--md-dur-short),transform var(--md-dur-short);
+417: }
+418: .btn::before{content:"";position:absolute;inset:0;background:var(--md-on-primary);opacity:0;transition:opacity var(--md-dur-short);}
+419: .btn:hover::before{opacity:.08;}
+420: .btn:active{transform:scale(.97);}
+421: .btn:active::before{opacity:.12;}
+422: .btn .icon{font-size:18px;}
+423: .btn.btn-tonal{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+424: .btn.btn-tonal::before{background:var(--md-on-secondary-container);}
+425: .btn.btn-outlined{background:transparent;color:var(--md-primary);border:1px solid var(--md-outline);}
+426: .btn.btn-outlined::before{background:var(--md-primary);}
+427: .btn.btn-text{background:transparent;color:var(--md-primary);}
+428: .btn.btn-text::before{background:var(--md-primary);}
+429: .btn.btn-error{background:var(--md-error);color:var(--md-on-error);}
+430: .btn.btn-error::before{background:var(--md-on-error);}
+431: .btn:disabled{opacity:.38;pointer-events:none;}
+432: .btn.btn-large{height:48px;padding:0 32px;border-radius:24px;font-size:15px;}
+433: 
+434: /* FAB 悬浮按钮 */
+435: .fab{
+436:   position:absolute;width:56px;height:56px;border-radius:18px;
+437:   background:var(--md-primary-container);color:var(--md-on-primary-container);
+438:   display:flex;align-items:center;justify-content:center;
+439:   box-shadow:0 4px 12px rgba(0,0,0,.2);
+440:   z-index:15;overflow:hidden;
+441:   transition:transform var(--md-dur-medium) var(--md-easing-emphasized),box-shadow var(--md-dur-short),opacity var(--md-dur-medium) var(--md-easing-standard),scale var(--md-dur-medium) var(--md-easing-emphasized);
+442: }
+443: .fab::before{content:"";position:absolute;inset:0;background:var(--md-on-primary-container);opacity:0;transition:opacity var(--md-dur-short);}
+444: .fab:hover::before{opacity:.1;}
+445: .fab:active{transform:scale(.92);box-shadow:0 2px 6px rgba(0,0,0,.2);}
+446: .fab .icon{font-size:24px;position:relative;z-index:1;}
+447: 
+448: /* 重置 FAB：默认隐藏，全部完成时显示。右下角，距底栏上方 16px */
+449: .reset-fab{
+450:   right:16px;bottom:16px;
+451:   opacity:0;transform:scale(.4) translateY(20px);pointer-events:none;
+452: }
+453: .reset-fab.visible{
+454:   opacity:1;transform:scale(1) translateY(0);pointer-events:auto;
+455: }
+456: 
+457: /* ---------- 新建/编辑检查单页面 ---------- */
+458: .form-page-content{
+459:   flex:1;overflow-y:auto;overflow-x:hidden;
+460:   padding:8px 0 24px;
+461:   -webkit-overflow-scrolling:touch;
+462: }
+463: .form-page-content::-webkit-scrollbar{width:0;}
+464: .form-section{padding:16px;}
+465: .form-label{
+466:   font-size:12px;font-weight:500;color:var(--md-on-surface-variant);
+467:   letter-spacing:.4px;text-transform:none;
+468:   margin-bottom:8px;display:block;padding:0 4px;
+469: }
+470: .section-title{
+471:   font-size:14px;font-weight:500;color:var(--md-primary);
+472:   padding:24px 16px 8px;letter-spacing:.1px;
+473: }
+474: 
+475: /* 图标选择网格 */
+476: .icon-picker-grid{
+477:   display:grid;grid-template-columns:repeat(6,1fr);gap:8px;
+478:   padding:8px;
+479: }
+480: .icon-option{
+481:   aspect-ratio:1;border-radius:12px;
+482:   display:flex;align-items:center;justify-content:center;
+483:   color:var(--md-on-surface-variant);
+484:   background:var(--md-surface-container-low);
+485:   position:relative;overflow:hidden;
+486:   transition:background-color var(--md-dur-short) var(--md-easing-standard),color var(--md-dur-short),transform var(--md-dur-short);
+487: }
+488: .icon-option::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+489: .icon-option:hover::before{opacity:.08;}
+490: .icon-option:active{transform:scale(.9);}
+491: .icon-option .icon{font-size:24px;position:relative;z-index:1;}
+492: .icon-option.selected{background:var(--md-primary);color:var(--md-on-primary);}
+493: .icon-option.auto-icon{
+494:   grid-column:span 6;aspect-ratio:auto;height:48px;gap:8px;flex-direction:row;justify-content:center;
+495: }
+496: .icon-option.auto-icon .label{font-size:13px;font-weight:500;}
+497: 
+498: /* 文本输入框（MD3 Outlined Text Field） */
+499: .text-field{
+500:   position:relative;margin-top:8px;
+501: }
+502: .text-field input{
+503:   width:100%;height:56px;padding:0 16px;
+504:   font-size:16px;line-height:56px;color:var(--md-on-surface);
+505:   background:transparent;
+506:   border:1px solid var(--md-outline);
+507:   border-radius:12px;
+508:   transition:border-color var(--md-dur-short) var(--md-easing-standard);
+509: }
+510: .text-field input:focus{border-color:var(--md-primary);border-width:2px;padding:0 15px;}
+511: .text-field label{
+512:   position:absolute;left:12px;top:-8px;padding:0 4px;
+513:   font-size:12px;color:var(--md-on-surface-variant);
+514:   background:var(--md-surface);
+515:   transition:color var(--md-dur-short);
+516: }
+517: .text-field input:focus + label{color:var(--md-primary);}
+518: 
+519: /* 重置时间选择 */
+520: .duration-row{
+521:   display:flex;align-items:center;gap:16px;padding:12px 4px;
+522: }
+523: .duration-row .dr-label{flex:1;font-size:16px;color:var(--md-on-surface);}
+524: .duration-row .dr-value{font-size:14px;color:var(--md-primary);font-weight:500;}
+525: .duration-chips{display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px;}
+526: .chip{
+527:   height:32px;padding:0 12px;border-radius:8px;
+528:   display:inline-flex;align-items:center;gap:6px;
+529:   font-size:13px;font-weight:500;
+530:   border:1px solid var(--md-outline);color:var(--md-on-surface-variant);
+531:   background:transparent;position:relative;overflow:hidden;
+532:   transition:background-color var(--md-dur-short),color var(--md-dur-short),border-color var(--md-dur-short);
+533: }
+534: .chip::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+535: .chip:hover::before{opacity:.08;}
+536: .chip:active::before{opacity:.12;}
+537: .chip.selected{background:var(--md-secondary-container);color:var(--md-on-secondary-container);border-color:transparent;}
+538: 
+539: /* 检查项编辑条目（新建页中） */
+540: .form-item{
+541:   display:flex;align-items:center;gap:8px;
+542:   padding:8px 8px 8px 4px;
+543:   position:relative;
+544:   transition:opacity var(--md-dur-medium) var(--md-easing-standard),transform var(--md-dur-medium) var(--md-easing-emphasized),max-height var(--md-dur-medium) var(--md-easing-emphasized);
+545:   max-height:80px;overflow:hidden;
+546: }
+547: .form-item.removing{opacity:0;transform:translateX(-40px);max-height:0;padding-top:0;padding-bottom:0;}
+548: .form-item .fi-icon-btn{
+549:   width:48px;height:48px;border-radius:50%;flex-shrink:0;
+550:   display:flex;align-items:center;justify-content:center;
+551:   color:var(--md-on-surface-variant);position:relative;overflow:hidden;
+552:   transition:background-color var(--md-dur-short),color var(--md-dur-short);
+553: }
+554: .form-item .fi-icon-btn::before{content:"";position:absolute;inset:0;background:var(--md-on-surface);opacity:0;transition:opacity var(--md-dur-short);}
+555: .form-item .fi-icon-btn:hover::before{opacity:.08;}
+556: .form-item .fi-icon-btn:active::before{opacity:.12;}
+557: .form-item .fi-icon-btn .icon{font-size:24px;position:relative;z-index:1;}
+558: .form-item .fi-icon-btn.has-icon{color:var(--md-primary);}
+559: .form-item .fi-input{flex:1;height:48px;margin-top:0;}
+560: .form-item .fi-input input{height:48px;line-height:48px;border-radius:12px;}
+561: .form-item .fi-remove{
+562:   width:36px;height:36px;border-radius:50%;flex-shrink:0;
+563:   display:flex;align-items:center;justify-content:center;
+564:   color:var(--md-on-surface-variant);position:relative;overflow:hidden;
+565:   opacity:0;transition:opacity var(--md-dur-short),background-color var(--md-dur-short);
+566: }
+567: .form-item .fi-remove::before{content:"";position:absolute;inset:0;background:var(--md-error);opacity:0;transition:opacity var(--md-dur-short);}
+568: .form-item .fi-remove:hover::before{opacity:.1;}
+569: .form-item .fi-remove .icon{font-size:20px;position:relative;z-index:1;}
+570: .form-item.has-content .fi-remove{opacity:1;}
+571: 
+572: /* 检查单图标选择行：7个圆按钮（6常用 + 更多/预览） */
+573: .icon-circle-row{
+574:   display:flex;gap:12px;flex-wrap:wrap;
+575: }
+576: .icon-circle-btn{
+577:   width:48px;height:48px;border-radius:50%;flex-shrink:0;
+578:   display:flex;align-items:center;justify-content:center;
+579:   color:var(--md-on-surface-variant);
+580:   background:var(--md-surface-container-low);
+581:   position:relative;overflow:hidden;
+582:   transition:background-color var(--md-dur-medium) var(--md-easing-emphasized),
+583:              color var(--md-dur-medium) var(--md-easing-emphasized),
+584:              transform var(--md-dur-short) var(--md-easing-standard);
+585: }
+586: .icon-circle-btn::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+587: .icon-circle-btn:hover::before{opacity:.08;}
+588: .icon-circle-btn:active{transform:scale(.88);}
+589: .icon-circle-btn .icon{font-size:24px;position:relative;z-index:1;transition:transform var(--md-dur-medium) var(--md-easing-emphasized-decelerate);}
+590: .icon-circle-btn:active .icon{transform:scale(.85);}
+591: .icon-circle-btn.selected{background:var(--md-primary);color:var(--md-on-primary);}
+592: .icon-circle-btn.selected .icon{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
+593: .icon-circle-btn.preview-btn{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+594: .icon-circle-btn.preview-btn .icon{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
+595: 
+596: /* 表单主体 */
+597: .form-body{padding-bottom:8px;}
+598: 
+599: /* 表单底部按钮组 —— 跟随页面滚动（流式布局） */
+600: .form-actions{
+601:   display:flex;gap:12px;justify-content:center;
+602:   padding:8px 16px 32px;flex-wrap:wrap;
+603: }
+604: 
+605: /* ---------- 搜索栏 ---------- */
+606: .search-bar{
+607:   display:flex;align-items:center;gap:8px;
+608:   padding:0 8px;max-height:0;overflow:hidden;
+609:   background:var(--md-surface);
+610:   position:relative;z-index:21;
+611:   opacity:0;pointer-events:none;
+612:   transition:max-height var(--md-dur-medium) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-short) var(--md-easing-standard),padding var(--md-dur-medium) var(--md-easing-standard);
+613: }
+614: .search-bar.visible{max-height:64px;padding:4px 8px;opacity:1;pointer-events:auto;}
+615: .search-bar .sb-back,.search-bar .sb-clear{
+616:   width:48px;height:48px;border-radius:50%;flex-shrink:0;
+617:   display:flex;align-items:center;justify-content:center;
+618:   color:var(--md-on-surface-variant);position:relative;overflow:hidden;
+619:   transition:background-color var(--md-dur-short);
+620: }
+621: .search-bar .sb-back::before,.search-bar .sb-clear::before{content:"";position:absolute;inset:0;background:var(--md-on-surface);opacity:0;transition:opacity var(--md-dur-short);}
+622: .search-bar .sb-back:hover::before,.search-bar .sb-clear:hover::before{opacity:.08;}
+623: .search-bar .sb-back .icon,.search-bar .sb-clear .icon{font-size:24px;position:relative;z-index:1;}
+624: .search-input-wrap{flex:1;position:relative;}
+625: .search-input-wrap input{
+626:   width:100%;height:48px;padding:0 16px;
+627:   font-size:16px;color:var(--md-on-surface);
+628:   background:var(--md-surface-container-high);
+629:   border-radius:24px;border:none;
+630:   transition:background-color var(--md-dur-short);
+631: }
+632: .search-input-wrap input:focus{background:var(--md-surface-container-highest);}
+633: .search-bar .sb-clear{opacity:0;transition:opacity var(--md-dur-short),background-color var(--md-dur-short);}
+634: .search-bar.has-text .sb-clear{opacity:1;}
+635: 
+636: /* ---------- 设置页面 ---------- */
+637: .settings-content{
+638:   flex:1;overflow-y:auto;overflow-x:hidden;
+639:   -webkit-overflow-scrolling:touch;
+640:   padding-bottom:24px;
+641: }
+642: .settings-content::-webkit-scrollbar{width:0;}
+643: .settings-group{margin:16px;border-radius:16px;overflow:hidden;background:var(--md-surface-container-low);}
+644: .settings-item{
+645:   display:flex;align-items:center;gap:16px;
+646:   padding:16px;min-height:56px;
+647:   position:relative;
+648:   transition:background-color var(--md-dur-short);
+649: }
+650: .settings-item.clickable{cursor:pointer;}
+651: .settings-item.clickable::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+652: .settings-item.clickable:hover::before{opacity:.06;}
+653: .settings-item.clickable:active::before{opacity:.1;}
+654: .settings-item .si-icon{font-size:24px;color:var(--md-on-surface-variant);flex-shrink:0;}
+655: .settings-item .si-text{flex:1;}
+656: .settings-item .si-title{font-size:16px;color:var(--md-on-surface);}
+657: .settings-item .si-sub{font-size:13px;color:var(--md-on-surface-variant);margin-top:2px;}
+658: .settings-item.disabled{opacity:.38;pointer-events:none;}
+659: 
+660: /* 语言菜单项：圆角 state layer + 水滴效果（overflow:hidden 裁剪圆角） */
+661: .lang-item{
+662:   display:flex;align-items:center;gap:16px;
+663:   padding:16px;min-height:56px;
+664:   position:relative;overflow:hidden;border-radius:12px;
+665:   margin:0 4px;
+666:   transition:background-color var(--md-dur-short) var(--md-easing-standard);
+667: }
+668: .lang-item::before{
+669:   content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+670:   border-radius:inherit;transition:opacity var(--md-dur-short) var(--md-easing-standard);
+671: }
+672: .lang-item:hover::before{opacity:.08;}
+673: .lang-item:active::before{opacity:.12;}
+674: .lang-item.selected .si-icon{color:var(--md-primary);}
+675: .lang-item .si-icon{font-size:24px;color:var(--md-on-surface-variant);flex-shrink:0;position:relative;z-index:1;}
+676: .lang-item .si-text{flex:1;position:relative;z-index:1;}
+677: .lang-item .si-title{font-size:16px;color:var(--md-on-surface);}
+678: 
+679: /* 开关 Switch（MD3 完整重写）
+680:    轨道 52×32，圆角 16px。球用绝对定位 + transform 居中。
+681:    关闭：球 12px，左侧距边 8px
+682:    开启：球 24px，右侧距边 8px
+683:    按下：球横向拉伸 */
+684: .switch{
+685:   width:52px;height:32px;border-radius:16px;
+686:   background:var(--md-surface-container-highest);
+687:   border:2px solid var(--md-outline);
+688:   position:relative;flex-shrink:0;cursor:pointer;
+689:   display:flex;align-items:center;
+690:   transition:background-color var(--md-dur-medium) var(--md-easing-standard),border-color var(--md-dur-medium) var(--md-easing-standard);
+691: }
+692: .switch .switch-thumb{
+693:   position:absolute;
+694:   width:12px;height:12px;border-radius:50%;
+695:   background:var(--md-outline);
+696:   /* 关闭：球在左侧，距左 border 6px（8-2border），用 left 定位 */
+697:   left:6px;
+698:   top:50%;transform:translateY(-50%);
+699:   transition:left var(--md-dur-medium) var(--md-easing-emphasized),
+700:              width var(--md-dur-medium) var(--md-easing-emphasized),
+701:              height var(--md-dur-medium) var(--md-easing-emphasized),
+702:              background-color var(--md-dur-medium) var(--md-easing-standard);
+703: }
+704: .switch.on{background:var(--md-primary);border-color:var(--md-primary);}
+705: /* 开启：球 24px，移到右侧。left = 52 - 2(border) - 24 - 6 = 20px */
+706: .switch.on .switch-thumb{left:22px;width:24px;height:24px;background:var(--md-on-primary);}
+707: /* 按下时球横向拉伸（MD3 规范） */
+708: .switch:active:not(.on) .switch-thumb{width:18px;}
+709: .switch.on:active .switch-thumb{width:28px;}
+710: 
+711: /* 单选按钮组（主题模式选择） */
+712: .seg-buttons{display:flex;gap:8px;padding:0 16px 16px;}
+713: .seg-btn{
+714:   flex:1;height:40px;border-radius:20px;
+715:   display:flex;align-items:center;justify-content:center;gap:6px;
+716:   font-size:14px;font-weight:500;
+717:   border:1px solid var(--md-outline);color:var(--md-on-surface-variant);
+718:   background:transparent;position:relative;overflow:hidden;
+719:   transition:background-color var(--md-dur-short),color var(--md-dur-short),border-color var(--md-dur-short);
+720: }
+721: .seg-btn::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+722: .seg-btn:hover::before{opacity:.08;}
+723: .seg-btn.selected{background:var(--md-secondary-container);color:var(--md-on-secondary-container);border-color:transparent;}
+724: .seg-btn .icon{font-size:18px;}
+725: 
+726: /* 滑块 Slider（MD3 规范）：active track 用 primary 色，inactive 用 surface-container-highest */
+727: .slider-wrap{padding:8px 16px 16px;display:flex;align-items:center;gap:12px;}
+728: .slider-wrap .slider-value{font-size:13px;color:var(--md-primary);font-weight:500;min-width:48px;text-align:right;}
+729: .slider{
+730:   flex:1;height:40px;position:relative;display:flex;align-items:center;
+731: }
+732: .slider input[type=range]{
+733:   -webkit-appearance:none;appearance:none;
+734:   width:100%;height:4px;border-radius:2px;
+735:   /* active/inactive 双色 track 由 JS 通过 --slider-pct 动态设置渐变 */
+736:   background:linear-gradient(to right,
+737:     var(--md-primary) 0%, var(--md-primary) var(--slider-pct,0%),
+738:     var(--md-surface-container-highest) var(--slider-pct,0%), var(--md-surface-container-highest) 100%);
+739:   outline:none;margin:0;cursor:pointer;
+740: }
+741: .slider input[type=range]::-webkit-slider-thumb{
+742:   -webkit-appearance:none;appearance:none;
+743:   width:20px;height:20px;border-radius:50%;
+744:   background:var(--md-primary);cursor:pointer;
+745:   border:none;
+746:   transition:box-shadow var(--md-dur-short) var(--md-easing-standard),transform var(--md-dur-short) var(--md-easing-standard);
+747: }
+748: .slider input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 8px color-mix(in srgb,var(--md-primary) 12%,transparent);}
+749: .slider input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15);box-shadow:0 0 0 12px color-mix(in srgb,var(--md-primary) 16%,transparent);}
+750: .slider input[type=range]::-moz-range-thumb{
+751:   width:20px;height:20px;border-radius:50%;background:var(--md-primary);cursor:pointer;border:none;
+752: }
+753: .slider input[type=range]::-moz-range-progress{background:var(--md-primary);height:4px;border-radius:2px;}
+754: .slider input[type=range]::-moz-range-track{background:var(--md-surface-container-highest);height:4px;border-radius:2px;}
+755: 
+756: /* 下拉菜单（许可证） */
+757: .dropdown{margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--md-surface-container-low);}
+758: .dropdown:last-child{margin-bottom:0;}
+759: .dropdown-header{
+760:   display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer;
+761:   position:relative;transition:background-color var(--md-dur-short);
+762: }
+763: .dropdown-header::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+764: .dropdown-header:hover::before{opacity:.06;}
+765: .dropdown-header .dh-icon{font-size:24px;color:var(--md-on-surface-variant);}
+766: .dropdown-header .dh-title{flex:1;font-size:15px;font-weight:500;color:var(--md-on-surface);}
+767: .dropdown-header .dh-arrow{font-size:24px;color:var(--md-on-surface-variant);transition:transform var(--md-dur-medium) var(--md-easing-emphasized);}
+768: .dropdown.open .dh-arrow{transform:rotate(180deg);}
+769: .dropdown-body{
+770:   max-height:0;overflow:hidden;
+771:   transition:max-height var(--md-dur-long) var(--md-easing-emphasized);
+772: }
+773: .dropdown-body-inner{padding:8px 16px 20px;}
+774: .license-text{
+775:   font-family:'HarmonyOS Sans SC',monospace;
+776:   font-size:12px;line-height:1.6;color:var(--md-on-surface-variant);
+777:   white-space:pre-wrap;word-break:break-word;
+778:   max-height:280px;overflow-y:auto;
+779:   background:var(--md-surface-container);padding:12px;border-radius:8px;
+780: }
+781: .license-text::-webkit-scrollbar{width:4px;}
+782: .license-text::-webkit-scrollbar-thumb{background:var(--md-outline-variant);border-radius:2px;}
+783: .license-item{margin-bottom:8px;}
+784: .license-item .li-name{font-size:14px;font-weight:500;color:var(--md-on-surface);}
+785: .license-item .li-license{font-size:12px;color:var(--md-on-surface-variant);}
+786: 
+787: /* 关于区域 */
+788: .about-section{padding:32px 16px;text-align:center;}
+789: .about-icon{
+790:   width:96px;height:96px;border-radius:24px;margin:0 auto 16px;
+791:   display:flex;align-items:center;justify-content:center;
+792:   overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15);
+793: }
+794: .about-icon img{width:100%;height:100%;object-fit:cover;}
+795: .about-name{font-size:28px;font-weight:700;color:var(--md-on-surface);margin-bottom:4px;}
+796: .about-version{font-size:14px;color:var(--md-on-surface-variant);margin-bottom:16px;}
+797: .about-credit{font-size:14px;color:var(--md-on-surface-variant);margin-bottom:4px;}
+798: .about-credit a{color:var(--md-primary);text-decoration:underline;cursor:pointer;}
+799: .about-glm{font-size:14px;color:var(--md-on-surface-variant);}
+800: 
+801: /* 选择菜单（Select / 语言） */
+802: .select-field{
+803:   position:relative;margin:8px 16px;
+804: }
+805: .select-field select{
+806:   width:100%;height:56px;padding:0 16px;
+807:   font-size:16px;color:var(--md-on-surface);
+808:   background:transparent;
+809:   border:1px solid var(--md-outline);
+810:   border-radius:12px;
+811:   -webkit-appearance:none;appearance:none;
+812:   cursor:pointer;
+813:   transition:border-color var(--md-dur-short);
+814: }
+815: .select-field select:focus{border-color:var(--md-primary);border-width:2px;padding:0 15px;}
+816: .select-field .select-arrow{
+817:   position:absolute;right:12px;top:50%;transform:translateY(-50%);
+818:   font-size:24px;color:var(--md-on-surface-variant);pointer-events:none;
+819: }
+820: .select-field label{
+821:   position:absolute;left:12px;top:-8px;padding:0 4px;
+822:   font-size:12px;color:var(--md-on-surface-variant);background:var(--md-surface);
+823: }
+824: 
+825: /* 图标选择弹窗（底栏/检查项） */
+826: .modal-scrim{
+827:   position:fixed;inset:0;background:rgba(0,0,0,.4);
+828:   z-index:100;opacity:0;pointer-events:none;
+829:   transition:opacity var(--md-dur-medium) var(--md-easing-standard);
+830: }
+831: .modal-scrim.visible{opacity:1;pointer-events:auto;}
+832: .modal{
+833:   position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
+834:   background:var(--md-surface-container-high);color:var(--md-on-surface);
+835:   border-radius:28px;z-index:101;
+836:   width:min(440px,90vw);max-height:80vh;
+837:   display:flex;flex-direction:column;
+838:   opacity:0;pointer-events:none;
+839:   transition:transform var(--md-dur-long) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-medium);
+840: }
+841: .modal.visible{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+842: .modal-header{padding:24px 24px 16px;font-size:22px;font-weight:500;}
+843: .modal-search{padding:0 24px 16px;}
+844: .modal-search input{
+845:   width:100%;height:48px;padding:0 16px;
+846:   background:var(--md-surface-container-highest);border:none;border-radius:24px;
+847:   font-size:15px;color:var(--md-on-surface);
+848: }
+849: .modal-body{flex:1;overflow-y:auto;padding:0 16px 24px;}
+850: .modal-body::-webkit-scrollbar{width:0;}
+851: .modal-actions{padding:8px 24px 24px;display:flex;justify-content:flex-end;gap:8px;}
+852: 
+853: /* 确认对话框（删除二次确认） */
+854: .dialog{
+855:   position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
+856:   background:var(--md-surface-container-high);color:var(--md-on-surface);
+857:   border-radius:28px;z-index:101;
+858:   width:min(360px,88vw);padding:24px;
+859:   opacity:0;pointer-events:none;
+860:   transition:transform var(--md-dur-long) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-medium);
+861: }
+862: .dialog.visible{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+863: .dialog-title{font-size:22px;font-weight:500;margin-bottom:8px;}
+864: .dialog-body{font-size:14px;color:var(--md-on-surface-variant);line-height:1.5;margin-bottom:24px;}
+865: .dialog-actions{display:flex;justify-content:flex-end;gap:8px;}
+866: 
+867: /* Toast 提示 */
+868: .toast{
+869:   position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+870:   background:var(--md-inverse-surface);color:var(--md-inverse-on-surface);
+871:   padding:12px 16px;border-radius:8px;font-size:14px;
+872:   z-index:200;opacity:0;pointer-events:none;
+873:   box-shadow:0 4px 12px rgba(0,0,0,.2);
+874:   transition:transform var(--md-dur-medium) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-medium);
+875:   max-width:90vw;text-align:center;
+876: }
+877: .toast.visible{transform:translateX(-50%) translateY(0);opacity:1;}
+878: 
+879: /* 大图标搜索弹窗的图标网格 */
+880: .modal-icon-grid{
+881:   padding:8px;
+882: }
+883: /* 图标分类标题 */
+884: .icon-category-title{
+885:   font-size:13px;font-weight:500;color:var(--md-on-surface-variant);
+886:   padding:16px 8px 8px;letter-spacing:.5px;
+887: }
+888: /* 分类下的图标网格 */
+889: .icon-category-grid{
+890:   display:grid;grid-template-columns:repeat(6,1fr);gap:8px;
+891: }
+892: 
+893: /* 隐藏类 */
+894: .hidden{display:none!important;}
+895: 
+896: /* 滚动条全局隐藏 */
+897: *::-webkit-scrollbar{width:0;height:0;}
+898: 
+899: /* 搜索时高亮 */
+900: .search-highlight{background:color-mix(in srgb,var(--md-primary) 24%,transparent);border-radius:4px;padding:0 2px;}
+901: 
+902: /* 响应式 */
+903: @media(max-width:360px){
+904:   .icon-picker-grid,.icon-category-grid{grid-template-columns:repeat(5,1fr);}
+905:   .nav-tab{min-width:72px;padding:8px 8px 12px;}
+906:   .nav-tab .tab-icon-pill{width:56px;}
+907: }
+908: 
+909: /* ===== 触屏设备：禁用 hover 效果（触摸后 hover 状态不应保持） ===== */
+910: @media(hover:none){
+911:   .icon-btn:hover::before,
+912:   .nav-tab:hover .tab-icon-pill::before,
+913:   .check-item:hover::before,
+914:   .ci-check:hover::before,
+915:   .btn:hover::before,
+916:   .seg-btn:hover::before,
+917:   .chip:hover::before,
+918:   .settings-item.clickable:hover::before,
+919:   .dropdown-header.clickable:hover::before,
+920:   .lang-item:hover::before,
+921:   .icon-option:hover::before,
+922:   .icon-circle-btn:hover::before,
+923:   .fi-icon-btn:hover::before,
+924:   .fab:hover::before{opacity:0 !important;}
+925: }
+926: 
+927: /* ===== 横屏模式：底栏移到左侧成为导航栏（MD3 Navigation Drawer 规范） ===== */
+928: @media(orientation:landscape) and (max-height:480px){
+929:   #app{flex-direction:row;}
+930:   .topbar{height:48px;flex-shrink:0;width:100%;}
+931:   /* 横屏时顶栏横跨上方，底栏变为左侧竖栏 */
+932:   #app{display:flex;flex-direction:column;}
+933:   .main-area{flex:1;display:flex;flex-direction:row;overflow:hidden;}
+934:   .bottombar{flex-direction:column;width:auto;max-width:80px;border-top:none;border-right:1px solid var(--md-outline-variant);overflow-y:auto;overflow-x:hidden;}
+935:   .bottombar-scroll{flex-direction:column;overflow-x:hidden;overflow-y:auto;}
+936:   .nav-tab{min-width:auto;padding:8px 4px;}
+937:   .nav-tab .tab-label{font-size:10px;max-width:64px;}
+938:   .nav-tab .tab-icon-pill{width:48px;height:32px;}
+939:   /* 主区域在横屏时占满剩余空间 */
+940:   .page{flex:1;}
+941: }
+942: </style>
+943: </head>
+944: <body>
+945: <div id="app">
+946:   <!-- 顶栏 -->
+947:   <header class="topbar" id="topbar">
+948:     <div class="topbar-title" id="topbarTitle"><span id="topbarTitleText"></span><span class="title-suffix" id="topbarTitleSuffix"></span></div>
+949:     <button class="icon-btn" id="btnConfig" aria-label="配置"><span class="icon">menu</span></button>
+950:     <button class="icon-btn" id="btnSearch" aria-label="搜索"><span class="icon">search</span></button>
+951:     <button class="icon-btn" id="btnSettings" aria-label="设置"><span class="icon">settings</span></button>
+952:   </header>
+953: 
+954:   <!-- 搜索栏 -->
+955:   <div class="search-bar" id="searchBar">
+956:     <button class="sb-back" id="sbBack" aria-label="关闭搜索"><span class="icon">arrow_back</span></button>
+957:     <div class="search-input-wrap">
+958:       <input type="text" id="searchInput" autocomplete="off">
+959:     </div>
+960:     <button class="sb-clear" id="sbClear" aria-label="清除"><span class="icon">close</span></button>
+961:   </div>
+962: 
+963:   <!-- 主区域（页面容器） -->
+964:   <main class="main-area" id="mainArea">
+965:     <!-- 主页面（检查项列表） -->
+966:     <section class="page page-active" id="pageHome">
+967:       <div class="list-scroll" id="listScroll">
+968:         <div class="list-container" id="listContainer"></div>
+969:         <!-- 空状态 / 全部完成 / 列表 由JS动态渲染 -->
+970:       </div>
+971:       <!-- 重置 FAB：仅全部完成时显示 -->
+972:       <button class="fab reset-fab" id="btnResetList" aria-label="重置检查单"><span class="icon">restart_alt</span></button>
+973:     </section>
+974: 
+975:     <!-- 新建/编辑检查单页面 -->
+976:     <section class="page page-enter-right" id="pageForm">
+977:       <div class="form-page-content" id="formContent"></div>
+978:     </section>
+979: 
+980:     <!-- 设置页面 -->
+981:     <section class="page page-enter-right" id="pageSettings">
+982:       <div class="settings-content" id="settingsContent"></div>
+983:     </section>
+984:   </main>
+985: 
+986:   <!-- 底栏 -->
+987:   <nav class="bottombar" id="bottombar">
+988:     <div class="bottombar-scroll" id="bottombarScroll"></div>
+989:   </nav>
+990: </div>
+991: 
+992: <!-- 弹窗：图标选择 -->
+993: <div class="modal-scrim" id="iconPickerScrim"></div>
+994: <div class="modal" id="iconPickerModal">
+995:   <div class="modal-header" id="iconPickerTitle">选择图标</div>
+996:   <div class="modal-search"><input type="text" id="iconPickerSearch" placeholder="搜索图标"></div>
+997:   <div class="modal-body"><div class="modal-icon-grid" id="iconPickerGrid"></div></div>
+998:   <div class="modal-actions">
+999:     <button class="btn btn-text" id="iconPickerCancel">取消</button>
+1000:   </div>
+1001: </div>
+1002: 
+1003: <!-- 弹窗：语言选择（居中 modal 样式，可滚动） -->
+1004: <div class="modal-scrim" id="langScrim"></div>
+1005: <div class="modal" id="langModal">
+1006:   <div class="modal-header" id="langModalTitle">语言</div>
+1007:   <div class="modal-body" id="langModalBody"></div>
+1008:   <div class="modal-actions">
+1009:     <button class="btn btn-text" id="langModalCancel">取消</button>
+1010:   </div>
+1011: </div>
+1012: 
+1013: <!-- 弹窗：确认对话框 -->
+1014: <div class="modal-scrim" id="dialogScrim"></div>
+1015: <div class="dialog" id="confirmDialog">
+1016:   <div class="dialog-title" id="dialogTitle"></div>
+1017:   <div class="dialog-body" id="dialogBody"></div>
+1018:   <div class="dialog-actions" id="dialogActions"></div>
+1019: </div>
+1020: 
+1021: <!-- Toast -->
+1022: <div class="toast" id="toast"></div>
+1023: 
+1024: <script>
+1025: /* ============================================================
+1026:    检查单应用 - JavaScript 逻辑
+1027:    ============================================================ */
+1028: 
+1029: /* ---------- 内嵌资源占位（构建脚本注入） ---------- */
+1030: <LONG 159002 chars>
+1031: const APP_VERSION = 'Release v0.8.0';
+1032: const APP_AUTHOR_URL = 'https://github.com/CrazySue';
+1033: 
+1034: /* ---------- 图标库（分类结构，便于查找） ---------- */
+1035: const ICON_LIBRARY = {
+1036:   '日常': ['checklist','home','work','school','bedtime','alarm','schedule','event','today','timer','hourglass_empty','restaurant','restaurant_menu','local_cafe','water_full','coffee','medication','health_and_safety','brush','shower','wash','checkroom','snowshoeing','watch','visibility','glasses','door_front','light','lightbulb','lock','key','wallet','credit_card','phone_iphone','laptop','headphones','battery_charging_full','backpack','umbrella'],
+1037:   '出行': ['directions_car','directions_bus','directions_bike','directions_walk','directions_run','directions_boat','flight','flight_takeoff','train','sailing','luggage','travel_explore','map','location_on','navigation','local_taxi','two_wheeler','connecting_airports','local_shipping','delivery_dining','moped'],
+1038:   '购物': ['shopping_bag','shopping_cart','shopping_basket','local_grocery_store','store','local_mall','redeem','card_giftcard','sell','label','inventory_2','warehouse','payments','savings','account_balance','currency_exchange','percent'],
+1039:   '运动': ['fitness_center','sports_gymnastics','sports_basketball','sports_soccer','sports_tennis','sports_volleyball','sports_baseball','pool','directions_run','directions_walk','directions_bike','hiking','kayaking','surfing','snowboarding','skiing','skateboarding','sports_handball','sports_martial_arts'],
+1040:   '休闲': ['music_note','queue_music','album','podcasts','radio','theaters','camera','photo_camera','photo_library','videocam','movie','book','menu_book','auto_stories','library_books','pets','cruelty_free','child_care','local_florist','park','forest','spa','emoji_nature','celebration','favorite','star','puzzle','videogame_asset','toys','blocks','casino','extension'],
+1041:   '饮食': ['restaurant','restaurant_menu','local_cafe','local_bar','local_pizza','cake','water_drop','water_full','local_drink','sports_bar','wine_bar','liquor','coffee','microwave','blender','kitchen','outdoor_grill','rice_bowl','ramen_dining','lunch_dining','dinner_dining','breakfast_dining','icecream','bakery_dining','fastfood'],
+1042:   '健康': ['medication','medical_services','vaccines','health_and_safety','monitor_heart','monitor_weight','psychology','spa','self_improvement','accessible','elderly','baby_changing_station'],
+1043:   '工作': ['work','description','article','edit_note','edit','draw','content_copy','content_paste','save','file_download','file_upload','folder','folder_open','archive','delete','restore_from_trash','print','scanner','attach_file','mail','inbox','send','drafts','mark_email_unread','task_alt','done','check_circle','flag','bookmark','assignment','note','sticky_note_2','event_note'],
+1044:   '其他': ['settings','tune','build','construction','plumbing','handyman','cleaning_services','soap','vaccumes','local_laundry_service','dry_cleaning','content_cut','gardening','agriculture','farming','energy_savings_leaf','eco','wb_sunny','cloud','ac_unit','thermostat','air','safety_check','verified','help','question_mark','info','warning','error','tips_and_updates','auto_awesome','science','biotech','compost']
+1045: };
+1046: /* 所有图标的扁平数组（用于搜索和验证） */
+1047: const ICON_LIST = Object.values(ICON_LIBRARY).flat();
+1048: 
+1049: /* ---------- 自动图标映射（根据关键词选图标） ----------
+1050:    每条包含 10 种语言的关键词，用 | 分隔。
+1051:    语言顺序：zh-CN zh-TW en ja ko fr de es ru pt */
+1052: const AUTO_ICON_KEYWORDS = [
+1053:   ['钥匙|門禁|門鎖|key|钥匙|key|key|鍵|열쇠|clé|Schlüssel|llave|ключ|chave', 'key'],
+1054:   ['钱包|錢包|wallet|wallet|財布|지갑|portefeuille|Geldbeutel|cartera|кошелёк|carteira', 'wallet'],
+1055:   ['卡|卡|card|card|カード|카드|carte|Karte|tarjeta|карта|cartão', 'credit_card'],
+1056:   ['水|水|water|water|水|물|eau|Wasser|agua|вода|água', 'water_full'],
+1057:   ['咖啡|咖啡|coffee|coffee|コーヒー|커피|café|Kaffee|café|кофе|café', 'coffee'],
+1058:   ['茶|茶|tea|tea|お茶|차|thé|Tee|té|чай|chá', 'local_cafe'],
+1059:   ['手机|手機|phone|phone|スマホ|폰|téléphone|Handy|teléfono|телефон|telemóvel', 'phone_iphone'],
+1060:   ['充电|充電|charge|charge|充電|충전|charger|laden|cargar|заряд|carregar', 'battery_charging_full'],
+1061:   ['电脑|電腦|laptop|laptop|ノート|노트북|ordinateur|Laptop|portátil|ноутбук|portátil', 'laptop'],
+1062:   ['耳机|耳機|headphone|headphone|イヤホン|이어폰|écouteur|Kopfhörer|auricular|наушник|auscultador', 'headphones'],
+1063:   ['书|書|book|book|本|책|livre|Buch|libro|книга|livro', 'book'],
+1064:   ['书包|書包|backpack|backpack|バッグ|가방|sac|Rucksack|mochila|рюкзак|mochila', 'backpack'],
+1065:   ['行李|行李|luggage|luggage|荷物|짐|bagage|Gepäck|equipaje|багаж|bagagem', 'luggage'],
+1066:   ['车|車|car|car|車|자동차|voiture|Auto|coche|машина|carro', 'directions_car'],
+1067:   ['自行车|單車|bike|bike|自転車|자전거|vélo|Fahrrad|bici|велосипед|bicicleta', 'directions_bike'],
+1068:   ['公交|公車|bus|bus|バス|버스|bus|Bus|autobús|автобус|autocarro', 'directions_bus'],
+1069:   ['飞机|飛機|flight|flight|飛行機|비행기|vol|Flug|vuelo|самолёт|voo', 'flight'],
+1070:   ['火车|火車|train|train|電車|기차|train|Zug|tren|поезд|comboio', 'train'],
+1071:   ['饭|飯|meal|meal|食事|식사|repas|Mahlzeit|comida|еда|refeição', 'restaurant'],
+1072:   ['食|食|food|food|食べ物|음식|nourriture|Essen|comida|еда|comida', 'restaurant_menu'],
+1073:   ['药|藥|medicine|medicine|薬|약|médicament|Medikament|medicina|лекарство|remédio', 'medication'],
+1074:   ['健康|健康|health|health|健康|건강|santé|Gesundheit|salud|здоровье|saúde', 'health_and_safety'],
+1075:   ['运动|運動|exercise|exercise|運動|운동|exercice|Sport|ejercicio|упражнение|exercício', 'fitness_center'],
+1076:   ['宠物|寵物|pet|pet|ペット|반려동물|animal|Haustier|mascota|питомец|animal', 'pets'],
+1077:   ['孩子|孩子|baby|baby|赤ちゃん|아기|bébé|Baby|bebé|ребёнок|bebé', 'child_care'],
+1078:   ['伞|傘|umbrella|umbrella|傘|우산|parapluie|Regenschirm|paraguas|зонт|guarda-chuva', 'umbrella'],
+1079:   ['衣服|衣服|clothes|clothes|服|옷|vêtement|Kleidung|ropa|одежда|roupa', 'checkroom'],
+1080:   ['鞋|鞋|shoe|shoe|靴|신발|chaussure|Schuh|zapato|обувь|sapato', 'snowshoeing'],
+1081:   ['眼镜|眼鏡|glasses|glasses|眼鏡|안경|lunettes|Brille|gafas|очки|óculos', 'visibility'],
+1082:   ['表|錶|watch|watch|時計|시계|montre|Uhr|reloj|часы|relógio', 'watch'],
+1083:   ['音乐|音樂|music|music|音楽|음악|musique|Musik|música|музыка|música', 'music_note'],
+1084:   ['相机|相機|camera|camera|カメラ|카메라|appareil|Kamera|cámara|камера|câmara', 'photo_camera'],
+1085:   ['工作|工作|work|work|仕事|일업|travail|Arbeit|trabajo|работа|trabalho', 'work'],
+1086:   ['学习|學習|study|study|勉強|공부|étudier|lernen|estudiar|учёба|estudar', 'school'],
+1087:   ['购物|購物|shop|shop|買い物|쇼핑|courses|Einkaufen|comprar|покупки|compras', 'shopping_bag'],
+1088:   ['植物|植物|plant|plant|植物|식물|plante|Pflanze|planta|растение|planta', 'local_florist'],
+1089:   ['灯|燈|light|light|ライト|조명|lumière|Licht|luz|свет|luz', 'lightbulb'],
+1090:   ['文档|文檔|document|document|書類|문서|document|Dokument|documento|документ|documento', 'description'],
+1091:   ['密码|密碼|password|password|パスワード|비밀번호|mot de passe|Passwort|contraseña|пароль|senha', 'password'],
+1092:   ['闹钟|鬧鐘|alarm|alarm|アラーム|알람|alarme|Alarm|alarma|будильник|alarme', 'alarm'],
+1093:   ['日程|日程|schedule|schedule|スケジュール|일정|calendrier|Kalender|calendario|расписание|agenda', 'event'],
+1094:   ['出门|出門|leave|leave|外出|외출|sortir|verlassen|salir|выход|sair', 'door_front'],
+1095:   ['回家|回家|home|home|帰宅|귀가|maison|Heim|casa|дом|casa', 'home'],
+1096:   ['刷牙|刷牙|brush|brush|歯磨き|양치|brosser|putzen|cepillar|чистить|escovar', 'brush'],
+1097:   ['洗澡|洗澡|shower|shower|シャワー|샤워|douche|Dusche|ducha|душ|duche', 'shower'],
+1098:   ['睡觉|睡覺|sleep|sleep|睡眠|수면|dormir|schlafen|dormir|сон|dormir', 'bedtime'],
+1099:   ['起床|起床|wake|wake|起床|기상|réveiller|aufstehen|despertar|подъём|acordar', 'alarm'],
+1100:   ['签到|簽到|check|check|チェック|체크|vérifier|prüfen|verificar|отметить|verificar', 'task_alt'],
+1101:   ['刷牙|刷牙|toothbrush|brush|歯磨き|양치|brosser|Zahnbürste|cepillar|чистить|escovar', 'brush'],
+1102:   ['洗澡|洗澡|shower|shower|シャワー|샤워|douche|Dusche|ducha|душ|duche', 'shower'],
+1103:   ['洗衣|洗衣|laundry|laundry|洗濯|세탁|lessive|Wäsche|colada|стирка|roupa', 'local_laundry_service'],
+1104:   ['剃须|剃鬚|shave|shave|髭剃り|면도|raser|rasieren|afeitar|бритьё|barbear', 'content_cut'],
+1105:   ['做饭|做飯|cook|cook|料理|요리|cuisiner|kochen|cocinar|готовить|cozinhar', 'microwave'],
+1106:   ['买菜|買菜|grocery|grocery|買い物|장보기|courses|Einkaufen|compra|покупка|mercado', 'local_grocery_store'],
+1107:   ['游泳|游泳|swim|swim|水泳|수영|nager|schwimmen|nadar|плавать|nadar', 'pool'],
+1108:   ['跑步|跑步|run|run|ランニング|달리기|courir|laufen|correr|бегать|correr', 'directions_run'],
+1109:   ['看书|看書|read|read|読書|독서|lire|lesen|leer|читать|ler', 'menu_book'],
+1110:   ['拍照|拍照|photo|photo|撮影|사진|photo|Foto|foto|фото|foto', 'photo_camera'],
+1111:   ['听音乐|聽音樂|music|music|音楽|음악|musique|Musik|música|музыка|música', 'music_note'],
+1112:   ['关灯|關燈|light off|light off|消灯|불 끄기|éteindre|Licht aus|apagar|выключить|apagar', 'lightbulb'],
+1113:   ['开灯|開燈|light on|light on|点灯|불 켜기|allumer|Licht an|encender|включить|acender', 'lightbulb'],
+1114:   ['锁门|鎖門|lock|lock|施錠|잠금|verrouiller|sperren|cerrar|запереть|trancar', 'lock'],
+1115:   ['浇花|澆花|water plant|water plant|水やり|식물 물|arroser|gießen|regar|поливать|regar', 'local_florist'],
+1116:   ['买菜|買菜|grocery|grocery|買い物|장보기|courses|Einkaufen|compra|покупка|mercado', 'shopping_bag'],
+1117:   ['运动|運動|exercise|exercise|運動|운동|exercice|Sport|ejercicio|упражнение|exercício', 'fitness_center'],
+1118:   ['吃药|吃藥|medicine|medicine|服薬|약|médicament|Medikament|medicina|лекарство|remédio', 'medication'],
+1119:   ['早饭|早飯|breakfast|breakfast|朝食|아침|petit-déjeuner|Frühstück|desayuno|завтрак|pequeno-almoço', 'breakfast_dining'],
+1120:   ['午饭|午飯|lunch|lunch|昼食|점심|déjeuner|Mittagessen|almuerzo|обед|almoço', 'lunch_dining'],
+1121:   ['晚饭|晚飯|dinner|dinner|夕食|저녁|dîner|Abendessen|cena|ужин|jantar', 'dinner_dining'],
+1122:   ['零食|零食|snack|snack|スナック|간식|snack|Snack|snack|перекус|lanche', 'fastfood'],
+1123:   ['冰淇淋|冰淇淋|ice cream|ice cream|アイス|아이스크림|glace|Eis|helado|мороженое|gelado', 'icecream'],
+1124:   ['面包|麵包|bread|bread|パン|빵|pain|Brot|pan|хлеб|pão', 'bakery_dining'],
+1125:   ['面|麵|noodle|noodle|ラーメン|면|nouilles|Nudeln|fideos|лапша|macarrão', 'ramen_dining'],
+1126:   ['快递|快遞|delivery|delivery|宅配|배달|livraison|Lieferung|envío|доставка|entrega', 'delivery_dining'],
+1127:   ['签证|簽證|visa|visa|ビザ|비자|visa|Visum|visa|виза|visto', 'card_giftcard'],
+1128:   ['护照|護照|passport|passport|パスポート|여권|passeport|Reisepass|pasaporte|паспорт|passaporte', 'badge'],
+1129:   ['门票|門票|ticket|ticket|チケット|티켓|billet|Ticket|entrada|билет|bilhete', 'confirmation_number'],
+1130: ];
+1131: 
+1132: /* ---------- 多语言 i18n ---------- */
+1133: const I18N = {
+1134:   'zh-CN':{
+1135:     app_name:'检查单', app_suffix:'检查单',
+1136:     checklist:'检查单', checklists:'检查单',
+1137:     config:'配置', search:'搜索', settings:'设置',
+1138:     back_home:'返回主页', new_checklist:'新建检查单', edit_checklist:'编辑检查单',
+1139:     checklist_name:'检查单名称', checklist_icon:'检查单图标',
+1140:     auto_icon:'自动选择图标', reset_time:'自动重置时间',
+1141:     reset_time_sub:'完成后经过此时长自动重置',
+1142:     never_reset:'不自动重置', hours:'小时',
+1143:     add_check_item:'添加检查项', check_item_placeholder:'输入检查项内容',
+1144:     item_icon:'检查项图标', confirm:'确认', save:'保存', delete:'删除',
+1145:     cancel:'取消', add:'添加',
+1146:     delete_confirm_title:'删除检查单', delete_confirm_body:'再按一次「删除」以确认删除此检查单',
+1147:     delete_checklist:'删除检查单', save_changes:'保存更改', enter_checklist_name:'请输入检查单名称', enter_check_item:'请添加检查项', export_checklist:'导出检查单', import_checklist:'导入检查单', export_success:'检查单导出成功', export_fail:'检查单导出失败', import_success:'检查单导入成功', import_fail:'检查单导入失败',
+1148:     reset_checklist:'重置检查单',
+1149:     all_done_title:'做得好，我们可以休息一会儿了', all_done_sub:'全部检查项已完成',
+1150:     empty_title:'点击新建检查单以添加第一个检查单',
+1151:     empty_sub:'还没有检查单',
+1152:     reset_toast:'检查单已重置', added_toast:'检查单已添加', saved_toast:'检查单已保存', deleted_toast:'检查单已删除',
+1153:     pull_to_reset:'下拉重置', release_to_reset:'松手重置', refreshing:'重置中…',
+1154:     new_tab:'新建',
+1155:     settings_theme:'主题', settings_follow_system:'跟随系统主题',
+1156:     settings_light:'浅色模式', settings_dark:'深色模式',
+1157:     settings_item_height:'检查项单条高度', settings_item_height_sub:'拖动滑块调整检查项高度',
+1158:     settings_first_only:'仅应用到第一个检查项', settings_first_only_sub:'仅当前待完成的第一个检查项使用此高度',
+1159:     settings_language:'语言', settings_language_sub:'选择界面语言',
+1160:     settings_about:'关于',
+1161:     follow_system:'跟随系统',
+1162:     mit_license_title:'本软件使用 MIT LICENSE 开源',
+1163:     oss_license_title:'开放源代码许可',
+1164:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1165:     no_results:'无搜索结果', search_placeholder:'搜索检查项',
+1166:     select_icon:'选择图标', icon_search:'搜索图标',
+1167:     auto_select:'自动',
+1168:     add_first_item:'添加检查项',
+1169:     items_count:'项',
+1170:     completed_count:'已完成',
+1171:   },
+1172:   'zh-TW':{
+1173:     app_name:'檢查單', app_suffix:'檢查單',
+1174:     checklist:'檢查單', checklists:'檢查單',
+1175:     config:'設定', search:'搜尋', settings:'設定',
+1176:     back_home:'返回主頁', new_checklist:'新建檢查單', edit_checklist:'編輯檢查單',
+1177:     checklist_name:'檢查單名稱', checklist_icon:'檢查單圖示',
+1178:     auto_icon:'自動選擇圖示', reset_time:'自動重置時間',
+1179:     reset_time_sub:'完成後經過此時長自動重置',
+1180:     never_reset:'不自動重置', hours:'小時',
+1181:     add_check_item:'新增檢查項', check_item_placeholder:'輸入檢查項內容',
+1182:     item_icon:'檢查項圖示', confirm:'確認', save:'儲存', delete:'刪除',
+1183:     cancel:'取消', add:'新增',
+1184:     delete_confirm_title:'刪除檢查單', delete_confirm_body:'再按一次「刪除」以確認刪除此檢查單',
+1185:     delete_checklist:'刪除檢查單', save_changes:'儲存變更', enter_checklist_name:'請輸入檢查單名稱', enter_check_item:'請新增檢查項', export_checklist:'匯出檢查單', import_checklist:'匯入檢查單', export_success:'檢查單匯出成功', export_fail:'檢查單匯出失敗', import_success:'檢查單匯入成功', import_fail:'檢查單匯入失敗',
+1186:     reset_checklist:'重置檢查單',
+1187:     all_done_title:'做得好，我們可以休息一會兒了', all_done_sub:'全部檢查項已完成',
+1188:     empty_title:'點擊新建檢查單以新增第一個檢查單',
+1189:     empty_sub:'還沒有檢查單',
+1190:     reset_toast:'檢查單已重置', added_toast:'檢查單已新增', saved_toast:'檢查單已儲存', deleted_toast:'檢查單已刪除',
+1191:     pull_to_reset:'下拉重置', release_to_reset:'放手重置', refreshing:'重置中…',
+1192:     new_tab:'新建',
+1193:     settings_theme:'主題', settings_follow_system:'跟隨系統主題',
+1194:     settings_light:'淺色模式', settings_dark:'深色模式',
+1195:     settings_item_height:'檢查項單條高度', settings_item_height_sub:'拖動滑塊調整檢查項高度',
+1196:     settings_first_only:'僅套用到第一個檢查項', settings_first_only_sub:'僅當前待完成的第一個檢查項使用此高度',
+1197:     settings_language:'語言', settings_language_sub:'選擇介面語言',
+1198:     settings_about:'關於',
+1199:     follow_system:'跟隨系統',
+1200:     mit_license_title:'本軟體使用 MIT LICENSE 開源',
+1201:     oss_license_title:'開放原始碼授權',
+1202:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1203:     no_results:'無搜尋結果', search_placeholder:'搜尋檢查項',
+1204:     select_icon:'選擇圖示', icon_search:'搜尋圖示',
+1205:     auto_select:'自動',
+1206:     add_first_item:'新增檢查項',
+1207:     items_count:'項',
+1208:     completed_count:'已完成',
+1209:   },
+1210:   'en':{
+1211:     app_name:'Checklist', app_suffix:' Checklist',
+1212:     checklist:'Checklist', checklists:'Checklists',
+1213:     config:'Configure', search:'Search', settings:'Settings',
+1214:     back_home:'Home', new_checklist:'New Checklist', edit_checklist:'Edit Checklist',
+1215:     checklist_name:'Checklist name', checklist_icon:'Checklist icon',
+1216:     auto_icon:'Auto-select icon', reset_time:'Auto-reset time',
+1217:     reset_time_sub:'Auto-reset after this duration once completed',
+1218:     never_reset:'No auto-reset', hours:'h',
+1219:     add_check_item:'Add check item', check_item_placeholder:'Enter check item',
+1220:     item_icon:'Item icon', confirm:'Confirm', save:'Save', delete:'Delete',
+1221:     cancel:'Cancel', add:'Add',
+1222:     delete_confirm_title:'Delete checklist', delete_confirm_body:'Press "Delete" again to confirm deletion',
+1223:     delete_checklist:'Delete checklist', save_changes:'Save changes', enter_checklist_name:'Please enter a checklist name', enter_check_item:'Please add a check item', export_checklist:'Export checklist', import_checklist:'Import checklist', export_success:'Checklist exported successfully', export_fail:'Checklist export failed', import_success:'Checklist imported successfully', import_fail:'Checklist import failed',
+1224:     reset_checklist:'Reset checklist',
+1225:     all_done_title:'Well done, let\'s take a break', all_done_sub:'All check items completed',
+1226:     empty_title:'Tap "New Checklist" to add your first one',
+1227:     empty_sub:'No checklists yet',
+1228:     reset_toast:'Checklist reset', added_toast:'Checklist added', saved_toast:'Checklist saved', deleted_toast:'Checklist deleted',
+1229:     pull_to_reset:'Pull to reset', release_to_reset:'Release to reset', refreshing:'Resetting…',
+1230:     new_tab:'New',
+1231:     settings_theme:'Theme', settings_follow_system:'Follow system theme',
+1232:     settings_light:'Light mode', settings_dark:'Dark mode',
+1233:     settings_item_height:'Item row height', settings_item_height_sub:'Drag the slider to adjust item height',
+1234:     settings_first_only:'Apply to first item only', settings_first_only_sub:'Only the next pending item uses this height',
+1235:     settings_language:'Language', settings_language_sub:'Choose interface language',
+1236:     settings_about:'About',
+1237:     follow_system:'Follow system',
+1238:     mit_license_title:'Open source under the MIT LICENSE',
+1239:     oss_license_title:'Open source licenses',
+1240:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1241:     no_results:'No results', search_placeholder:'Search items',
+1242:     select_icon:'Select icon', icon_search:'Search icons',
+1243:     auto_select:'Auto',
+1244:     add_first_item:'Add check item',
+1245:     items_count:'items',
+1246:     completed_count:'completed',
+1247:   },
+1248:   'ja':{
+1249:     app_name:'チェックリスト', app_suffix:'チェックリスト',
+1250:     checklist:'チェックリスト', checklists:'チェックリスト',
+1251:     config:'設定', search:'検索', settings:'設定',
+1252:     back_home:'ホームに戻る', new_checklist:'新規チェックリスト', edit_checklist:'チェックリストを編集',
+1253:     checklist_name:'チェックリスト名', checklist_icon:'チェックリストアイコン',
+1254:     auto_icon:'アイコンを自動選択', reset_time:'自動リセット時間',
+1255:     reset_time_sub:'完了後にこの時間で自動リセット',
+1256:     never_reset:'自動リセットしない', hours:'時間',
+1257:     add_check_item:'チェック項目を追加', check_item_placeholder:'チェック項目を入力',
+1258:     item_icon:'項目アイコン', confirm:'確認', save:'保存', delete:'削除',
+1259:     cancel:'キャンセル', add:'追加',
+1260:     delete_confirm_title:'チェックリストを削除', delete_confirm_body:'もう一度「削除」を押して削除を確認',
+1261:     delete_checklist:'チェックリストを削除', save_changes:'変更を保存', enter_checklist_name:'チェックリスト名を入力してください', enter_check_item:'チェック項目を追加してください', export_checklist:'チェックリストをエクスポート', import_checklist:'チェックリストをインポート', export_success:'チェックリストをエクスポートしました', export_fail:'エクスポートに失敗しました', import_success:'チェックリストをインポートしました', import_fail:'インポートに失敗しました',
+1262:     reset_checklist:'チェックリストをリセット',
+1263:     all_done_title:'よくできました、少し休みましょう', all_done_sub:'すべてのチェック項目が完了しました',
+1264:     empty_title:'「新規チェックリスト」をタップして最初のものを追加',
+1265:     empty_sub:'まだチェックリストがありません',
+1266:     reset_toast:'チェックリストをリセットしました', added_toast:'チェックリストを追加しました', saved_toast:'チェックリストを保存しました', deleted_toast:'チェックリストを削除しました',
+1267:     pull_to_reset:'引いてリセット', release_to_reset:'離してリセット', refreshing:'リセット中…',
+1268:     new_tab:'新規',
+1269:     settings_theme:'テーマ', settings_follow_system:'システムテーマに従う',
+1270:     settings_light:'ライトモード', settings_dark:'ダークモード',
+1271:     settings_item_height:'項目の行の高さ', settings_item_height_sub:'スライダーをドラッグして項目の高さを調整',
+1272:     settings_first_only:'最初の項目のみに適用', settings_first_only_sub:'次の保留中の項目のみこの高さを使用します',
+1273:     settings_language:'言語', settings_language_sub:'インターフェース言語を選択',
+1274:     settings_about:'について',
+1275:     follow_system:'システムに従う',
+1276:     mit_license_title:'本ソフトウェアは MIT LICENSE でオープンソースです',
+1277:     oss_license_title:'オープンソースライセンス',
+1278:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1279:     no_results:'結果なし', search_placeholder:'項目を検索',
+1280:     select_icon:'アイコンを選択', icon_search:'アイコンを検索',
+1281:     auto_select:'自動',
+1282:     add_first_item:'チェック項目を追加',
+1283:     items_count:'項目',
+1284:     completed_count:'完了',
+1285:   },
+1286:   'ko':{
+1287:     app_name:'체크리스트', app_suffix:' 체크리스트',
+1288:     checklist:'체크리스트', checklists:'체크리스트',
+1289:     config:'설정', search:'검색', settings:'설정',
+1290:     back_home:'홈으로', new_checklist:'새 체크리스트', edit_checklist:'체크리스트 편집',
+1291:     checklist_name:'체크리스트 이름', checklist_icon:'체크리스트 아이콘',
+1292:     auto_icon:'아이콘 자동 선택', reset_time:'자동 리셋 시간',
+1293:     reset_time_sub:'완료 후 이 시간이 지나면 자동 리셋',
+1294:     never_reset:'자동 리셋 안 함', hours:'시간',
+1295:     add_check_item:'체크 항목 추가', check_item_placeholder:'체크 항목 입력',
+1296:     item_icon:'항목 아이콘', confirm:'확인', save:'저장', delete:'삭제',
+1297:     cancel:'취소', add:'추가',
+1298:     delete_confirm_title:'체크리스트 삭제', delete_confirm_body:'삭제하려면 "삭제"를 한 번 더 누르세요',
+1299:     delete_checklist:'체크리스트 삭제', save_changes:'변경 사항 저장', enter_checklist_name:'체크리스트 이름을 입력하세요', enter_check_item:'체크 항목을 추가하세요', export_checklist:'체크리스트 내보내기', import_checklist:'체크리스트 가져오기', export_success:'체크리스트를 내보냈습니다', export_fail:'내보내기 실패', import_success:'체크리스트를 가져왔습니다', import_fail:'가져오기 실패',
+1300:     reset_checklist:'체크리스트 리셋',
+1301:     all_done_title:'잘했어요, 잠시 쉬어요', all_done_sub:'모든 체크 항목이 완료되었습니다',
+1302:     empty_title:'"새 체크리스트"를 눌러 첫 항목을 추가하세요',
+1303:     empty_sub:'아직 체크리스트가 없습니다',
+1304:     reset_toast:'체크리스트가 리셋되었습니다', added_toast:'체크리스트가 추가되었습니다', saved_toast:'체크리스트가 저장되었습니다', deleted_toast:'체크리스트가 삭제되었습니다',
+1305:     pull_to_reset:'당겨서 리셋', release_to_reset:'놓아서 리셋', refreshing:'리셋 중…',
+1306:     new_tab:'새로',
+1307:     settings_theme:'테마', settings_follow_system:'시스템 테마 따르기',
+1308:     settings_light:'라이트 모드', settings_dark:'다크 모드',
+1309:     settings_item_height:'항목 행 높이', settings_item_height_sub:'슬라이더를 드래그하여 항목 높이 조정',
+1310:     settings_first_only:'첫 항목에만 적용', settings_first_only_sub:'다음 대기 중인 항목만 이 높이를 사용합니다',
+1311:     settings_language:'언어', settings_language_sub:'인터페이스 언어 선택',
+1312:     settings_about:'정보',
+1313:     follow_system:'시스템 따르기',
+1314:     mit_license_title:'이 소프트웨어는 MIT LICENSE 오픈소스입니다',
+1315:     oss_license_title:'오픈소스 라이선스',
+1316:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1317:     no_results:'결과 없음', search_placeholder:'항목 검색',
+1318:     select_icon:'아이콘 선택', icon_search:'아이콘 검색',
+1319:     auto_select:'자동',
+1320:     add_first_item:'체크 항목 추가',
+1321:     items_count:'항목',
+1322:     completed_count:'완료',
+1323:   },
+1324:   'fr':{
+1325:     app_name:'Liste', app_suffix:' de contrôle',
+1326:     checklist:'Liste de contrôle', checklists:'Listes de contrôle',
+1327:     config:'Configurer', search:'Rechercher', settings:'Paramètres',
+1328:     back_home:'Accueil', new_checklist:'Nouvelle liste', edit_checklist:'Modifier la liste',
+1329:     checklist_name:'Nom de la liste', checklist_icon:'Icône de la liste',
+1330:     auto_icon:'Sélection auto de l\'icône', reset_time:'Durée de réinitialisation auto',
+1331:     reset_time_sub:'Réinitialisation auto après cette durée une fois terminé',
+1332:     never_reset:'Pas de réinit. auto', hours:'h',
+1333:     add_check_item:'Ajouter un élément', check_item_placeholder:'Saisir un élément',
+1334:     item_icon:'Icône de l\'élément', confirm:'Confirmer', save:'Enregistrer', delete:'Supprimer',
+1335:     cancel:'Annuler', add:'Ajouter',
+1336:     delete_confirm_title:'Supprimer la liste', delete_confirm_body:'Appuyez à nouveau sur « Supprimer » pour confirmer',
+1337:     delete_checklist:'Supprimer la liste', save_changes:'Enregistrer les modifications', enter_checklist_name:'Veuillez saisir un nom de liste', enter_check_item:'Veuillez ajouter un élément', export_checklist:'Exporter la liste', import_checklist:'Importer une liste', export_success:'Liste exportée avec succès', export_fail:'Échec de l export', import_success:'Liste importée avec succès', import_fail:'Échec de l import',
+1338:     reset_checklist:'Réinitialiser la liste',
+1339:     all_done_title:'Bien joué, faisons une pause', all_done_sub:'Tous les éléments sont complétés',
+1340:     empty_title:'Appuyez sur « Nouvelle liste » pour ajouter la première',
+1341:     empty_sub:'Aucune liste pour l\'instant',
+1342:     reset_toast:'Liste réinitialisée', added_toast:'Liste ajoutée', saved_toast:'Liste enregistrée', deleted_toast:'Liste supprimée',
+1343:     pull_to_reset:'Tirer pour réinitialiser', release_to_reset:'Relâcher pour réinitialiser', refreshing:'Réinitialisation…',
+1344:     new_tab:'Nouv.',
+1345:     settings_theme:'Thème', settings_follow_system:'Suivre le thème système',
+1346:     settings_light:'Mode clair', settings_dark:'Mode sombre',
+1347:     settings_item_height:'Hauteur de ligne des éléments', settings_item_height_sub:'Glissez le curseur pour ajuster la hauteur',
+1348:     settings_first_only:'Appliquer au premier élément seulement', settings_first_only_sub:'Seul le prochain élément en attente utilise cette hauteur',
+1349:     settings_language:'Langue', settings_language_sub:'Choisir la langue de l\'interface',
+1350:     settings_about:'À propos',
+1351:     follow_system:'Suivre le système',
+1352:     mit_license_title:'Open source sous licence MIT',
+1353:     oss_license_title:'Licences open source',
+1354:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1355:     no_results:'Aucun résultat', search_placeholder:'Rechercher des éléments',
+1356:     select_icon:'Choisir l\'icône', icon_search:'Rechercher des icônes',
+1357:     auto_select:'Auto',
+1358:     add_first_item:'Ajouter un élément',
+1359:     items_count:'éléments',
+1360:     completed_count:'complétés',
+1361:   },
+1362:   'de':{
+1363:     app_name:'Checkliste', app_suffix:'-Checkliste',
+1364:     checklist:'Checkliste', checklists:'Checklisten',
+1365:     config:'Konfigurieren', search:'Suchen', settings:'Einstellungen',
+1366:     back_home:'Start', new_checklist:'Neue Checkliste', edit_checklist:'Checkliste bearbeiten',
+1367:     checklist_name:'Name der Checkliste', checklist_icon:'Checklisten-Symbol',
+1368:     auto_icon:'Symbol automatisch wählen', reset_time:'Auto-Zurücksetzzeit',
+1369:     reset_time_sub:'Nach Ablauf automatisch zurücksetzen',
+1370:     never_reset:'Kein Auto-Reset', hours:'Std',
+1371:     add_check_item:'Prüfpunkt hinzufügen', check_item_placeholder:'Prüfpunkt eingeben',
+1372:     item_icon:'Element-Symbol', confirm:'Bestätigen', save:'Speichern', delete:'Löschen',
+1373:     cancel:'Abbrechen', add:'Hinzufügen',
+1374:     delete_confirm_title:'Checkliste löschen', delete_confirm_body:'Erneut „Löschen“ drücken, um zu bestätigen',
+1375:     delete_checklist:'Checkliste löschen', save_changes:'Änderungen speichern', enter_checklist_name:'Bitte einen Checklistennamen eingeben', enter_check_item:'Bitte ein Prüfelement hinzufügen', export_checklist:'Checkliste exportieren', import_checklist:'Checkliste importieren', export_success:'Checkliste erfolgreich exportiert', export_fail:'Export fehlgeschlagen', import_success:'Checkliste erfolgreich importiert', import_fail:'Import fehlgeschlagen',
+1376:     reset_checklist:'Checkliste zurücksetzen',
+1377:     all_done_title:'Gut gemacht, machen wir eine Pause', all_done_sub:'Alle Prüfpunkte erledigt',
+1378:     empty_title:'Auf „Neue Checkliste“ tippen, um die erste hinzuzufügen',
+1379:     empty_sub:'Noch keine Checklisten',
+1380:     reset_toast:'Checkliste zurückgesetzt', added_toast:'Checkliste hinzugefügt', saved_toast:'Checkliste gespeichert', deleted_toast:'Checkliste gelöscht',
+1381:     pull_to_reset:'Zum Zurücksetzen ziehen', release_to_reset:'Loslassen zum Zurücksetzen', refreshing:'Zurücksetzen…',
+1382:     new_tab:'Neu',
+1383:     settings_theme:'Design', settings_follow_system:'Systemdesign folgen',
+1384:     settings_light:'Heller Modus', settings_dark:'Dunkler Modus',
+1385:     settings_item_height:'Zeilenhöhe der Elemente', settings_item_height_sub:'Schieber ziehen, um die Höhe einzustellen',
+1386:     settings_first_only:'Nur auf erstes Element anwenden', settings_first_only_sub:'Nur das nächste offene Element verwendet diese Höhe',
+1387:     settings_language:'Sprache', settings_language_sub:'Oberflächensprache wählen',
+1388:     settings_about:'Über',
+1389:     follow_system:'System folgen',
+1390:     mit_license_title:'Open Source unter der MIT-Lizenz',
+1391:     oss_license_title:'Open-Source-Lizenzen',
+1392:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1393:     no_results:'Keine Ergebnisse', search_placeholder:'Elemente suchen',
+1394:     select_icon:'Symbol wählen', icon_search:'Symbole suchen',
+1395:     auto_select:'Auto',
+1396:     add_first_item:'Prüfpunkt hinzufügen',
+1397:     items_count:'Elemente',
+1398:     completed_count:'erledigt',
+1399:   },
+1400:   'es':{
+1401:     app_name:'Lista', app_suffix:' de verificación',
+1402:     checklist:'Lista de verificación', checklists:'Listas de verificación',
+1403:     config:'Configurar', search:'Buscar', settings:'Ajustes',
+1404:     back_home:'Inicio', new_checklist:'Nueva lista', edit_checklist:'Editar lista',
+1405:     checklist_name:'Nombre de la lista', checklist_icon:'Icono de la lista',
+1406:     auto_icon:'Selección automática de icono', reset_time:'Tiempo de reinicio automático',
+1407:     reset_time_sub:'Reinicio automático tras esta duración al completar',
+1408:     never_reset:'Sin reinicio auto', hours:'h',
+1409:     add_check_item:'Añadir elemento', check_item_placeholder:'Introducir elemento',
+1410:     item_icon:'Icono del elemento', confirm:'Confirmar', save:'Guardar', delete:'Eliminar',
+1411:     cancel:'Cancelar', add:'Añadir',
+1412:     delete_confirm_title:'Eliminar lista', delete_confirm_body:'Pulsa «Eliminar» otra vez para confirmar',
+1413:     delete_checklist:'Eliminar lista', save_changes:'Guardar cambios', enter_checklist_name:'Introduzca un nombre de lista', enter_check_item:'Añada un elemento', export_checklist:'Exportar lista', import_checklist:'Importar lista', export_success:'Lista exportada con éxito', export_fail:'Error al exportar', import_success:'Lista importada con éxito', import_fail:'Error al importar',
+1414:     reset_checklist:'Reiniciar lista',
+1415:     all_done_title:'Bien hecho, tomemos un descanso', all_done_sub:'Todos los elementos completados',
+1416:     empty_title:'Pulsa «Nueva lista» para añadir la primera',
+1417:     empty_sub:'Aún no hay listas',
+1418:     reset_toast:'Lista reiniciada', added_toast:'Lista añadida', saved_toast:'Lista guardada', deleted_toast:'Lista eliminada',
+1419:     pull_to_reset:'Desliza para reiniciar', release_to_reset:'Suelta para reiniciar', refreshing:'Reiniciando…',
+1420:     new_tab:'Nueva',
+1421:     settings_theme:'Tema', settings_follow_system:'Seguir tema del sistema',
+1422:     settings_light:'Modo claro', settings_dark:'Modo oscuro',
+1423:     settings_item_height:'Altura de fila de elementos', settings_item_height_sub:'Arrastra el control para ajustar la altura',
+1424:     settings_first_only:'Aplicar solo al primer elemento', settings_first_only_sub:'Solo el siguiente elemento pendiente usa esta altura',
+1425:     settings_language:'Idioma', settings_language_sub:'Elegir idioma de la interfaz',
+1426:     settings_about:'Acerca de',
+1427:     follow_system:'Seguir sistema',
+1428:     mit_license_title:'Código abierto bajo la licencia MIT',
+1429:     oss_license_title:'Licencias de código abierto',
+1430:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1431:     no_results:'Sin resultados', search_placeholder:'Buscar elementos',
+1432:     select_icon:'Elegir icono', icon_search:'Buscar iconos',
+1433:     auto_select:'Auto',
+1434:     add_first_item:'Añadir elemento',
+1435:     items_count:'elementos',
+1436:     completed_count:'completados',
+1437:   },
+1438:   'ru':{
+1439:     app_name:'Чек-лист', app_suffix:' чек-лист',
+1440:     checklist:'Чек-лист', checklists:'Чек-листы',
+1441:     config:'Настроить', search:'Поиск', settings:'Настройки',
+1442:     back_home:'Главная', new_checklist:'Новый чек-лист', edit_checklist:'Изменить чек-лист',
+1443:     checklist_name:'Название чек-листа', checklist_icon:'Значок чек-листа',
+1444:     auto_icon:'Авто-выбор значка', reset_time:'Время авто-сброса',
+1445:     reset_time_sub:'Авто-сброс по истечении этого времени после завершения',
+1446:     never_reset:'Без авто-сброса', hours:'ч',
+1447:     add_check_item:'Добавить пункт', check_item_placeholder:'Введите пункт',
+1448:     item_icon:'Значок пункта', confirm:'Подтвердить', save:'Сохранить', delete:'Удалить',
+1449:     cancel:'Отмена', add:'Добавить',
+1450:     delete_confirm_title:'Удалить чек-лист', delete_confirm_body:'Нажмите «Удалить» ещё раз для подтверждения',
+1451:     delete_checklist:'Удалить чек-лист', save_changes:'Сохранить изменения', enter_checklist_name:'Введите название чек-листа', enter_check_item:'Добавьте пункт', export_checklist:'Экспортировать чек-лист', import_checklist:'Импортировать чек-лист', export_success:'Чек-лист экспортирован', export_fail:'Ошибка экспорта', import_success:'Чек-лист импортирован', import_fail:'Ошибка импорта',
+1452:     reset_checklist:'Сбросить чек-лист',
+1453:     all_done_title:'Отлично, давайте отдохнём', all_done_sub:'Все пункты выполнены',
+1454:     empty_title:'Нажмите «Новый чек-лист», чтобы добавить первый',
+1455:     empty_sub:'Пока нет чек-листов',
+1456:     reset_toast:'Чек-лист сброшен', added_toast:'Чек-лист добавлен', saved_toast:'Чек-лист сохранён', deleted_toast:'Чек-лист удалён',
+1457:     pull_to_reset:'Потяните для сброса', release_to_reset:'Отпустите для сброса', refreshing:'Сброс…',
+1458:     new_tab:'Новый',
+1459:     settings_theme:'Тема', settings_follow_system:'Системная тема',
+1460:     settings_light:'Светлая тема', settings_dark:'Тёмная тема',
+1461:     settings_item_height:'Высота строки пунктов', settings_item_height_sub:'Перетащите ползунок для настройки высоты',
+1462:     settings_first_only:'Только к первому пункту', settings_first_only_sub:'Только следующий ожидающий пункт использует эту высоту',
+1463:     settings_language:'Язык', settings_language_sub:'Выбрать язык интерфейса',
+1464:     settings_about:'О приложении',
+1465:     follow_system:'Системный',
+1466:     mit_license_title:'Открытый исходный код под лицензией MIT',
+1467:     oss_license_title:'Лицензии открытого кода',
+1468:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1469:     no_results:'Нет результатов', search_placeholder:'Поиск пунктов',
+1470:     select_icon:'Выбрать значок', icon_search:'Поиск значков',
+1471:     auto_select:'Авто',
+1472:     add_first_item:'Добавить пункт',
+1473:     items_count:'пунктов',
+1474:     completed_count:'выполнено',
+1475:   },
+1476:   'pt':{
+1477:     app_name:'Lista', app_suffix:' de verificação',
+1478:     checklist:'Lista de verificação', checklists:'Listas de verificação',
+1479:     config:'Configurar', search:'Buscar', settings:'Configurações',
+1480:     back_home:'Início', new_checklist:'Nova lista', edit_checklist:'Editar lista',
+1481:     checklist_name:'Nome da lista', checklist_icon:'Ícone da lista',
+1482:     auto_icon:'Seleção automática de ícone', reset_time:'Tempo de redefinição automática',
+1483:     reset_time_sub:'Redefinição automática após essa duração ao concluir',
+1484:     never_reset:'Sem redef. auto', hours:'h',
+1485:     add_check_item:'Adicionar item', check_item_placeholder:'Digite o item',
+1486:     item_icon:'Ícone do item', confirm:'Confirmar', save:'Salvar', delete:'Excluir',
+1487:     cancel:'Cancelar', add:'Adicionar',
+1488:     delete_confirm_title:'Excluir lista', delete_confirm_body:'Pressione «Excluir» novamente para confirmar',
+1489:     delete_checklist:'Excluir lista', save_changes:'Salvar alterações', enter_checklist_name:'Introduza um nome de lista', enter_check_item:'Adicione um item', export_checklist:'Exportar lista', import_checklist:'Importar lista', export_success:'Lista exportada com sucesso', export_fail:'Erro ao exportar', import_success:'Lista importada com sucesso', import_fail:'Erro ao importar',
+1490:     reset_checklist:'Redefinir lista',
+1491:     all_done_title:'Muito bem, vamos fazer uma pausa', all_done_sub:'Todos os itens concluídos',
+1492:     empty_title:'Toque em «Nova lista» para adicionar a primeira',
+1493:     empty_sub:'Nenhuma lista ainda',
+1494:     reset_toast:'Lista redefinida', added_toast:'Lista adicionada', saved_toast:'Lista salva', deleted_toast:'Lista excluída',
+1495:     pull_to_reset:'Puxe para redefinir', release_to_reset:'Solte para redefinir', refreshing:'Redefinindo…',
+1496:     new_tab:'Nova',
+1497:     settings_theme:'Tema', settings_follow_system:'Seguir tema do sistema',
+1498:     settings_light:'Modo claro', settings_dark:'Modo escuro',
+1499:     settings_item_height:'Altura da linha dos itens', settings_item_height_sub:'Arraste o controle para ajustar a altura',
+1500:     settings_first_only:'Aplicar apenas ao primeiro item', settings_first_only_sub:'Apenas o próximo item pendente usa esta altura',
+1501:     settings_language:'Idioma', settings_language_sub:'Escolher idioma da interface',
+1502:     settings_about:'Sobre',
+1503:     follow_system:'Sistema',
+1504:     mit_license_title:'Código aberto sob a licença MIT',
+1505:     oss_license_title:'Licenças de código aberto',
+1506:     created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+1507:     no_results:'Sem resultados', search_placeholder:'Buscar itens',
+1508:     select_icon:'Escolher ícone', icon_search:'Buscar ícones',
+1509:     auto_select:'Auto',
+1510:     add_first_item:'Adicionar item',
+1511:     items_count:'itens',
+1512:     completed_count:'concluídos',
+1513:   },
+1514: };
+1515: const LANGUAGES = [
+1516:   {code:'auto', name:'跟随系统', nativeName:'跟随系统 / Follow System'},
+1517:   {code:'zh-CN', name:'简体中文', nativeName:'简体中文'},
+1518:   {code:'zh-TW', name:'繁體中文', nativeName:'繁體中文'},
+1519:   {code:'en', name:'English', nativeName:'English'},
+1520:   {code:'ja', name:'日本語', nativeName:'日本語'},
+1521:   {code:'ko', name:'한국어', nativeName:'한국어'},
+1522:   {code:'fr', name:'Français', nativeName:'Français'},
+1523:   {code:'de', name:'Deutsch', nativeName:'Deutsch'},
+1524:   {code:'es', name:'Español', nativeName:'Español'},
+1525:   {code:'ru', name:'Русский', nativeName:'Русский'},
+1526:   {code:'pt', name:'Português', nativeName:'Português'},
+1527: ];
+1528: 
+1529: /* ---------- MIT 许可证原文 ---------- */
+1530: const MIT_LICENSE_TEXT = `MIT License
+1531: 
+1532: Copyright (c) 2026 Crazy Sue
+1533: 
+1534: Permission is hereby granted, free of charge, to any person obtaining a copy
+1535: of this software and associated documentation files (the "Software"), to deal
+1536: in the Software without restriction, including without limitation the rights
+1537: to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+1538: copies of the Software, and to permit persons to whom the Software is
+1539: furnished to do so, subject to the following conditions:
+1540: 
+1541: The above copyright notice and this permission notice shall be included in all
+1542: copies or substantial portions of the Software.
+1543: 
+1544: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+1545: IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+1546: FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+1547: AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+1548: LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+1549: OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+1550: SOFTWARE.`;
+1551: 
+1552: /* ---------- 开源组件许可 ---------- */
+1553: const OSS_LICENSES = [
+1554:   {name:'Material Symbols Rounded (Google)', license:'Apache License 2.0', text:`Apache License 2.0
+1555: 
+1556: Copyright 2022 Google LLC
+1557: 
+1558: Licensed under the Apache License, Version 2.0 (the "License");
+1559: you may not use this file except in compliance with the License.
+1560: You may obtain a copy of the License at
+1561: 
+1562:     http://www.apache.org/licenses/LICENSE-2.0
+1563: 
+1564: Unless required by applicable law or agreed to in writing, software
+1565: distributed under the License is distributed on an "AS IS" BASIS,
+1566: WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+1567: See the License for the specific language governing permissions and
+1568: limitations under the License.`},
+1569:   {name:'Material Design 3 (Google)', license:'Apache License 2.0', text:'Material Design 3 is a design system published by Google, licensed under the Apache License 2.0. This application implements its UI and interaction patterns in accordance with the MD3 design specification.'},
+1570:   {name:'HarmonyOS Sans SC (Huawei)', license:'HarmonyOS Sans Font License', text:`HarmonyOS Sans SC is a typeface developed by Huawei.
+1571: 
+1572: According to the font license published by Huawei, the HarmonyOS Sans font is free for both commercial and personal use.
+1573: 
+1574: This application embeds the HarmonyOS Sans SC font files to ensure consistent typography across devices.`},
+1575: ];
+1576: 
+1577: /* ---------- 默认设置 ---------- */
+1578: const DEFAULT_SETTINGS = {
+1579:   theme:'auto',          // auto | light | dark
+1580:   itemHeight:64,         // 单条高度（px）
+1581:   firstOnly:false,       // 仅首条应用高度
+1582:   language:'auto',       // auto | 语言代码
+1583: };
+1584: const ITEM_HEIGHT_MIN = 56;
+1585: const ITEM_HEIGHT_MAX = 120;
+1586: 
+1587: /* ---------- 数据模型 ---------- */
+1588: /*
+1589:   state = {
+1590:     checklists: [
+1591:       { id, name, icon, resetHours, items:[{id, text, icon, done}], completedAt, createdAt }
+1592:     ],
+1593:     activeChecklistId: id | null,
+1594:     settings: {...DEFAULT_SETTINGS}
+1595:   }
+1596: */
+1597: 
+1598: /* ---------- 状态管理 ---------- */
+1599: const Store = {
+1600:   key:'checklist_app_state_v1',
+1601:   state:null,
+1602:   listeners:[],
+1603:   load(){
+1604:     try{
+1605:       const raw = localStorage.getItem(this.key);
+1606:       if(raw){
+1607:         this.state = JSON.parse(raw);
+1608:         // 合并默认设置（防止旧版本字段缺失）
+1609:         this.state.settings = Object.assign({...DEFAULT_SETTINGS}, this.state.settings||{});
+1610:       }else{
+1611:         this.state = {checklists:[], activeChecklistId:null, settings:{...DEFAULT_SETTINGS}};
+1612:       }
+1613:     }catch(e){
+1614:       this.state = {checklists:[], activeChecklistId:null, settings:{...DEFAULT_SETTINGS}};
+1615:     }
+1616:     // 数据校验
+1617:     if(!Array.isArray(this.state.checklists)) this.state.checklists = [];
+1618:     if(!this.state.settings) this.state.settings = {...DEFAULT_SETTINGS};
+1619:   },
+1620:   save(){
+1621:     try{ localStorage.setItem(this.key, JSON.stringify(this.state)); }catch(e){}
+1622:   },
+1623:   subscribe(fn){ this.listeners.push(fn); },
+1624:   emit(){ this.listeners.forEach(fn=>fn(this.state)); },
+1625:   set(partial){ Object.assign(this.state, partial); this.save(); this.emit(); },
+1626: };
+1627: 
+1628: /* ---------- 工具函数 ---------- */
+1629: const uid = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+1630: const $ = (sel,root=document)=> root.querySelector(sel);
+1631: const $$ = (sel,root=document)=> Array.from(root.querySelectorAll(sel));
+1632: function el(tag, props={}, children=[]){
+1633:   const e = document.createElement(tag);
+1634:   // 布尔属性：值为 false 时不设置（HTML 规范中属性存在即为真）
+1635:   const BOOL_ATTRS = ['disabled','checked','selected','readonly','multiple','hidden','autoplay','controls','loop','muted','open','required'];
+1636:   Object.entries(props).forEach(([k,v])=>{
+1637:     if(k==='class') e.className=v;
+1638:     else if(k==='html') e.innerHTML=v;
+1639:     else if(k==='text') e.textContent=v;
+1640:     else if(k.startsWith('on')&&typeof v==='function') e.addEventListener(k.slice(2).toLowerCase(), v);
+1641:     else if(k==='dataset') Object.entries(v).forEach(([dk,dv])=>e.dataset[dk]=dv);
+1642:     else if(BOOL_ATTRS.includes(k)){
+1643:       if(v) e.setAttribute(k,''); else e.removeAttribute(k);
+1644:     }
+1645:     else if(v!==null&&v!==undefined&&v!==false) e.setAttribute(k,v);
+1646:   });
+1647:   (Array.isArray(children)?children:[children]).forEach(c=>{
+1648:     if(c==null) return;
+1649:     if(typeof c==='string') e.appendChild(document.createTextNode(c));
+1650:     else e.appendChild(c);
+1651:   });
+1652:   return e;
+1653: }
+1654: /* ---------- MD3 水滴效果（Ripple） ----------
+1655:    为可交互元素附加点击水滴动画。元素需有 position:relative 和 overflow:hidden。
+1656:    水滴会被父元素的 border-radius 裁剪，确保圆角区域不溢出。 */
+1657: function attachRipple(el){
+1658:   el._rippleAttached = true;
+1659:   el.addEventListener('pointerdown', e=>{
+1660:     // 仅对主按键响应
+1661:     if(e.button!==0 && e.pointerType==='mouse') return;
+1662:     const rect = el.getBoundingClientRect();
+1663:     const size = Math.max(rect.width, rect.height);
+1664:     const x = e.clientX - rect.left - size/2;
+1665:     const y = e.clientY - rect.top - size/2;
+1666:     const ripple = document.createElement('span');
+1667:     ripple.className = 'md-ripple';
+1668:     ripple.style.left = x + 'px';
+1669:     ripple.style.top = y + 'px';
+1670:     ripple.style.width = ripple.style.height = size + 'px';
+1671:     el.appendChild(ripple);
+1672:     // 主动画结束后移除
+1673:     const cleanup = ()=>{ ripple.remove(); el.removeEventListener('pointerup', cleanup); el.removeEventListener('pointerleave', cleanup); };
+1674:     el.addEventListener('pointerup', cleanup);
+1675:     el.addEventListener('pointerleave', cleanup);
+1676:     // 兜底清理
+1677:     setTimeout(()=>ripple.remove(), 700);
+1678:   });
+1679: }
+1680: /* 全局水波效果委托：自动给匹配选择器的元素添加 ripple，无需手动 attach。
+1681:    匹配的元素需要 position:relative + overflow:hidden 以裁剪圆角。 */
+1682: const RIPPLE_SELECTOR = '.btn,.seg-btn,.chip,.settings-item.clickable,.dropdown-header.clickable,.lang-item,.icon-option,.icon-circle-btn,.nav-tab .tab-icon-pill,.icon-btn,.fab,.ci-check,.check-item,.fi-icon-btn,.fi-remove';
+1683: function initGlobalRipple(){
+1684:   document.addEventListener('pointerdown', e=>{
+1685:     if(e.button!==0 && e.pointerType==='mouse') return;
+1686:     const target = e.target.closest(RIPPLE_SELECTOR);
+1687:     if(!target) return;
+1688:     // 已通过 attachRipple 处理的元素跳过（避免重复）
+1689:     if(target._rippleAttached) return;
+1690:     const rect = target.getBoundingClientRect();
+1691:     const size = Math.max(rect.width, rect.height);
+1692:     const x = e.clientX - rect.left - size/2;
+1693:     const y = e.clientY - rect.top - size/2;
+1694:     const ripple = document.createElement('span');
+1695:     ripple.className = 'md-ripple';
+1696:     ripple.style.left = x + 'px';
+1697:     ripple.style.top = y + 'px';
+1698:     ripple.style.width = ripple.style.height = size + 'px';
+1699:     target.appendChild(ripple);
+1700:     setTimeout(()=>ripple.remove(), 550);
+1701:   }, {capture:true});
+1702: }
+1703: function autoIconFor(text){
+1704:   if(!text) return 'checklist';
+1705:   const lower = text.toLowerCase();
+1706:   for(const [pattern, icon] of AUTO_ICON_KEYWORDS){
+1707:     const parts = pattern.split('|');
+1708:     for(const p of parts){
+1709:       if(lower.includes(p.toLowerCase())) return icon;
+1710:     }
+1711:   }
+1712:   return 'checklist';
+1713: }
+1714: function resolveIcon(iconName, fallbackText){
+1715:   // 返回实际图标名：若用户提供则用，否则自动选
+1716:   if(iconName && iconName!=='auto' && ICON_LIST.includes(iconName)) return iconName;
+1717:   return autoIconFor(fallbackText||'');
+1718: }
+1719: 
+1720: /* ---------- i18n 取词 ---------- */
+1721: function getLang(){
+1722:   const s = Store.state.settings.language;
+1723:   if(s==='auto'){
+1724:     const nav = navigator.language || 'zh-CN';
+1725:     // 精确匹配
+1726:     if(I18N[nav]) return nav;
+1727:     // 前缀匹配
+1728:     const prefix = nav.split('-')[0];
+1729:     if(I18N[prefix]) return prefix;
+1730:     return 'zh-CN';
+1731:   }
+1732:   return I18N[s] ? s : 'zh-CN';
+1733: }
+1734: function t(key){
+1735:   const lang = getLang();
+1736:   return (I18N[lang] && I18N[lang][key]) || I18N['zh-CN'][key] || key;
+1737: }
+1738: 
+1739: /* ---------- 主题应用 ---------- */
+1740: function applyTheme(){
+1741:   const s = Store.state.settings.theme;
+1742:   let dark;
+1743:   if(s==='auto'){
+1744:     // 多重检测：matchMedia + color-scheme CSS 属性 + Android WebView 兼容
+1745:     dark = false;
+1746:     if(window.matchMedia){
+1747:       const mq = window.matchMedia('(prefers-color-scheme: dark)');
+1748:       dark = mq.matches;
+1749:     }
+1750:     // Android WebView 回退：检查 color-scheme CSS 属性
+1751:     if(!dark){
+1752:       const cs = getComputedStyle(document.documentElement).colorScheme || getComputedStyle(document.body).colorScheme;
+1753:       if(cs && cs.indexOf('dark')>=0) dark = true;
+1754:     }
+1755:     // 最终回退：检查背景色亮度
+1756:     if(!dark){
+1757:       const bg = getComputedStyle(document.body).backgroundColor;
+1758:       const m = bg.match(/\d+/g);
+1759:       if(m && m.length>=3){
+1760:         const lum = (0.299*+m[0] + 0.587*+m[1] + 0.114*+m[2]);
+1761:         dark = lum < 128;
+1762:       }
+1763:     }
+1764:   }else{
+1765:     dark = s==='dark';
+1766:   }
+1767:   document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+1768:   const meta = document.querySelector('meta[name=theme-color]');
+1769:   if(meta) meta.content = dark?'#131318':'#FCF8FF';
+1770: }
+1771: 
+1772: /* ============================================================
+1773:    渲染层
+1774:    ============================================================ */
+1775: 
+1776: /* ---------- 顶栏渲染 ---------- */
+1777: function renderTopbar(pageType){
+1778:   const titleText = $('#topbarTitleText');
+1779:   const titleSuffix = $('#topbarTitleSuffix');
+1780:   const btnConfig = $('#btnConfig');
+1781:   const btnSearch = $('#btnSearch');
+1782:   const btnSettings = $('#btnSettings');
+1783: 
+1784:   if(pageType==='home'){
+1785:     const cl = getActiveChecklist();
+1786:     if(cl){
+1787:       titleText.textContent = cl.name;
+1788:       titleSuffix.textContent = t('app_suffix');
+1789:     }else{
+1790:       titleText.textContent = t('app_name');
+1791:       titleSuffix.textContent = '';
+1792:     }
+1793:     btnConfig.style.display='';
+1794:     btnSearch.style.display='';
+1795:     btnSettings.style.display='';
+1796:     btnSettings.querySelector('.icon').textContent='settings';
+1797:     btnSettings.setAttribute('aria-label', t('settings'));
+1798:     btnSettings.classList.remove('is-active');
+1799:     btnConfig.querySelector('.icon').textContent='menu';
+1800:     btnConfig.setAttribute('aria-label', t('config'));
+1801:     btnSearch.querySelector('.icon').textContent='search';
+1802:     btnSearch.setAttribute('aria-label', t('search'));
+1803:     // 配置按钮在有检查单时可用
+1804:     btnConfig.style.opacity = cl? '1':'.38';
+1805:     btnConfig.style.pointerEvents = cl? 'auto':'none';
+1806:     btnSearch.style.opacity = cl? '1':'.38';
+1807:     btnSearch.style.pointerEvents = cl? 'auto':'none';
+1808:   }else if(pageType==='form'){
+1809:     const editing = Store.state._editing;
+1810:     titleText.textContent = editing? t('edit_checklist') : t('new_checklist');
+1811:     titleSuffix.textContent='';
+1812:     btnConfig.style.display='none';
+1813:     btnSearch.style.display='none';
+1814:     // 表单页显示设置按钮（UI逻辑：检查单→新建→设置，向右翻）
+1815:     btnSettings.style.display='';
+1816:     btnSettings.querySelector('.icon').textContent='settings';
+1817:     btnSettings.setAttribute('aria-label', t('settings'));
+1818:     btnSettings.classList.add('is-active');
+1819:   }else if(pageType==='settings'){
+1820:     titleText.textContent = t('settings');
+1821:     titleSuffix.textContent='';
+1822:     btnConfig.style.display='none';
+1823:     btnSearch.style.display='none';
+1824:     btnSettings.style.display='';
+1825:     btnSettings.querySelector('.icon').textContent='home';
+1826:     btnSettings.setAttribute('aria-label', t('back_home'));
+1827:     btnSettings.classList.add('is-active');
+1828:   }
+1829:   // 重置搜索栏状态
+1830:   if(pageType!=='home'){
+1831:     closeSearch(true);
+1832:   }
+1833: }
+1834: 
+1835: /* ---------- 获取当前活动检查单 ---------- */
+1836: function getActiveChecklist(){
+1837:   const id = Store.state.activeChecklistId;
+1838:   if(!id) return null;
+1839:   return Store.state.checklists.find(c=>c.id===id) || null;
+1840: }
+1841: 
+1842: /* ---------- 主页面渲染 ---------- */
+1843: let currentHomeView = 'list'; // list | empty | alldone
+1844: 
+1845: function renderHome(){
+1846:   const container = $('#listContainer');
+1847:   const resetFab = $('#btnResetList');
+1848:   const cl = getActiveChecklist();
+1849: 
+1850:   // 清空
+1851:   container.innerHTML='';
+1852: 
+1853:   if(!cl){
+1854:     // 无检查单 - 自动跳到新建页面，不显示空状态
+1855:     resetFab.classList.remove('visible');
+1856:     if(currentPage==='home'){
+1857:       openForm(null);
+1858:     }
+1859:     return;
+1860:   }
+1861: 
+1862:   const pendingItems = cl.items.filter(i=>!i.done);
+1863:   if(cl.items.length===0 || pendingItems.length===0){
+1864:     // 全部完成 - 显示重置 FAB
+1865:     showHomeView('alldone');
+1866:     resetFab.classList.add('visible');
+1867:     return;
+1868:   }
+1869: 
+1870:   showHomeView('list');
+1871:   resetFab.classList.remove('visible');
+1872: 
+1873:   const settings = Store.state.settings;
+1874:   // FLIP：记录旧位置
+1875:   const oldRects = new Map();
+1876:   $$('.check-item', container).forEach(node=>{
+1877:     oldRects.set(node.dataset.id, node.getBoundingClientRect());
+1878:   });
+1879: 
+1880:   // 渲染待办项
+1881:   pendingItems.forEach((item, idx)=>{
+1882:     const isFirst = idx===0;
+1883:     const useCustom = isFirst || !settings.firstOnly;
+1884:     const height = useCustom? settings.itemHeight : 64;
+1885:     const iconName = resolveIcon(item.icon, item.text);
+1886: 
+1887:     const node = el('div', {class:'check-item', dataset:{id:item.id}});
+1888:     node.style.height = height+'px';
+1889: 
+1890:     const iconEl = el('span', {class:'icon ci-icon'}, iconName);
+1891:     const textEl = el('div', {class:'ci-text'}, item.text);
+1892:     const checkBtn = el('button', {class:'ci-check', 'aria-label':t('confirm'), onclick:(e)=>{
+1893:       e.stopPropagation();
+1894:       completeItem(cl.id, item.id);
+1895:     }});
+1896:     checkBtn.appendChild(el('span', {class:'icon ci-check-icon'}, 'check'));
+1897:     // 附加水滴效果
+1898:     attachRipple(checkBtn);
+1899: 
+1900:     node.appendChild(iconEl);
+1901:     node.appendChild(textEl);
+1902:     node.appendChild(checkBtn);
+1903:     container.appendChild(node);
+1904:   });
+1905: 
+1906:   // FLIP 补位动画
+1907:   requestAnimationFrame(()=>{
+1908:     $$('.check-item', container).forEach(node=>{
+1909:       const old = oldRects.get(node.dataset.id);
+1910:       if(old){
+1911:         const neW = node.getBoundingClientRect();
+1912:         const dy = old.top - neW.top;
+1913:         if(Math.abs(dy)>1){
+1914:           node.style.transform = `translateY(${dy}px)`;
+1915:           node.style.transition='none';
+1916:           requestAnimationFrame(()=>{
+1917:             node.style.transition='';
+1918:             node.style.transform='';
+1919:           });
+1920:         }
+1921:       }
+1922:     });
+1923:   });
+1924: }
+1925: 
+1926: function showHomeView(view){
+1927:   const container = $('#listContainer');
+1928:   // 若视图类型相同，仅更新文本（用于语言切换时刷新文案）
+1929:   if(view===currentHomeView){
+1930:     if(view==='alldone'){
+1931:       const dt = $('#allDoneView .done-title'), ds = $('#allDoneView .done-sub');
+1932:       if(dt) dt.textContent = t('all_done_title');
+1933:       if(ds) ds.textContent = t('all_done_sub');
+1934:     }
+1935:     return;
+1936:   }
+1937:   currentHomeView = view;
+1938: 
+1939:   // 移除旧的完成视图
+1940:   const oldDone = $('#allDoneView');
+1941:   if(oldDone){ oldDone.classList.remove('show'); setTimeout(()=>oldDone.remove(), 400); }
+1942: 
+1943:   if(view==='alldone'){
+1944:     const v = el('div', {class:'all-done', id:'allDoneView'});
+1945:     v.appendChild(el('span', {class:'icon big-icon'}, 'coffee'));
+1946:     v.appendChild(el('div', {class:'done-title'}, t('all_done_title')));
+1947:     v.appendChild(el('div', {class:'done-sub'}, t('all_done_sub')));
+1948:     $('#listScroll').appendChild(v);
+1949:     requestAnimationFrame(()=>v.classList.add('show'));
+1950:   }
+1951: }
+1952: 
+1953: /* ---------- 完成检查项（带动画） ----------
+1954:    彻底重写：直接操作 DOM，不重新渲染整个列表。
+1955:    流程：1.勾选填充 → 2.右滑淡出+高度收缩 → 3.移除节点 → 4.新的第一项布局过渡
+1956:    这样下方项会随高度收缩自然上移，无需 FLIP，不会瞬移。 */
+1957: function completeItem(clId, itemId){
+1958:   const cl = Store.state.checklists.find(c=>c.id===clId);
+1959:   if(!cl) return;
+1960:   const item = cl.items.find(i=>i.id===itemId);
+1961:   if(!item) return;
+1962: 
+1963:   const node = $(`.check-item[data-id="${itemId}"]`);
+1964:   if(node){
+1965:     // 1. 勾选填充动画（200ms）
+1966:     node.classList.add('completed');
+1967:     setTimeout(()=>{
+1968:       // 2. 移除动画：右滑淡出 + 高度收缩（CSS transition 自然带动下方项上移）
+1969:       node.classList.add('removing');
+1970:       // 3. 等待移除动画完成
+1971:       setTimeout(()=>{
+1972:         // 更新数据
+1973:         item.done = true;
+1974:         const allDone = cl.items.every(i=>i.done);
+1975:         if(allDone) cl.completedAt = Date.now();
+1976:         Store.save();
+1977:         // 从 DOM 移除已完成节点
+1978:         node.remove();
+1979:         renderBottombar();
+1980:         checkAutoReset();
+1981:         // 4. 如果还有待办项，新的第一项高度可能需要更新
+1982:         const pendingItems = cl.items.filter(i=>!i.done);
+1983:         if(pendingItems.length === 0){
+1984:           // 全部完成：显示咖啡态
+1985:           showHomeView('alldone');
+1986:           $('#btnResetList').classList.add('visible');
+1987:         }else{
+1988:           // 更新新的第一项的高度
+1989:           updateFirstItemHeight();
+1990:         }
+1991:       }, 400);
+1992:     }, 200);
+1993:   }else{
+1994:     item.done = true;
+1995:     const allDone = cl.items.every(i=>i.done);
+1996:     if(allDone) cl.completedAt = Date.now();
+1997:     Store.save();
+1998:     renderHome();
+1999:     renderBottombar();
+2000:   }
+2001: }
+2002: 
+2003: /* 更新第一项的高度（firstOnly 模式下，新的第一项使用自定义高度） */
+2004: function updateFirstItemHeight(){
+2005:   const settings = Store.state.settings;
+2006:   const container = $('#listContainer');
+2007:   const firstNode = container.querySelector('.check-item');
+2008:   if(!firstNode) return;
+2009:   firstNode.style.height = settings.itemHeight + 'px';
+2010: }
+2011: 
+2012: 
+2013: /* ---------- 重置检查单 ---------- */
+2014: function resetChecklist(clId){
+2015:   const cl = Store.state.checklists.find(c=>c.id===clId);
+2016:   if(!cl) return;
+2017:   cl.items.forEach(i=>i.done=false);
+2018:   cl.completedAt = null;
+2019:   Store.save();
+2020:   renderHome();
+2021:   renderBottombar();
+2022:   showToast(t('reset_toast'));
+2023: }
+2024: 
+2025: /* ---------- 自动重置检查 ---------- */
+2026: function checkAutoReset(){
+2027:   const now = Date.now();
+2028:   let changed = false;
+2029:   Store.state.checklists.forEach(cl=>{
+2030:     if(cl.completedAt && cl.resetHours && cl.resetHours>0){
+2031:       const elapsed = (now - cl.completedAt)/3600000;
+2032:       if(elapsed >= cl.resetHours){
+2033:         cl.items.forEach(i=>i.done=false);
+2034:         cl.completedAt = null;
+2035:         changed = true;
+2036:       }
+2037:     }
+2038:   });
+2039:   if(changed){ Store.save(); renderHome(); renderBottombar(); }
+2040: }
+2041: // 每分钟检查一次自动重置
+2042: setInterval(checkAutoReset, 60000);
+2043: 
+2044: /* ---------- 底栏渲染 ---------- */
+2045: function renderBottombar(newTabId){
+2046:   const scroll = $('#bottombarScroll');
+2047:   scroll.innerHTML='';
+2048: 
+2049:   // 检查单标签高亮：主页时高亮活动检查单，编辑页时高亮正在编辑的检查单
+2050:   Store.state.checklists.forEach(cl=>{
+2051:     const active = (currentPage==='home' && cl.id===Store.state.activeChecklistId) ||
+2052:                    (currentPage==='form' && Store.state._editing===cl.id);
+2053:     const iconName = resolveIcon(cl.icon, cl.name);
+2054:     // 新增的标签应用入场动画
+2055:     const isNew = cl.id===newTabId;
+2056:     const tab = el('button', {class:'nav-tab'+(active?' is-active':'')+(isNew?' tab-enter':''), dataset:{id:cl.id}, onclick:()=>switchChecklist(cl.id)});
+2057:     const pill = el('div', {class:'tab-icon-pill'}, el('span', {class:'icon'}, iconName));
+2058:     attachRipple(pill);
+2059:     const label = el('div', {class:'tab-label'}, cl.name || t('checklist'));
+2060:     tab.appendChild(pill);
+2061:     tab.appendChild(label);
+2062:     scroll.appendChild(tab);
+2063:     // 动画结束后移除入场类
+2064:     if(isNew){
+2065:       tab.addEventListener('animationend', ()=>tab.classList.remove('tab-enter'), {once:true});
+2066:     }
+2067:   });
+2068: 
+2069:   // 新建标签 —— 在表单页（新建模式）时高亮
+2070:   const newTabActive = currentPage==='form' && !Store.state._editing;
+2071:   const newTab = el('button', {class:'nav-tab'+(newTabActive?' is-active':''), id:'newTab', onclick:()=>openForm(null)});
+2072:   const newPill = el('div', {class:'tab-icon-pill'}, el('span', {class:'icon'}, 'add'));
+2073:   attachRipple(newPill);
+2074:   newTab.appendChild(newPill);
+2075:   newTab.appendChild(el('div', {class:'tab-label'}, t('new_tab')));
+2076:   scroll.appendChild(newTab);
+2077: 
+2078:   // 滚动到活动标签
+2079:   setTimeout(()=>{
+2080:     const active = $('.nav-tab.is-active', scroll);
+2081:     if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+2082:   }, 50);
+2083: }
+2084: 
+2085: /* 切换动画 token：用于中断之前的切换动画 */
+2086: let switchAnimToken = 0;
+2087: function switchChecklist(clId){
+2088:   const oldId = Store.state.activeChecklistId;
+2089:   if(oldId === clId && currentPage === 'home') return;
+2090:   const lists = Store.state.checklists;
+2091:   const oldIdx = lists.findIndex(c=>c.id===oldId);
+2092:   const newIdx = lists.findIndex(c=>c.id===clId);
+2093:   const goRight = newIdx > oldIdx;
+2094: 
+2095:   // 中断之前的切换动画
+2096:   switchAnimToken++;
+2097:   const myToken = switchAnimToken;
+2098: 
+2099:   Store.set({activeChecklistId:clId});
+2100:   if(currentPage!=='home'){
+2101:     switchPage('home');
+2102:   }
+2103:   renderTopbar('home');
+2104:   renderBottombar();
+2105:   closeSearch(true);
+2106: 
+2107:   // 丝滑左右滑动切换：旧内容滑出 → 渲染新内容 → 新内容滑入
+2108:   const container = $('#listContainer');
+2109:   if(container && oldId !== clId){
+2110:     const dir = goRight ? -1 : 1;
+2111:     const enterDir = goRight ? 1 : -1;
+2112:     // 1. 旧内容滑出（150ms加速）
+2113:     container.style.transition = 'transform 150ms cubic-bezier(.3,0,.8,.15), opacity 120ms cubic-bezier(.3,0,.8,.15)';
+2114:     container.style.transform = `translateX(${dir*40}px)`;
+2115:     container.style.opacity = '0';
+2116:     setTimeout(()=>{
+2117:       if(myToken !== switchAnimToken) return; // 被中断
+2118:       // 2. 渲染新内容
+2119:       renderHome();
+2120:       // 3. 从反方向无过渡定位
+2121:       container.style.transition = 'none';
+2122:       container.style.transform = `translateX(${enterDir*40}px)`;
+2123:       container.style.opacity = '0';
+2124:       // 4. 滑入（300ms减速）
+2125:       requestAnimationFrame(()=>requestAnimationFrame(()=>{
+2126:         if(myToken !== switchAnimToken) return; // 被中断
+2127:         container.style.transition = 'transform 300ms cubic-bezier(.05,.7,.1,1), opacity 250ms cubic-bezier(.05,.7,.1,1)';
+2128:         container.style.transform = 'translateX(0)';
+2129:         container.style.opacity = '1';
+2130:         setTimeout(()=>{
+2131:           if(myToken !== switchAnimToken) return;
+2132:           container.style.transition = '';
+2133:           container.style.transform = '';
+2134:           container.style.opacity = '';
+2135:         }, 320);
+2136:       }));
+2137:     }, 150);
+2138:   }else{
+2139:     renderHome();
+2140:   }
+2141: }
+2142: 
+2143: /* ---------- 新建/编辑表单 ---------- */
+2144: let formState = {name:'', icon:'auto', resetHours:0, items:[{id:uid(), text:'', icon:'auto'}]};
+2145: 
+2146: function openForm(checklistId){
+2147:   // checklistId 为 null 表示新建
+2148:   Store.state._editing = checklistId;
+2149:   if(checklistId){
+2150:     const cl = Store.state.checklists.find(c=>c.id===checklistId);
+2151:     formState = {
+2152:       name:cl.name,
+2153:       icon:cl.icon||'auto',
+2154:       resetHours:cl.resetHours||0,
+2155:       items: cl.items.map(i=>({id:i.id, text:i.text, icon:i.icon||'auto', done:i.done}))
+2156:     };
+2157:   }else{
+2158:     formState = {name:'', icon:'auto', resetHours:0, items:[{id:uid(), text:'', icon:'auto'}]};
+2159:   }
+2160:   if(currentPage === 'form'){
+2161:     // 已在表单页（如从编辑切到新建）：用淡入动画过渡
+2162:     const content = $('#formContent');
+2163:     content.style.transition = 'opacity 150ms cubic-bezier(.3,0,.8,.15)';
+2164:     content.style.opacity = '0';
+2165:     setTimeout(()=>{
+2166:       renderForm();
+2167:       renderTopbar('form');
+2168:       renderBottombar();
+2169:       content.style.transition = 'none';
+2170:       content.style.opacity = '0';
+2171:       requestAnimationFrame(()=>{
+2172:         content.style.transition = 'opacity 250ms cubic-bezier(.05,.7,.1,1)';
+2173:         content.style.opacity = '1';
+2174:       });
+2175:     }, 150);
+2176:   }else{
+2177:     renderForm();
+2178:     switchPage('form');
+2179:     renderTopbar('form');
+2180:     renderBottombar();
+2181:   }
+2182: }
+2183: 
+2184: /* 渲染检查单图标选择行（6常用 + 预览/更多） */
+2185: const CHECKLIST_COMMON_ICONS = ['checklist','home','work','school','shopping_bag','directions_car','flight','restaurant','local_cafe','fitness_center'];
+2186: function renderChecklistIconRow(){
+2187:   const row = el('div', {class:'icon-circle-row', id:'checklistIconRow'});
+2188:   // 计算当前实际显示的图标
+2189:   const isAuto = formState.icon==='auto';
+2190:   const autoIcon = autoIconFor(formState.name);
+2191:   const curIcon = isAuto ? autoIcon : formState.icon;
+2192:   // 判断自动图标是否在常用列表中
+2193:   const autoInCommon = CHECKLIST_COMMON_ICONS.includes(autoIcon);
+2194: 
+2195:   CHECKLIST_COMMON_ICONS.forEach(ic=>{
+2196:     // 选中状态：手动选了该图标，或 auto 模式下该图标恰好是自动图标
+2197:     const sel = (!isAuto && formState.icon===ic) || (isAuto && autoInCommon && ic===autoIcon);
+2198:     const btn = el('button', {class:'icon-circle-btn'+(sel?' selected':''), onclick:()=>{
+2199:       // 点击已选中的图标时取消选择（回到 auto）；否则选择该图标
+2200:       if(formState.icon===ic){
+2201:         formState.icon = 'auto';
+2202:       }else{
+2203:         formState.icon = ic;
+2204:       }
+2205:       refreshChecklistIconRow();
+2206:     }});
+2207:     btn.appendChild(el('span', {class:'icon'}, ic));
+2208:     attachRipple(btn);
+2209:     row.appendChild(btn);
+2210:   });
+2211:   // 更多按钮：打开完整图标选择弹窗
+2212:   const moreBtn = el('button', {class:'icon-circle-btn', onclick:()=>openIconPicker('checklist')});
+2213:   moreBtn.appendChild(el('span', {class:'icon'}, 'more_horiz'));
+2214:   attachRipple(moreBtn);
+2215:   row.appendChild(moreBtn);
+2216:   // 如果 auto 模式且自动图标不在常用列表中，在更多按钮前插入高亮预览按钮
+2217:   if(isAuto && !autoInCommon){
+2218:     const previewBtn = el('button', {class:'icon-circle-btn selected preview-btn', onclick:()=>openIconPicker('checklist')});
+2219:     previewBtn.appendChild(el('span', {class:'icon'}, autoIcon));
+2220:     attachRipple(previewBtn);
+2221:     row.insertBefore(previewBtn, moreBtn);
+2222:   }
+2223:   // 如果手动选了非常用图标，也显示预览按钮
+2224:   if(!isAuto && !CHECKLIST_COMMON_ICONS.includes(formState.icon)){
+2225:     const previewBtn = el('button', {class:'icon-circle-btn selected preview-btn', onclick:()=>{
+2226:       // 点击预览按钮取消选择（回到 auto）
+2227:       formState.icon = 'auto';
+2228:       refreshChecklistIconRow();
+2229:     }});
+2230:     previewBtn.appendChild(el('span', {class:'icon'}, formState.icon));
+2231:     attachRipple(previewBtn);
+2232:     row.insertBefore(previewBtn, moreBtn);
+2233:   }
+2234:   return row;
+2235: }
+2236: /* 刷新检查单图标行（不重新渲染整个表单，保持输入焦点） */
+2237: function refreshChecklistIconRow(){
+2238:   const oldRow = $('#checklistIconRow');
+2239:   if(!oldRow) return;
+2240:   const newRow = renderChecklistIconRow();
+2241:   oldRow.replaceWith(newRow);
+2242: }
+2243: 
+2244: function renderForm(){
+2245:   const content = $('#formContent');
+2246:   const editing = Store.state._editing;
+2247: 
+2248:   content.innerHTML='';
+2249:   // 表单内容区 + 底部按钮区（按钮跟随滚动）
+2250:   const formBody = el('div', {class:'form-body'});
+2251: 
+2252:   // 检查单图标选择 —— 7个圆按钮（6常用图标 + 更多按钮）
+2253:   formBody.appendChild(el('div', {class:'form-section'}, [
+2254:     el('label', {class:'form-label'}, t('checklist_icon')),
+2255:     renderChecklistIconRow()
+2256:   ]));
+2257: 
+2258:   // 名称输入
+2259:   formBody.appendChild(el('div', {class:'form-section'}, [
+2260:     el('label', {class:'form-label'}, t('checklist_name')),
+2261:     el('div', {class:'text-field'}, [
+2262:       (()=>{
+2263:         const input = el('input', {type:'text', value:formState.name, placeholder:t('checklist_name')});
+2264:         input.addEventListener('input', e=>{
+2265:           formState.name = e.target.value;
+2266:           // 若检查单图标为自动，即时更新图标行预览（不重新渲染整个表单，保持焦点）
+2267:           if(formState.icon==='auto'){
+2268:             refreshChecklistIconRow();
+2269:           }
+2270:         });
+2271:         return input;
+2272:       })()
+2273:     ])
+2274:   ]));
+2275: 
+2276:   // 重置时间 —— 下拉菜单选择（需求3）
+2277:   formBody.appendChild(el('div', {class:'form-section'}, [
+2278:     el('label', {class:'form-label'}, t('reset_time')),
+2279:     (()=>{
+2280:       const dd = el('div', {class:'dropdown form-dropdown'});
+2281:       const header = el('div', {class:'dropdown-header clickable', onclick:()=>{
+2282:         const willOpen = !dd.classList.contains('open');
+2283:         const body = dd.querySelector('.dropdown-body');
+2284:         if(willOpen){
+2285:           dd.classList.add('open');
+2286:           body.style.maxHeight = body.scrollHeight + 'px';
+2287:         }else{
+2288:           body.style.maxHeight = body.scrollHeight + 'px';
+2289:           void body.offsetHeight;
+2290:           body.style.maxHeight = '0px';
+2291:           dd.classList.remove('open');
+2292:         }
+2293:       }});
+2294:       const curText = formState.resetHours>0 ? `${formState.resetHours} ${t('hours')}` : t('never_reset');
+2295:       header.appendChild(el('span', {class:'icon dh-icon'}, 'schedule'));
+2296:       header.appendChild(el('span', {class:'dh-title'}, curText));
+2297:       header.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+2298:       attachRipple(header);
+2299:       dd.appendChild(header);
+2300:       const body = el('div', {class:'dropdown-body'});
+2301:       const inner = el('div', {class:'dropdown-body-inner'});
+2302:       const options = [0,1,2,4,6,8,12,24,48,72];
+2303:       options.forEach(h=>{
+2304:         const sel = formState.resetHours===h;
+2305:         const opt = el('div', {class:'lang-item'+(sel?' selected':''), onclick:()=>{
+2306:           formState.resetHours=h;
+2307:           // 更新 header 文本（即时反馈）
+2308:           header.querySelector('.dh-title').textContent = h===0 ? t('never_reset') : `${h} ${t('hours')}`;
+2309:           // 延迟收起，让水波效果先播放
+2310:           setTimeout(()=>{
+2311:             const bodyEl = dd.querySelector('.dropdown-body');
+2312:             bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+2313:             void bodyEl.offsetHeight;
+2314:             bodyEl.style.maxHeight = '0px';
+2315:             dd.classList.remove('open');
+2316:             // 收起动画结束后重新渲染（更新选项选中状态）
+2317:             setTimeout(()=>renderForm(), 400);
+2318:           }, 100);
+2319:         }});
+2320:         opt.appendChild(el('span', {class:'icon si-icon', style:sel?'color:var(--md-primary)':''}, sel?'check':'schedule'));
+2321:         opt.appendChild(el('div', {class:'si-text'}, el('div', {class:'si-title'}, h===0? t('never_reset') : `${h} ${t('hours')}`)));
+2322:         inner.appendChild(opt);
+2323:       });
+2324:       body.appendChild(inner);
+2325:       dd.appendChild(body);
+2326:       return dd;
+2327:     })()
+2328:   ]));
+2329: 
+2330:   // 检查项
+2331:   formBody.appendChild(el('div', {class:'form-section'}, [
+2332:     el('label', {class:'form-label'}, t('add_check_item')),
+2333:     (()=>{
+2334:       const wrap = el('div', {id:'formItemsWrap'});
+2335:       renderFormItems(wrap);
+2336:       return wrap;
+2337:     })()
+2338:   ]));
+2339: 
+2340:   content.appendChild(formBody);
+2341: 
+2342:   // 按钮 —— 嵌入 formContent 末尾，跟随滚动
+2343:   const actions = el('div', {class:'form-actions', id:'formActions'});
+2344:   if(editing){
+2345:     actions.appendChild(el('button', {class:'btn btn-large btn-error', id:'btnDelete', onclick:handleDelete}, [
+2346:       el('span', {class:'icon'}, 'delete'), t('delete_checklist')
+2347:     ]));
+2348:     actions.appendChild(el('button', {class:'btn btn-large', onclick:handleSave}, [
+2349:       el('span', {class:'icon'}, 'save'), t('save_changes')
+2350:     ]));
+2351:     // 导出按钮（编辑模式，第二行）
+2352:     const exportRow = el('div', {class:'form-actions', style:'padding-top:0;'});
+2353:     exportRow.appendChild(el('button', {class:'btn btn-large btn-outlined', onclick:handleExport}, [
+2354:       el('span', {class:'icon'}, 'file_download'), t('export_checklist')
+2355:     ]));
+2356:     content.appendChild(actions);
+2357:     content.appendChild(exportRow);
+2358:   }else{
+2359:     actions.appendChild(el('button', {class:'btn btn-large', onclick:handleConfirm}, [
+2360:       el('span', {class:'icon'}, 'check'), t('confirm')
+2361:     ]));
+2362:     // 导入按钮（新建模式，确认按钮上方）
+2363:     const importRow = el('div', {class:'form-actions', style:'padding-top:0;'});
+2364:     importRow.appendChild(el('button', {class:'btn btn-large btn-outlined', onclick:handleImport}, [
+2365:       el('span', {class:'icon'}, 'file_upload'), t('import_checklist')
+2366:     ]));
+2367:     content.appendChild(importRow);
+2368:     content.appendChild(actions);
+2369:   }
+2370: }
+2371: 
+2372: function renderFormItems(wrap){
+2373:   wrap.innerHTML='';
+2374:   // 确保最后总有一个空行供继续输入
+2375:   const last = formState.items[formState.items.length-1];
+2376:   if(!last || last.text.trim()) {
+2377:     formState.items.push({id:uid(), text:'', icon:'auto'});
+2378:   }
+2379:   formState.items.forEach((item, idx)=>{
+2380:     const hasContent = item.text.trim().length>0;
+2381:     const fi = el('div', {class:'form-item'+(hasContent?' has-content':''), dataset:{id:item.id}});
+2382:     // 图标按钮
+2383:     const iconBtn = el('button', {class:'fi-icon-btn'+(item.icon!=='auto'?' has-icon':''), onclick:()=>openIconPicker('item', item.id)});
+2384:     iconBtn.appendChild(el('span', {class:'icon'}, item.icon==='auto'? (hasContent?autoIconFor(item.text):'add_circle') : resolveIcon(item.icon, item.text)));
+2385:     attachRipple(iconBtn);
+2386:     fi.appendChild(iconBtn);
+2387:     // 输入框
+2388:     const tf = el('div', {class:'text-field fi-input'});
+2389:     const input = el('input', {type:'text', value:item.text, placeholder:t('check_item_placeholder')});
+2390:     // 记录当前聚焦元素，避免重新渲染时丢失焦点（需求4）
+2391:     const focusedId = document.activeElement && document.activeElement.tagName==='INPUT' ? document.activeElement.closest('.form-item')?.dataset?.id : null;
+2392:     input.addEventListener('input', e=>{
+2393:       item.text = e.target.value;
+2394:       const hc = item.text.trim().length>0;
+2395:       fi.classList.toggle('has-content', hc);
+2396:       // 自动图标预览更新
+2397:       if(item.icon==='auto'){
+2398:         iconBtn.querySelector('.icon').textContent = hc? autoIconFor(item.text) : 'add_circle';
+2399:       }
+2400:       // 若是最后一条且有内容，新增一条空行（不抢焦点，不重新渲染当前行）
+2401:       if(idx===formState.items.length-1 && hc){
+2402:         const newId = uid();
+2403:         formState.items.push({id:newId, text:'', icon:'auto'});
+2404:         // 仅追加新行，不重新渲染所有行，保持当前焦点
+2405:         appendFormItem(wrap, newId);
+2406:       }
+2407:     });
+2408:     tf.appendChild(input);
+2409:     fi.appendChild(tf);
+2410:     // 删除按钮
+2411:     const rmBtn = el('button', {class:'fi-remove', onclick:()=>{
+2412:       if(formState.items.length<=1){
+2413:         // 仅清空
+2414:         item.text=''; item.icon='auto';
+2415:         renderFormItems(wrap);
+2416:         return;
+2417:       }
+2418:       fi.classList.add('removing');
+2419:       setTimeout(()=>{
+2420:         formState.items = formState.items.filter(i=>i.id!==item.id);
+2421:         renderFormItems(wrap);
+2422:       }, 250);
+2423:     }});
+2424:     rmBtn.appendChild(el('span', {class:'icon'}, 'close'));
+2425:     fi.appendChild(rmBtn);
+2426:     wrap.appendChild(fi);
+2427:     // 恢复焦点
+2428:     if(focusedId===item.id){
+2429:       requestAnimationFrame(()=>input.focus());
+2430:       // 将光标放到末尾
+2431:       const len = input.value.length;
+2432:       requestAnimationFrame(()=>{ input.setSelectionRange(len,len); });
+2433:     }
+2434:   });
+2435: }
+2436: 
+2437: /* 追加单个表单项（不重新渲染全部，避免抢焦点） */
+2438: function appendFormItem(wrap, itemId){
+2439:   const item = formState.items.find(i=>i.id===itemId);
+2440:   if(!item) return;
+2441:   const fi = el('div', {class:'form-item', dataset:{id:item.id}});
+2442:   const iconBtn = el('button', {class:'fi-icon-btn', onclick:()=>openIconPicker('item', item.id)});
+2443:   iconBtn.appendChild(el('span', {class:'icon'}, 'add_circle'));
+2444:   attachRipple(iconBtn);
+2445:   fi.appendChild(iconBtn);
+2446:   const tf = el('div', {class:'text-field fi-input'});
+2447:   const input = el('input', {type:'text', value:item.text, placeholder:t('check_item_placeholder')});
+2448:   input.addEventListener('input', e=>{
+2449:     item.text = e.target.value;
+2450:     const hc = item.text.trim().length>0;
+2451:     fi.classList.toggle('has-content', hc);
+2452:     if(item.icon==='auto'){
+2453:       iconBtn.querySelector('.icon').textContent = hc? autoIconFor(item.text) : 'add_circle';
+2454:     }
+2455:     if(item.id===formState.items[formState.items.length-1].id && hc){
+2456:       const newId = uid();
+2457:       formState.items.push({id:newId, text:'', icon:'auto'});
+2458:       appendFormItem(wrap, newId);
+2459:     }
+2460:   });
+2461:   tf.appendChild(input);
+2462:   fi.appendChild(tf);
+2463:   const rmBtn = el('button', {class:'fi-remove', onclick:()=>{
+2464:     if(formState.items.length<=1){ item.text=''; item.icon='auto'; renderFormItems(wrap); return; }
+2465:     fi.classList.add('removing');
+2466:     setTimeout(()=>{ formState.items = formState.items.filter(i=>i.id!==item.id); renderFormItems(wrap); }, 250);
+2467:   }});
+2468:   rmBtn.appendChild(el('span', {class:'icon'}, 'close'));
+2469:   fi.appendChild(rmBtn);
+2470:   wrap.appendChild(fi);
+2471: }
+2472: 
+2473: /* ---------- 导出检查单 ---------- */
+2474: function handleExport(){
+2475:   const editing = Store.state._editing;
+2476:   const cl = Store.state.checklists.find(c=>c.id===editing);
+2477:   if(!cl){ showToast(t('export_fail')); return; }
+2478:   try {
+2479:     // 导出数据：名称、图标、重置时间、检查项（名称+图标）
+2480:     const data = {
+2481:       name: cl.name,
+2482:       icon: cl.icon,
+2483:       resetHours: cl.resetHours,
+2484:       items: cl.items.map(i=>({ text:i.text, icon:i.icon }))
+2485:     };
+2486:     const json = JSON.stringify(data, null, 2);
+2487:     const blob = new Blob([json], {type:'application/json'});
+2488:     const url = URL.createObjectURL(blob);
+2489:     const a = document.createElement('a');
+2490:     a.href = url;
+2491:     a.download = (cl.name || 'checklist') + '.checklist.json';
+2492:     document.body.appendChild(a);
+2493:     a.click();
+2494:     document.body.removeChild(a);
+2495:     URL.revokeObjectURL(url);
+2496:     showToast(t('export_success'));
+2497:   } catch(e) {
+2498:     showToast(t('export_fail'));
+2499:   }
+2500: }
+2501: 
+2502: /* ---------- 导入检查单 ---------- */
+2503: function handleImport(){
+2504:   // 创建隐藏的 file input
+2505:   const input = document.createElement('input');
+2506:   input.type = 'file';
+2507:   input.accept = '.json,.checklist.json,.checklist,application/json';
+2508:   input.onchange = (e)=>{
+2509:     const file = e.target.files[0];
+2510:     if(!file) return;
+2511:     const reader = new FileReader();
+2512:     reader.onload = (ev)=>{
+2513:       try {
+2514:         const data = JSON.parse(ev.target.result);
+2515:         if(!data.name || !Array.isArray(data.items)){ throw new Error('invalid'); }
+2516:         // 创建新检查单
+2517:         const newCl = {
+2518:           id: uid(),
+2519:           name: data.name,
+2520:           icon: data.icon || 'auto',
+2521:           resetHours: data.resetHours || 0,
+2522:           items: data.items.map(i=>({ id:uid(), text:i.text, icon:i.icon||'auto', done:false })),
+2523:           completedAt: null,
+2524:           createdAt: Date.now()
+2525:         };
+2526:         Store.state.checklists.push(newCl);
+2527:         Store.state.activeChecklistId = newCl.id;
+2528:         Store.state._editing = null;
+2529:         Store.save();
+2530:         switchPage('home');
+2531:         renderTopbar('home');
+2532:         renderHome();
+2533:         renderBottombar(newCl.id);
+2534:         showToast(t('import_success'));
+2535:       } catch(err) {
+2536:         showToast(t('import_fail'));
+2537:       }
+2538:     };
+2539:     reader.onerror = ()=>showToast(t('import_fail'));
+2540:     reader.readAsText(file);
+2541:   };
+2542:   input.click();
+2543: }
+2544: 
+2545: function handleConfirm(){
+2546:   const name = formState.name.trim();
+2547:   if(!name){
+2548:     showToast(t('enter_checklist_name'));
+2549:     return;
+2550:   }
+2551:   const items = formState.items.filter(i=>i.text.trim()).map(i=>({id:i.id, text:i.text.trim(), icon:i.icon, done:false}));
+2552:   if(items.length===0){
+2553:     showToast(t('enter_check_item'));
+2554:     return;
+2555:   }
+2556:   const newCl = {
+2557:     id:uid(), name, icon:formState.icon, resetHours:formState.resetHours,
+2558:     items, completedAt:null, createdAt:Date.now()
+2559:   };
+2560:   Store.state.checklists.push(newCl);
+2561:   Store.state.activeChecklistId = newCl.id;
+2562:   Store.state._editing = null;
+2563:   Store.save(); Store.emit();
+2564:   switchPage('home');
+2565:   renderTopbar('home');
+2566:   renderHome();
+2567:   renderBottombar(newCl.id);
+2568:   showToast(t('added_toast'));
+2569: }
+2570: 
+2571: function handleSave(){
+2572:   const editing = Store.state._editing;
+2573:   const cl = Store.state.checklists.find(c=>c.id===editing);
+2574:   if(!cl) return;
+2575:   const name = formState.name.trim();
+2576:   if(!name){ showToast(t('enter_checklist_name')); return; }
+2577:   const items = formState.items.filter(i=>i.text.trim()).map(i=>{
+2578:     const old = cl.items.find(o=>o.id===i.id);
+2579:     return {id:i.id, text:i.text.trim(), icon:i.icon, done: old? old.done : false};
+2580:   });
+2581:   if(items.length===0){ showToast(t('enter_check_item')); return; }
+2582:   cl.name = name;
+2583:   cl.icon = formState.icon;
+2584:   cl.resetHours = formState.resetHours;
+2585:   cl.items = items;
+2586:   // 检查是否仍全部完成
+2587:   const allDone = cl.items.every(i=>i.done);
+2588:   cl.completedAt = allDone? (cl.completedAt||Date.now()) : null;
+2589:   Store.state._editing = null;
+2590:   Store.save(); Store.emit();
+2591:   switchPage('home');
+2592:   renderTopbar('home');
+2593:   renderHome();
+2594:   renderBottombar();
+2595:   showToast(t('saved_toast'));
+2596: }
+2597: 
+2598: let deleteConfirmTimer = null;
+2599: function handleDelete(){
+2600:   const btn = $('#btnDelete');
+2601:   if(!btn) return;
+2602:   if(!btn.dataset.armed){
+2603:     btn.dataset.armed='1';
+2604:     btn.textContent='';
+2605:     btn.appendChild(el('span', {class:'icon'}, 'warning'));
+2606:     btn.appendChild(document.createTextNode(t('delete')));
+2607:     showToast(t('delete_confirm_body'));
+2608:     deleteConfirmTimer = setTimeout(()=>{
+2609:       btn.removeAttribute('data-armed');
+2610:       btn.textContent='';
+2611:       btn.appendChild(el('span', {class:'icon'}, 'delete'));
+2612:       btn.appendChild(document.createTextNode(t('delete')));
+2613:     }, 3000);
+2614:   }else{
+2615:     clearTimeout(deleteConfirmTimer);
+2616:     const editing = Store.state._editing;
+2617:     // 先播放底栏标签移除动画
+2618:     const removingTab = $(`.nav-tab[data-id="${editing}"]`);
+2619:     const finishDelete = ()=>{
+2620:       Store.state.checklists = Store.state.checklists.filter(c=>c.id!==editing);
+2621:       // 选第一个检查单或 null
+2622:       Store.state.activeChecklistId = Store.state.checklists[0]? Store.state.checklists[0].id : null;
+2623:       Store.state._editing = null;
+2624:       Store.save(); Store.emit();
+2625:       renderBottombar();
+2626:       showToast(t('deleted_toast'));
+2627:       if(Store.state.checklists.length === 0){
+2628:         // 没有检查单了，直接跳到新建页面
+2629:         openForm(null);
+2630:       }else{
+2631:         switchPage('home');
+2632:         renderTopbar('home');
+2633:         renderHome();
+2634:       }
+2635:     };
+2636:     if(removingTab){
+2637:       let done = false;
+2638:       const finishOnce = ()=>{
+2639:         if(done) return; done = true;
+2640:         finishDelete();
+2641:       };
+2642:       removingTab.classList.add('tab-leave');
+2643:       removingTab.addEventListener('animationend', finishOnce, {once:true});
+2644:       // 兜底：若动画事件未触发，450ms 后强制完成
+2645:       setTimeout(finishOnce, 450);
+2646:     }else{
+2647:       finishDelete();
+2648:     }
+2649:   }
+2650: }
+2651: 
+2652: /* ---------- 设置页面 ---------- */
+2653: function renderSettings(){
+2654:   const content = $('#settingsContent');
+2655:   const s = Store.state.settings;
+2656:   content.innerHTML='';
+2657: 
+2658:   // 主题
+2659:   content.appendChild(el('div', {class:'section-title'}, t('settings_theme')));
+2660:   const themeGroup = el('div', {class:'settings-group'});
+2661:   // 跟随系统
+2662:   const followItem = el('div', {class:'settings-item'});
+2663:   followItem.appendChild(el('span', {class:'icon si-icon'}, 'brightness_auto'));
+2664:   followItem.appendChild(el('div', {class:'si-text'}, [el('div',{class:'si-title'}, t('settings_follow_system'))]));
+2665:   const followSwitch = el('div', {class:'switch'+(s.theme==='auto'?' on':''), onclick:()=>{
+2666:     s.theme = s.theme==='auto'? 'light' : 'auto';
+2667:     Store.save(); applyTheme(); renderSettings();
+2668:   }});
+2669:   followSwitch.appendChild(el('div', {class:'switch-thumb'}));
+2670:   followItem.appendChild(followSwitch);
+2671:   themeGroup.appendChild(followItem);
+2672:   // 浅/深色选择（跟随系统时禁用）
+2673:   const modeDisabled = s.theme==='auto';
+2674:   const modeRow = el('div', {class:'seg-buttons'+(modeDisabled?' disabled':'')});
+2675:   ['light','dark'].forEach(mode=>{
+2676:     const sel = s.theme===mode;
+2677:     const btn = el('button', {class:'seg-btn'+(sel?' selected':'')+(modeDisabled?' disabled':''), disabled:modeDisabled, onclick:()=>{
+2678:       if(modeDisabled) return;
+2679:       s.theme = mode; Store.save(); applyTheme(); renderSettings();
+2680:     }}, [
+2681:       el('span', {class:'icon'}, mode==='light'?'light_mode':'dark_mode'),
+2682:       mode==='light'? t('settings_light') : t('settings_dark')
+2683:     ]);
+2684:     modeRow.appendChild(btn);
+2685:   });
+2686:   themeGroup.appendChild(modeRow);
+2687:   content.appendChild(themeGroup);
+2688: 
+2689:   // 检查项高度
+2690:   content.appendChild(el('div', {class:'section-title'}, t('settings_item_height')));
+2691:   const heightGroup = el('div', {class:'settings-group'});
+2692:   const heightItem = el('div', {class:'settings-item'});
+2693:   heightItem.appendChild(el('span', {class:'icon si-icon'}, 'format_line_spacing'));
+2694:   heightItem.appendChild(el('div', {class:'si-text'}, [
+2695:     el('div', {class:'si-title'}, t('settings_item_height')),
+2696:     el('div', {class:'si-sub'}, `${s.itemHeight}px · ${t('settings_item_height_sub')}`)
+2697:   ]));
+2698:   heightGroup.appendChild(heightItem);
+2699:   const sliderWrap = el('div', {class:'slider-wrap'});
+2700:   const slider = el('div', {class:'slider'});
+2701:   const range = el('input', {type:'range', min:ITEM_HEIGHT_MIN, max:ITEM_HEIGHT_MAX, value:s.itemHeight});
+2702:   // 初始化 active track 百分比
+2703:   const updateSliderPct = ()=>{
+2704:     const pct = ((s.itemHeight - ITEM_HEIGHT_MIN)/(ITEM_HEIGHT_MAX - ITEM_HEIGHT_MIN))*100;
+2705:     range.style.setProperty('--slider-pct', pct+'%');
+2706:   };
+2707:   updateSliderPct();
+2708:   range.addEventListener('input', e=>{
+2709:     s.itemHeight = parseInt(e.target.value);
+2710:     Store.save();
+2711:     updateSliderPct();
+2712:     // 实时更新显示
+2713:     heightItem.querySelector('.si-sub').textContent = `${s.itemHeight}px · ${t('settings_item_height_sub')}`;
+2714:     $('#sliderValue').textContent = s.itemHeight+'px';
+2715:     renderHome();
+2716:   });
+2717:   slider.appendChild(range);
+2718:   sliderWrap.appendChild(slider);
+2719:   sliderWrap.appendChild(el('div', {class:'slider-value', id:'sliderValue'}, s.itemHeight+'px'));
+2720:   heightGroup.appendChild(sliderWrap);
+2721:   // 仅首条
+2722:   const firstOnlyItem = el('div', {class:'settings-item'});
+2723:   firstOnlyItem.appendChild(el('span', {class:'icon si-icon'}, 'looks_one'));
+2724:   firstOnlyItem.appendChild(el('div', {class:'si-text'}, [
+2725:     el('div', {class:'si-title'}, t('settings_first_only')),
+2726:     el('div', {class:'si-sub'}, t('settings_first_only_sub'))
+2727:   ]));
+2728:   const foSwitch = el('div', {class:'switch'+(s.firstOnly?' on':''), onclick:()=>{
+2729:     s.firstOnly = !s.firstOnly; Store.save(); renderSettings(); renderHome();
+2730:   }});
+2731:   foSwitch.appendChild(el('div', {class:'switch-thumb'}));
+2732:   firstOnlyItem.appendChild(foSwitch);
+2733:   heightGroup.appendChild(firstOnlyItem);
+2734:   content.appendChild(heightGroup);
+2735: 
+2736:   // 语言
+2737:   content.appendChild(el('div', {class:'section-title'}, t('settings_language')));
+2738:   const langGroup = el('div', {class:'settings-group'});
+2739:   const langItem = el('div', {class:'settings-item'});
+2740:   langItem.appendChild(el('span', {class:'icon si-icon'}, 'language'));
+2741:   const sel = LANGUAGES.find(l=>l.code===s.language) || LANGUAGES[0];
+2742:   // auto 模式下显示本地化的"跟随系统"，而非混合文本
+2743:   const displayLang = s.language==='auto' ? t('follow_system') : sel.nativeName;
+2744:   langItem.appendChild(el('div', {class:'si-text'}, [
+2745:     el('div', {class:'si-title'}, t('settings_language')),
+2746:     el('div', {class:'si-sub'}, displayLang)
+2747:   ]));
+2748:   langItem.appendChild(el('span', {class:'icon si-icon'}, 'chevron_right'));
+2749:   langItem.style.cursor='pointer';
+2750:   langItem.addEventListener('click', ()=>openLanguageMenu());
+2751:   langGroup.appendChild(langItem);
+2752:   content.appendChild(langGroup);
+2753: 
+2754:   // 关于
+2755:   content.appendChild(el('div', {class:'section-title'}, t('settings_about')));
+2756:   // 应用图标与名称
+2757:   const about = el('div', {class:'about-section'});
+2758:   const iconWrap = el('div', {class:'about-icon'});
+2759:   const img = el('img', {src:EMBEDDED_ICON_PNG, alt:'icon'});
+2760:   iconWrap.appendChild(img);
+2761:   about.appendChild(iconWrap);
+2762:   about.appendChild(el('div', {class:'about-name'}, t('app_name')));
+2763:   about.appendChild(el('div', {class:'about-version'}, APP_VERSION));
+2764:   // Create with ❤️ by Crazy Sue
+2765:   const credit = el('div', {class:'about-credit'});
+2766:   credit.appendChild(document.createTextNode(t('created_by')));
+2767:   const link = el('a', {href:'#'}, 'Crazy Sue');
+2768:   link.addEventListener('click', e=>{
+2769:     e.preventDefault();
+2770:     window.open(APP_AUTHOR_URL, '_blank', 'noopener');
+2771:   });
+2772:   credit.appendChild(link);
+2773:   about.appendChild(credit);
+2774:   about.appendChild(el('div', {class:'about-glm'}, t('made_by')));
+2775:   content.appendChild(about);
+2776: 
+2777:   // MIT 许可下拉
+2778:   const mitDd = el('div', {class:'dropdown', id:'mitDropdown'});
+2779:   const mitHeader = el('div', {class:'dropdown-header clickable', onclick:()=>{
+2780:     const willOpen = !mitDd.classList.contains('open');
+2781:     const body = mitDd.querySelector('.dropdown-body');
+2782:     if(willOpen){
+2783:       // 先展开：设为内容高度以触发过渡
+2784:       mitDd.classList.add('open');
+2785:       body.style.maxHeight = body.scrollHeight + 'px';
+2786:     }else{
+2787:       // 收起：先设回当前高度（覆盖 none），再强制重排，再设 0 触发过渡
+2788:       body.style.maxHeight = body.scrollHeight + 'px';
+2789:       void body.offsetHeight;
+2790:       body.style.maxHeight = '0px';
+2791:       mitDd.classList.remove('open');
+2792:     }
+2793:   }});
+2794:   mitHeader.appendChild(el('span', {class:'icon dh-icon'}, 'description'));
+2795:   mitHeader.appendChild(el('span', {class:'dh-title'}, t('mit_license_title')));
+2796:   mitHeader.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+2797:   mitDd.appendChild(mitHeader);
+2798:   const mitBody = el('div', {class:'dropdown-body'});
+2799:   mitBody.appendChild(el('div', {class:'dropdown-body-inner'}, el('div', {class:'license-text'}, MIT_LICENSE_TEXT)));
+2800:   mitDd.appendChild(mitBody);
+2801:   content.appendChild(mitDd);
+2802: 
+2803:   // OSS 许可下拉
+2804:   const ossDd = el('div', {class:'dropdown', id:'ossDropdown'});
+2805:   const ossHeader = el('div', {class:'dropdown-header clickable', onclick:()=>{
+2806:     const willOpen = !ossDd.classList.contains('open');
+2807:     const body = ossDd.querySelector('.dropdown-body');
+2808:     if(willOpen){
+2809:       ossDd.classList.add('open');
+2810:       body.style.maxHeight = body.scrollHeight + 'px';
+2811:     }else{
+2812:       body.style.maxHeight = body.scrollHeight + 'px';
+2813:       void body.offsetHeight;
+2814:       body.style.maxHeight = '0px';
+2815:       ossDd.classList.remove('open');
+2816:     }
+2817:   }});
+2818:   ossHeader.appendChild(el('span', {class:'icon dh-icon'}, 'gavel'));
+2819:   ossHeader.appendChild(el('span', {class:'dh-title'}, t('oss_license_title')));
+2820:   ossHeader.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+2821:   ossDd.appendChild(ossHeader);
+2822:   const ossBody = el('div', {class:'dropdown-body'});
+2823:   const ossInner = el('div', {class:'dropdown-body-inner'});
+2824:   OSS_LICENSES.forEach(l=>{
+2825:     const item = el('div', {class:'license-item'});
+2826:     item.appendChild(el('div', {class:'li-name'}, l.name));
+2827:     item.appendChild(el('div', {class:'li-license'}, l.license));
+2828:     item.appendChild(el('div', {class:'license-text'}, l.text));
+2829:     ossInner.appendChild(item);
+2830:   });
+2831:   ossBody.appendChild(ossInner);
+2832:   ossDd.appendChild(ossBody);
+2833:   content.appendChild(ossDd);
+2834: }
+2835: 
+2836: /* 语言选择菜单（用对话框） */
+2837: function openLanguageMenu(){
+2838:   const title = $('#langModalTitle');
+2839:   const body = $('#langModalBody');
+2840:   title.textContent = t('settings_language');
+2841:   body.innerHTML='';
+2842:   const list = el('div', {style:'display:flex;flex-direction:column;gap:4px;'});
+2843:   LANGUAGES.forEach(l=>{
+2844:     const sel = Store.state.settings.language===l.code;
+2845:     const displayName = l.code==='auto' ? t('follow_system') : l.nativeName;
+2846:     const item = el('div', {class:'lang-item'+(sel?' selected':''), onclick:()=>{
+2847:       Store.state.settings.language = l.code;
+2848:       Store.save();
+2849:       closeLangModal();
+2850:       updateStaticLabels();
+2851:       renderSettings();
+2852:       renderTopbar('settings');
+2853:       renderBottombar();
+2854:       renderHome();
+2855:     }});
+2856:     item.appendChild(el('span', {class:'icon si-icon', style:sel?'color:var(--md-primary)':''}, sel?'check':'language'));
+2857:     item.appendChild(el('div', {class:'si-text'}, el('div', {class:'si-title'}, displayName)));
+2858:     list.appendChild(item);
+2859:   });
+2860:   body.appendChild(list);
+2861:   $('#langModalCancel').textContent = t('cancel');
+2862:   openLangModal();
+2863: }
+2864: function openLangModal(){
+2865:   $('#langScrim').classList.add('visible');
+2866:   $('#langModal').classList.add('visible');
+2867: }
+2868: function closeLangModal(){
+2869:   $('#langScrim').classList.remove('visible');
+2870:   $('#langModal').classList.remove('visible');
+2871: }
+2872: 
+2873: /* ---------- 图标选择弹窗 ---------- */
+2874: let iconPickerContext = null; // {type:'checklist'|'item', itemId?}
+2875: function openIconPicker(type, itemId){
+2876:   iconPickerContext = {type, itemId};
+2877:   $('#iconPickerTitle').textContent = t('select_icon');
+2878:   $('#iconPickerSearch').value='';
+2879:   renderIconPickerGrid('');
+2880:   $('#iconPickerScrim').classList.add('visible');
+2881:   $('#iconPickerModal').classList.add('visible');
+2882: }
+2883: function closeIconPicker(){
+2884:   $('#iconPickerScrim').classList.remove('visible');
+2885:   $('#iconPickerModal').classList.remove('visible');
+2886: }
+2887: function renderIconPickerGrid(filter){
+2888:   const grid = $('#iconPickerGrid');
+2889:   grid.innerHTML='';
+2890:   const lower = filter.toLowerCase();
+2891:   let totalShown = 0;
+2892:   // 按分类展示
+2893:   for(const [category, icons] of Object.entries(ICON_LIBRARY)){
+2894:     const filtered = icons.filter(ic=> !lower || ic.includes(lower));
+2895:     if(filtered.length===0) continue;
+2896:     totalShown += filtered.length;
+2897:     // 分类标题
+2898:     grid.appendChild(el('div', {class:'icon-category-title'}, category));
+2899:     // 图标网格
+2900:     const catGrid = el('div', {class:'icon-category-grid'});
+2901:     filtered.forEach(ic=>{
+2902:       const opt = el('button', {class:'icon-option', onclick:()=>selectIcon(ic)});
+2903:       opt.appendChild(el('span', {class:'icon'}, ic));
+2904:       attachRipple(opt);
+2905:       catGrid.appendChild(opt);
+2906:     });
+2907:     grid.appendChild(catGrid);
+2908:   }
+2909:   if(totalShown===0){
+2910:     grid.appendChild(el('div', {style:'text-align:center;padding:24px;color:var(--md-on-surface-variant)'}, t('no_results')));
+2911:   }
+2912: }
+2913: function selectIcon(iconName){
+2914:   const ctx = iconPickerContext;
+2915:   if(!ctx) return;
+2916:   if(ctx.type==='checklist'){
+2917:     formState.icon = iconName;
+2918:     renderForm();
+2919:   }else if(ctx.type==='item'){
+2920:     const item = formState.items.find(i=>i.id===ctx.itemId);
+2921:     if(item){ item.icon = iconName; renderForm(); }
+2922:   }
+2923:   closeIconPicker();
+2924: }
+2925: 
+2926: /* ---------- 搜索 ---------- */
+2927: let searchActive = false;
+2928: function toggleSearch(){
+2929:   if(searchActive){
+2930:     closeSearch();
+2931:   }else{
+2932:     openSearch();
+2933:   }
+2934: }
+2935: function openSearch(){
+2936:   searchActive = true;
+2937:   $('#btnSearch').classList.add('is-active');
+2938:   $('#searchBar').classList.add('visible');
+2939:   setTimeout(()=>$('#searchInput').focus(), 250);
+2940: }
+2941: function closeSearch(silent){
+2942:   if(!searchActive && silent) return;
+2943:   searchActive = false;
+2944:   $('#btnSearch').classList.remove('is-active');
+2945:   $('#searchBar').classList.remove('visible');
+2946:   $('#searchInput').value='';
+2947:   $('#searchBar').classList.remove('has-text');
+2948:   // 清除高亮
+2949:   $$('.check-item.is-search-match').forEach(n=>n.classList.remove('is-search-match'));
+2950: }
+2951: function doSearch(q){
+2952:   q = q.trim().toLowerCase();
+2953:   $('#searchBar').classList.toggle('has-text', q.length>0);
+2954:   const cl = getActiveChecklist();
+2955:   if(!cl) return;
+2956:   // 清除旧高亮
+2957:   $$('.check-item.is-search-match').forEach(n=>n.classList.remove('is-search-match'));
+2958:   if(!q){
+2959:     return;
+2960:   }
+2961:   // 找第一个匹配的待办项
+2962:   const match = cl.items.find(i=>!i.done && i.text.toLowerCase().includes(q));
+2963:   if(match){
+2964:     const node = $(`.check-item[data-id="${match.id}"]`);
+2965:     if(node){
+2966:       node.classList.add('is-search-match');
+2967:       node.scrollIntoView({behavior:'smooth', block:'center'});
+2968:     }
+2969:   }
+2970: }
+2971: 
+2972: /* ---------- 页面切换 ---------- */
+2973: let currentPage = 'home'; // home | form | settings
+2974: function switchPage(target){
+2975:   const pages = {home:'#pageHome', form:'#pageForm', settings:'#pageSettings'};
+2976:   const curEl = $(pages[currentPage]);
+2977:   const tgtEl = $(pages[target]);
+2978:   if(curEl===tgtEl) return;
+2979:   // 判断方向：home在左，form/settings在右
+2980:   const order = ['home','form','settings'];
+2981:   const curIdx = order.indexOf(currentPage);
+2982:   const tgtIdx = order.indexOf(target);
+2983:   const goRight = tgtIdx > curIdx;
+2984: 
+2985:   curEl.classList.remove('page-active');
+2986:   curEl.classList.add(goRight? 'page-leave-left':'page-leave-right');
+2987:   tgtEl.classList.remove('page-enter-right','page-enter-left','page-leave-left','page-leave-right');
+2988:   // 先设置初始位置
+2989:   tgtEl.classList.add(goRight? 'page-enter-right':'page-enter-left');
+2990:   requestAnimationFrame(()=>{
+2991:     tgtEl.classList.remove('page-enter-right','page-enter-left');
+2992:     tgtEl.classList.add('page-active');
+2993:   });
+2994: 
+2995:   currentPage = target;
+2996: }
+2997: 
+2998: /* ---------- 对话框 ---------- */
+2999: function openDialog(){
+3000:   $('#dialogScrim').classList.add('visible');
+3001:   $('#confirmDialog').classList.add('visible');
+3002: }
+3003: function closeDialog(){
+3004:   $('#dialogScrim').classList.remove('visible');
+3005:   $('#confirmDialog').classList.remove('visible');
+3006: }
+3007: 
+3008: /* ---------- Toast ---------- */
+3009: let toastTimer = null;
+3010: function showToast(msg){
+3011:   const toast = $('#toast');
+3012:   toast.textContent = msg;
+3013:   toast.classList.add('visible');
+3014:   clearTimeout(toastTimer);
+3015:   toastTimer = setTimeout(()=>toast.classList.remove('visible'), 2200);
+3016: }
+3017: 
+3018: /* ---------- 事件绑定 ---------- */
+3019: function bindEvents(){
+3020:   // 顶栏按钮 —— 附加水滴效果
+3021:   ['btnConfig','btnSearch','btnSettings','sbBack','sbClear'].forEach(id=>{
+3022:     const el = $('#'+id);
+3023:     if(el) attachRipple(el);
+3024:   });
+3025:   // 顶栏按钮
+3026:   $('#btnConfig').addEventListener('click', ()=>{
+3027:     const cl = getActiveChecklist();
+3028:     if(cl) openForm(cl.id);
+3029:   });
+3030:   $('#btnSearch').addEventListener('click', toggleSearch);
+3031:   $('#btnSettings').addEventListener('click', ()=>{
+3032:     if(currentPage==='settings'){
+3033:       // 从设置页返回主页
+3034:       switchPage('home');
+3035:       renderTopbar('home');
+3036:       renderHome();
+3037:     }else if(currentPage==='form'){
+3038:       // 从表单页向右翻到设置页
+3039:       renderSettings();
+3040:       switchPage('settings');
+3041:       renderTopbar('settings');
+3042:     }else{
+3043:       // 从主页翻到设置页
+3044:       renderSettings();
+3045:       switchPage('settings');
+3046:       renderTopbar('settings');
+3047:     }
+3048:   });
+3049: 
+3050:   // 搜索
+3051:   $('#sbBack').addEventListener('click', ()=>closeSearch());
+3052:   $('#sbClear').addEventListener('click', ()=>{
+3053:     $('#searchInput').value='';
+3054:     $('#searchBar').classList.remove('has-text');
+3055:     doSearch('');
+3056:     $('#searchInput').focus();
+3057:   });
+3058:   $('#searchInput').addEventListener('input', e=>doSearch(e.target.value));
+3059: 
+3060:   // 重置 FAB
+3061:   const resetFab = $('#btnResetList');
+3062:   attachRipple(resetFab);
+3063:   resetFab.addEventListener('click', ()=>{
+3064:     const cl = getActiveChecklist();
+3065:     if(cl) resetChecklist(cl.id);
+3066:   });
+3067: 
+3068:   // 图标选择弹窗
+3069:   $('#iconPickerScrim').addEventListener('click', closeIconPicker);
+3070:   $('#iconPickerCancel').addEventListener('click', closeIconPicker);
+3071:   // 语言弹窗
+3072:   $('#langScrim').addEventListener('click', closeLangModal);
+3073:   $('#langModalCancel').addEventListener('click', closeLangModal);
+3074:   $('#iconPickerSearch').addEventListener('input', e=>renderIconPickerGrid(e.target.value));
+3075: 
+3076:   // 对话框
+3077:   $('#dialogScrim').addEventListener('click', closeDialog);
+3078: 
+3079:   // 系统主题变化
+3080:   if(window.matchMedia){
+3081:     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+3082:       if(Store.state.settings.theme==='auto') applyTheme();
+3083:     });
+3084:   }
+3085: 
+3086:   // 键盘 ESC
+3087:   document.addEventListener('keydown', e=>{
+3088:     if(e.key==='Escape'){
+3089:       if($('#iconPickerModal').classList.contains('visible')) closeIconPicker();
+3090:       else if($('#confirmDialog').classList.contains('visible')) closeDialog();
+3091:       else if(searchActive) closeSearch();
+3092:       else if(currentPage!=='home'){
+3093:         switchPage('home');
+3094:         renderTopbar('home');
+3095:       }
+3096:     }
+3097:   });
+3098: 
+3099:   // 防止双击缩放
+3100:   let lastTouch=0;
+3101:   document.addEventListener('touchend', e=>{
+3102:     const now=Date.now();
+3103:     if(now-lastTouch<300){ e.preventDefault(); }
+3104:     lastTouch=now;
+3105:   }, {passive:false});
+3106: }
+3107: 
+3108: /* ---------- 更新静态元素的国际化标签 ---------- */
+3109: function updateStaticLabels(){
+3110:   // 搜索栏按钮
+3111:   $('#sbBack').setAttribute('aria-label', t('search'));
+3112:   $('#sbClear').setAttribute('aria-label', t('cancel'));
+3113:   $('#searchInput').setAttribute('placeholder', t('search_placeholder'));
+3114:   // 图标选择弹窗
+3115:   $('#iconPickerTitle').textContent = t('select_icon');
+3116:   $('#iconPickerSearch').setAttribute('placeholder', t('icon_search'));
+3117:   $('#iconPickerCancel').textContent = t('cancel');
+3118:   // 文档语言
+3119:   document.documentElement.lang = getLang();
+3120:   document.title = t('app_name');
+3121: }
+3122: 
+3123: /* ---------- 初始化 ---------- */
+3124: function init(){
+3125:   Store.load();
+3126:   applyTheme();
+3127:   bindEvents();
+3128:   initGlobalRipple();
+3129: 
+3130:   // 如果没有检查单，设置为空状态
+3131:   if(Store.state.checklists.length===0){
+3132:     Store.state.activeChecklistId = null;
+3133:   }else if(!Store.state.activeChecklistId || !Store.state.checklists.find(c=>c.id===Store.state.activeChecklistId)){
+3134:     Store.state.activeChecklistId = Store.state.checklists[0].id;
+3135:   }
+3136: 
+3137:   updateStaticLabels();
+3138:   renderTopbar('home');
+3139:   renderHome();
+3140:   renderBottombar();
+3141:   // 启动时检查自动重置
+3142:   checkAutoReset();
+3143: }
+3144: 
+3145: document.addEventListener('DOMContentLoaded', init);
+3146: </script>
+3147: </body>
+3148: </html>

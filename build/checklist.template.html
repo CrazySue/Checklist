@@ -1,0 +1,2944 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#10172F">
+<meta name="description" content="检查单 - 极简实用的待办清单应用">
+<title>检查单</title>
+<!-- 内嵌字体（base64 由构建脚本注入） -->
+<style id="embedded-fonts">
+/*INJECT_FONTS_HERE*/
+</style>
+<style>
+/* ============================================================
+   检查单应用 - Material Design 3 单文件实现
+   设计令牌 / 主题 / 组件 / 动效 全部基于 MD3 规范
+   ============================================================ */
+
+/* ---------- 字体族 ---------- */
+:root{
+  --md-sys-typescale-font:'HarmonyOS Sans SC','HarmonyOS Sans SC Regular','Material Symbols Rounded',system-ui,sans-serif;
+  --md-sys-typescale-icon-font:'Material Symbols Rounded';
+}
+
+/* ---------- MD3 设计令牌：自定义种子色生成浅/深配色 ----------
+   用户提供的4色：#10172F #283558 #525288 #A5A8BA
+   以 #525288 为主色派生完整 MD3 色板（浅色/深色）
+   通过 color-mix 手动定义关键色板，确保跨浏览器一致。
+*/
+:root{
+  /* 主色 */
+  --md-primary:#525288;
+  --md-on-primary:#FFFFFF;
+  --md-primary-container:#E1E0FF;
+  --md-on-primary-container:#0D006B;
+  --md-secondary:#5D5B77;
+  --md-on-secondary:#FFFFFF;
+  --md-secondary-container:#E3E0F9;
+  --md-on-secondary-container:#1A183B;
+  --md-tertiary:#9B4069;
+  --md-on-tertiary:#FFFFFF;
+  --md-tertiary-container:#FFD9E2;
+  --md-on-tertiary-container:#3E001E;
+  --md-error:#BA1A1A;
+  --md-on-error:#FFFFFF;
+  --md-error-container:#FFDAD6;
+  --md-on-error-container:#410002;
+  /* 背景与表面 */
+  --md-background:#FCF8FF;
+  --md-on-background:#1B1B21;
+  --md-surface:#FCF8FF;
+  --md-on-surface:#1B1B21;
+  --md-surface-variant:#E4E1EC;
+  --md-on-surface-variant:#47464F;
+  --md-surface-dim:#DCD9E0;
+  --md-surface-bright:#FCF8FF;
+  --md-surface-container-lowest:#FFFFFF;
+  --md-surface-container-low:#F6F2FA;
+  --md-surface-container:#F1ECF4;
+  --md-surface-container-high:#EBE6EF;
+  --md-surface-container-highest:#E5E1E9;
+  --md-outline:#787680;
+  --md-outline-variant:#C8C5D0;
+  --md-shadow:#000000;
+  --md-scrim:#000000;
+  --md-inverse-surface:#2F3036;
+  --md-inverse-on-surface:#F2EFF7;
+  --md-inverse-primary:#C0C1FF;
+  /* 用户提供色直接暴露 */
+  --brand-1:#10172F;
+  --brand-2:#283558;
+  --brand-3:#525288;
+  --brand-4:#A5A8BA;
+}
+/* 深色主题：以 #283558 调性派生 */
+[data-theme="dark"]{
+  --md-primary:#C0C1FF;
+  --md-on-primary:#232E78;
+  --md-primary-container:#3A4090;
+  --md-on-primary-container:#E1E0FF;
+  --md-secondary:#C6C4DD;
+  --md-on-secondary:#2E2D47;
+  --md-secondary-container:#45455F;
+  --md-on-secondary-container:#E3E0F9;
+  --md-tertiary:#FFB1C8;
+  --md-on-tertiary:#5F112F;
+  --md-tertiary-container:#7E294A;
+  --md-on-tertiary-container:#FFD9E2;
+  --md-error:#FFB4AB;
+  --md-on-error:#690005;
+  --md-error-container:#93000A;
+  --md-on-error-container:#FFDAD6;
+  --md-background:#131318;
+  --md-on-background:#E5E1E9;
+  --md-surface:#131318;
+  --md-on-surface:#E5E1E9;
+  --md-surface-variant:#47464F;
+  --md-on-surface-variant:#C8C5D0;
+  --md-surface-dim:#131318;
+  --md-surface-bright:#39393F;
+  --md-surface-container-lowest:#0E0E13;
+  --md-surface-container-low:#1B1B21;
+  --md-surface-container:#1F1F25;
+  --md-surface-container-high:#2A2A30;
+  --md-surface-container-highest:#35353B;
+  --md-outline:#928F9A;
+  --md-outline-variant:#47464F;
+  --md-inverse-surface:#E5E1E9;
+  --md-inverse-on-surface:#2F3036;
+  --md-inverse-primary:#525288;
+}
+
+/* ---------- 全局重置 ---------- */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{height:100%;}
+body{height:100vh;height:100dvh;overflow:hidden;}
+body{
+  font-family:var(--md-sys-typescale-font);
+  background:var(--md-background);
+  color:var(--md-on-background);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  user-select:none;
+  transition:background-color .25s ease,color .25s ease;
+  overscroll-behavior:none;
+}
+button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer;}
+input{font-family:inherit;color:inherit;border:none;background:none;outline:none;}
+.icon{font-family:var(--md-sys-typescale-icon-font);font-weight:normal;font-style:normal;display:inline-block;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+.icon.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
+
+/* ---------- MD3 通用动效曲线 ---------- */
+:root{
+  --md-easing-standard:cubic-bezier(.2,0,0,1);
+  --md-easing-standard-decelerate:cubic-bezier(0,0,0,1);
+  --md-easing-standard-accelerate:cubic-bezier(.3,0,1,1);
+  --md-easing-emphasized:cubic-bezier(.2,0,0,1);
+  --md-easing-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);
+  --md-easing-emphasized-accelerate:cubic-bezier(.3,0,.8,.15);
+  --md-dur-short:150ms;
+  --md-dur-medium:250ms;
+  --md-dur-long:400ms;
+  --md-dur-xlong:600ms;
+}
+
+/* ---------- MD3 状态层（hover/focus/press） ---------- */
+.state-layer{position:relative;overflow:hidden;}
+.state-layer::before{
+  content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+  transition:opacity var(--md-dur-short) var(--md-easing-standard);
+  pointer-events:none;border-radius:inherit;
+}
+.state-layer:hover::before{opacity:.08;}
+.state-layer:focus-visible::before{opacity:.12;}
+.state-layer:active::before{opacity:.12;}
+
+/* ---------- MD3 水滴效果（Ripple） ---------- */
+.md-ripple{
+  position:absolute;border-radius:50%;
+  background:currentColor;opacity:.14;
+  transform:scale(0);
+  animation:md-ripple-anim 500ms var(--md-easing-standard);
+  pointer-events:none;z-index:0;
+}
+@keyframes md-ripple-anim{
+  to{transform:scale(2.4);opacity:0;}
+}
+/* 较大卡片的水波速率更慢，更优雅 */
+.check-item .md-ripple{animation-duration:650ms;}
+.ci-check .md-ripple{animation-duration:600ms;}
+
+/* ---------- 应用骨架 ---------- */
+/* 用 100vh 回退 + 100dvh 优先（dvh 在手机端动态适应地址栏，避免底栏被遮挡） */
+#app{
+  display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+  max-width:560px;margin:0 auto;position:relative;
+  background:var(--md-surface);
+  box-shadow:0 0 0 1px transparent;
+}
+@media(min-width:600px){
+  #app{box-shadow:0 0 24px rgba(0,0,0,.12);}
+}
+
+/* ---------- 顶栏 Top App Bar ---------- */
+.topbar{
+  height:56px;display:flex;align-items:center;gap:4px;
+  padding:0 4px 0 16px;
+  background:var(--md-surface);
+  color:var(--md-on-surface);
+  position:relative;z-index:20;
+  transition:background-color .25s ease;
+}
+.topbar-title{
+  flex:1;font-size:20px;font-weight:500;letter-spacing:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity var(--md-dur-short) var(--md-easing-standard);
+}
+.topbar-title .title-suffix{opacity:.6;font-weight:400;}
+.icon-btn{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-surface-variant);
+  position:relative;overflow:hidden;flex-shrink:0;
+  transition:background-color var(--md-dur-short) var(--md-easing-standard),color var(--md-dur-short) var(--md-easing-standard),transform var(--md-dur-short) var(--md-easing-standard);
+}
+.icon-btn::before{
+  content:"";position:absolute;inset:0;background:var(--md-on-surface);opacity:0;
+  border-radius:50%;transition:opacity var(--md-dur-short) var(--md-easing-standard);
+}
+.icon-btn:hover::before{opacity:.08;}
+.icon-btn:active::before{opacity:.12;}
+.icon-btn .icon{font-size:24px;position:relative;z-index:1;transition:transform var(--md-dur-short) var(--md-easing-standard);}
+.icon-btn:active .icon{transform:scale(.88);}
+/* is-active 仅用于标识当前页面（如设置页的 home 按钮），不再填充背景色 */
+.icon-btn.is-active{color:var(--md-on-surface);}
+.icon-btn.is-active::before{display:none;}
+
+/* ---------- 主页面容器（页面切换用） ---------- */
+.main-area{
+  flex:1;position:relative;overflow:hidden;
+  background:var(--md-surface);
+}
+.page{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:transform var(--md-dur-long) var(--md-easing-emphasized),opacity var(--md-dur-medium) var(--md-easing-standard);
+  will-change:transform,opacity;
+}
+.page.page-enter-right{transform:translateX(100%);opacity:0;pointer-events:none;}
+.page.page-enter-left{transform:translateX(-100%);opacity:0;pointer-events:none;}
+.page.page-active{transform:translateX(0);opacity:1;}
+.page.page-leave-right{transform:translateX(100%);opacity:0;pointer-events:none;}
+.page.page-leave-left{transform:translateX(-100%);opacity:0;pointer-events:none;}
+
+/* ---------- 检查项列表 ---------- */
+.list-scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:8px 0 16px;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  position:relative;
+}
+.list-scroll::-webkit-scrollbar{width:0;}
+
+/* 检查项卡片 —— MD3 list item */
+.check-item{
+  display:flex;align-items:center;gap:16px;
+  margin:0 16px 8px;padding:0 16px;
+  height:64px;border-radius:16px;
+  background:var(--md-surface-container-low);
+  color:var(--md-on-surface);
+  position:relative;overflow:hidden;
+  transform-origin:center top;
+  transition:
+    height var(--md-dur-long) var(--md-easing-emphasized),
+    min-height var(--md-dur-long) var(--md-easing-emphasized),
+    background-color var(--md-dur-short) var(--md-easing-standard),
+    transform var(--md-dur-medium) var(--md-easing-emphasized),
+    opacity var(--md-dur-medium) var(--md-easing-standard),
+    margin var(--md-dur-medium) var(--md-easing-emphasized),
+    padding var(--md-dur-long) var(--md-easing-emphasized),
+    border-radius var(--md-dur-medium) var(--md-easing-emphasized);
+}
+/* MD3 state layer（hover/press）—— 圆角裁剪由 .check-item 的 overflow:hidden 保证 */
+.check-item::before{
+  content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+  border-radius:inherit;pointer-events:none;
+  transition:opacity var(--md-dur-short) var(--md-easing-standard);
+}
+.check-item:hover::before{opacity:.08;}
+.check-item:active::before{opacity:.12;}
+.check-item.is-search-match{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+.check-item .ci-icon{
+  font-size:24px;color:var(--md-primary);flex-shrink:0;width:24px;text-align:center;position:relative;z-index:1;
+  transition:transform var(--md-dur-medium) var(--md-easing-emphasized),font-size var(--md-dur-long) var(--md-easing-emphasized),color var(--md-dur-short);
+}
+.check-item .ci-text{
+  flex:1;font-size:16px;line-height:1.3;position:relative;z-index:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* ===== 检查项对勾按钮 ===== */
+/* 始终显示为主题色(primary)背景+背景色(on-primary)对勾，无论完成与否 */
+.check-item .ci-check{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-primary);
+  border:none;
+  position:relative;overflow:hidden;z-index:1;
+  background:var(--md-primary);
+  transition:transform var(--md-dur-short) var(--md-easing-standard),
+             opacity var(--md-dur-short) var(--md-easing-standard);
+}
+/* state layer */
+.check-item .ci-check::before{
+  content:"";position:absolute;inset:0;background:var(--md-on-primary);opacity:0;border-radius:50%;
+  transition:opacity var(--md-dur-short) var(--md-easing-standard);
+}
+.check-item .ci-check:hover::before{opacity:.08;}
+.check-item .ci-check:active::before{opacity:.12;}
+.check-item .ci-check:active{transform:scale(.9);}
+/* 对勾图标始终可见 */
+.check-item .ci-check .ci-check-icon{
+  font-size:24px;position:relative;z-index:1;
+  opacity:1;transform:scale(1);
+}
+/* 完成状态：文字变灰+删除线 */
+.check-item.completed .ci-text{opacity:.5;text-decoration:line-through;}
+
+/* 完成后移除动画：右滑淡出 → 高度收缩 */
+.check-item.removing{
+  opacity:0;transform:translateX(60px) scale(.85);
+  height:0!important;min-height:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important;
+  border-radius:0!important;pointer-events:none;
+}
+
+/* 全部完成 - 咖啡态（与空状态共用大图标显示逻辑） */
+.all-done{
+  min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:48px 24px;text-align:center;
+  opacity:0;transform:scale(.96);
+  transition:opacity var(--md-dur-long) var(--md-easing-emphasized-decelerate),transform var(--md-dur-long) var(--md-easing-emphasized-decelerate);
+}
+.all-done.show{opacity:1;transform:scale(1);}
+.all-done .big-icon{
+  font-size:96px;color:var(--md-primary);
+}
+.all-done .done-title{font-size:22px;font-weight:500;color:var(--md-on-surface);}
+.all-done .done-sub{font-size:14px;color:var(--md-on-surface-variant);}
+
+/* 列表项新增/移除 FLIP 容器 */
+.list-container{position:relative;}
+
+/* ---------- 底栏 Navigation Bar ---------- */
+.bottombar{
+  display:flex;align-items:stretch;
+  background:var(--md-surface-container);
+  color:var(--md-on-surface);
+  position:relative;z-index:20;
+  border-top:1px solid transparent;
+  overflow:hidden;
+  transition:background-color .25s ease;
+}
+.bottombar-scroll{
+  display:flex;align-items:stretch;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-behavior:smooth;
+  flex:1;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.bottombar-scroll::-webkit-scrollbar{display:none;}
+.nav-tab{
+  flex:0 0 auto;min-width:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:8px 12px 12px;
+  color:var(--md-on-surface-variant);
+  position:relative;overflow:visible;
+  min-width:80px;background:transparent;
+  transition:color var(--md-dur-short) var(--md-easing-standard);
+}
+.nav-tab .tab-icon-pill{
+  width:64px;height:32px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background-color var(--md-dur-medium) var(--md-easing-standard);
+  position:relative;
+}
+.nav-tab .tab-icon-pill .icon{font-size:24px;transition:transform var(--md-dur-short) var(--md-easing-standard);}
+.nav-tab .tab-label{
+  font-size:12px;font-weight:500;max-width:72px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity var(--md-dur-short);
+}
+.nav-tab.is-active{color:var(--md-on-surface);}
+.nav-tab.is-active .tab-icon-pill{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+.nav-tab.is-active .tab-icon-pill .icon{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
+.nav-tab.is-active .tab-label{font-weight:600;}
+/* MD3 state layer：限制在图标 pill 区域，圆角，避免突兀矩形 */
+.nav-tab .tab-icon-pill::before{
+  content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+  border-radius:inherit;transition:opacity var(--md-dur-short) var(--md-easing-standard);
+}
+.nav-tab:hover .tab-icon-pill::before{opacity:.08;}
+.nav-tab:active .tab-icon-pill::before{opacity:.12;}
+/* 新增标签动画 */
+.nav-tab.tab-enter{animation:tab-grow var(--md-dur-long) var(--md-easing-emphasized-decelerate);}
+@keyframes tab-grow{from{opacity:0;transform:scale(.6);max-width:0;padding-left:0;padding-right:0;}to{opacity:1;transform:scale(1);}}
+/* 删除标签动画 */
+.nav-tab.tab-leave{animation:tab-shrink var(--md-dur-medium) var(--md-easing-emphasized-accelerate) forwards;pointer-events:none;}
+@keyframes tab-shrink{to{opacity:0;transform:scale(.6);max-width:0;padding-left:0;padding-right:0;margin:0;}}
+
+/* ---------- 普通按钮（FAB / Button） ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:40px;padding:0 24px;border-radius:20px;
+  font-size:14px;font-weight:500;letter-spacing:.1px;
+  background:var(--md-primary);color:var(--md-on-primary);
+  position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short) var(--md-easing-standard),box-shadow var(--md-dur-short),transform var(--md-dur-short);
+}
+.btn::before{content:"";position:absolute;inset:0;background:var(--md-on-primary);opacity:0;transition:opacity var(--md-dur-short);}
+.btn:hover::before{opacity:.08;}
+.btn:active{transform:scale(.97);}
+.btn:active::before{opacity:.12;}
+.btn .icon{font-size:18px;}
+.btn.btn-tonal{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+.btn.btn-tonal::before{background:var(--md-on-secondary-container);}
+.btn.btn-outlined{background:transparent;color:var(--md-primary);border:1px solid var(--md-outline);}
+.btn.btn-outlined::before{background:var(--md-primary);}
+.btn.btn-text{background:transparent;color:var(--md-primary);}
+.btn.btn-text::before{background:var(--md-primary);}
+.btn.btn-error{background:var(--md-error);color:var(--md-on-error);}
+.btn.btn-error::before{background:var(--md-on-error);}
+.btn:disabled{opacity:.38;pointer-events:none;}
+.btn.btn-large{height:48px;padding:0 32px;border-radius:24px;font-size:15px;}
+
+/* FAB 悬浮按钮 */
+.fab{
+  position:absolute;width:56px;height:56px;border-radius:18px;
+  background:var(--md-primary-container);color:var(--md-on-primary-container);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+  z-index:15;overflow:hidden;
+  transition:transform var(--md-dur-medium) var(--md-easing-emphasized),box-shadow var(--md-dur-short),opacity var(--md-dur-medium) var(--md-easing-standard),scale var(--md-dur-medium) var(--md-easing-emphasized);
+}
+.fab::before{content:"";position:absolute;inset:0;background:var(--md-on-primary-container);opacity:0;transition:opacity var(--md-dur-short);}
+.fab:hover::before{opacity:.1;}
+.fab:active{transform:scale(.92);box-shadow:0 2px 6px rgba(0,0,0,.2);}
+.fab .icon{font-size:24px;position:relative;z-index:1;}
+
+/* 重置 FAB：默认隐藏，全部完成时显示。右下角，距底栏上方 16px */
+.reset-fab{
+  right:16px;bottom:16px;
+  opacity:0;transform:scale(.4) translateY(20px);pointer-events:none;
+}
+.reset-fab.visible{
+  opacity:1;transform:scale(1) translateY(0);pointer-events:auto;
+}
+
+/* ---------- 新建/编辑检查单页面 ---------- */
+.form-page-content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:8px 0 24px;
+  -webkit-overflow-scrolling:touch;
+}
+.form-page-content::-webkit-scrollbar{width:0;}
+.form-section{padding:16px;}
+.form-label{
+  font-size:12px;font-weight:500;color:var(--md-on-surface-variant);
+  letter-spacing:.4px;text-transform:none;
+  margin-bottom:8px;display:block;padding:0 4px;
+}
+.section-title{
+  font-size:14px;font-weight:500;color:var(--md-primary);
+  padding:24px 16px 8px;letter-spacing:.1px;
+}
+
+/* 图标选择网格 */
+.icon-picker-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:8px;
+  padding:8px;
+}
+.icon-option{
+  aspect-ratio:1;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-surface-variant);
+  background:var(--md-surface-container-low);
+  position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short) var(--md-easing-standard),color var(--md-dur-short),transform var(--md-dur-short);
+}
+.icon-option::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+.icon-option:hover::before{opacity:.08;}
+.icon-option:active{transform:scale(.9);}
+.icon-option .icon{font-size:24px;position:relative;z-index:1;}
+.icon-option.selected{background:var(--md-primary);color:var(--md-on-primary);}
+.icon-option.auto-icon{
+  grid-column:span 6;aspect-ratio:auto;height:48px;gap:8px;flex-direction:row;justify-content:center;
+}
+.icon-option.auto-icon .label{font-size:13px;font-weight:500;}
+
+/* 文本输入框（MD3 Outlined Text Field） */
+.text-field{
+  position:relative;margin-top:8px;
+}
+.text-field input{
+  width:100%;height:56px;padding:0 16px;
+  font-size:16px;line-height:56px;color:var(--md-on-surface);
+  background:transparent;
+  border:1px solid var(--md-outline);
+  border-radius:12px;
+  transition:border-color var(--md-dur-short) var(--md-easing-standard);
+}
+.text-field input:focus{border-color:var(--md-primary);border-width:2px;padding:0 15px;}
+.text-field label{
+  position:absolute;left:12px;top:-8px;padding:0 4px;
+  font-size:12px;color:var(--md-on-surface-variant);
+  background:var(--md-surface);
+  transition:color var(--md-dur-short);
+}
+.text-field input:focus + label{color:var(--md-primary);}
+
+/* 重置时间选择 */
+.duration-row{
+  display:flex;align-items:center;gap:16px;padding:12px 4px;
+}
+.duration-row .dr-label{flex:1;font-size:16px;color:var(--md-on-surface);}
+.duration-row .dr-value{font-size:14px;color:var(--md-primary);font-weight:500;}
+.duration-chips{display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px;}
+.chip{
+  height:32px;padding:0 12px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:500;
+  border:1px solid var(--md-outline);color:var(--md-on-surface-variant);
+  background:transparent;position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short),color var(--md-dur-short),border-color var(--md-dur-short);
+}
+.chip::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+.chip:hover::before{opacity:.08;}
+.chip:active::before{opacity:.12;}
+.chip.selected{background:var(--md-secondary-container);color:var(--md-on-secondary-container);border-color:transparent;}
+
+/* 检查项编辑条目（新建页中） */
+.form-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 8px 8px 4px;
+  position:relative;
+  transition:opacity var(--md-dur-medium) var(--md-easing-standard),transform var(--md-dur-medium) var(--md-easing-emphasized),max-height var(--md-dur-medium) var(--md-easing-emphasized);
+  max-height:80px;overflow:hidden;
+}
+.form-item.removing{opacity:0;transform:translateX(-40px);max-height:0;padding-top:0;padding-bottom:0;}
+.form-item .fi-icon-btn{
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-surface-variant);position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short),color var(--md-dur-short);
+}
+.form-item .fi-icon-btn::before{content:"";position:absolute;inset:0;background:var(--md-on-surface);opacity:0;transition:opacity var(--md-dur-short);}
+.form-item .fi-icon-btn:hover::before{opacity:.08;}
+.form-item .fi-icon-btn:active::before{opacity:.12;}
+.form-item .fi-icon-btn .icon{font-size:24px;position:relative;z-index:1;}
+.form-item .fi-icon-btn.has-icon{color:var(--md-primary);}
+.form-item .fi-input{flex:1;height:48px;margin-top:0;}
+.form-item .fi-input input{height:48px;line-height:48px;border-radius:12px;}
+.form-item .fi-remove{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-surface-variant);position:relative;overflow:hidden;
+  opacity:0;transition:opacity var(--md-dur-short),background-color var(--md-dur-short);
+}
+.form-item .fi-remove::before{content:"";position:absolute;inset:0;background:var(--md-error);opacity:0;transition:opacity var(--md-dur-short);}
+.form-item .fi-remove:hover::before{opacity:.1;}
+.form-item .fi-remove .icon{font-size:20px;position:relative;z-index:1;}
+.form-item.has-content .fi-remove{opacity:1;}
+
+/* 检查单图标选择行：7个圆按钮（6常用 + 更多/预览） */
+.icon-circle-row{
+  display:flex;gap:12px;flex-wrap:wrap;
+}
+.icon-circle-btn{
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-surface-variant);
+  background:var(--md-surface-container-low);
+  position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short) var(--md-easing-standard),color var(--md-dur-short),transform var(--md-dur-short);
+}
+.icon-circle-btn::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+.icon-circle-btn:hover::before{opacity:.08;}
+.icon-circle-btn:active{transform:scale(.92);}
+.icon-circle-btn .icon{font-size:24px;position:relative;z-index:1;}
+.icon-circle-btn.selected{background:var(--md-primary);color:var(--md-on-primary);}
+.icon-circle-btn.preview-btn{background:var(--md-secondary-container);color:var(--md-on-secondary-container);}
+
+/* 表单主体 */
+.form-body{padding-bottom:8px;}
+
+/* 表单底部按钮组 —— 跟随页面滚动（流式布局） */
+.form-actions{
+  display:flex;gap:12px;justify-content:center;
+  padding:8px 16px 32px;flex-wrap:wrap;
+}
+
+/* ---------- 搜索栏 ---------- */
+.search-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:0 8px;max-height:0;overflow:hidden;
+  background:var(--md-surface);
+  position:relative;z-index:21;
+  opacity:0;pointer-events:none;
+  transition:max-height var(--md-dur-medium) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-short) var(--md-easing-standard),padding var(--md-dur-medium) var(--md-easing-standard);
+}
+.search-bar.visible{max-height:64px;padding:4px 8px;opacity:1;pointer-events:auto;}
+.search-bar .sb-back,.search-bar .sb-clear{
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--md-on-surface-variant);position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short);
+}
+.search-bar .sb-back::before,.search-bar .sb-clear::before{content:"";position:absolute;inset:0;background:var(--md-on-surface);opacity:0;transition:opacity var(--md-dur-short);}
+.search-bar .sb-back:hover::before,.search-bar .sb-clear:hover::before{opacity:.08;}
+.search-bar .sb-back .icon,.search-bar .sb-clear .icon{font-size:24px;position:relative;z-index:1;}
+.search-input-wrap{flex:1;position:relative;}
+.search-input-wrap input{
+  width:100%;height:48px;padding:0 16px;
+  font-size:16px;color:var(--md-on-surface);
+  background:var(--md-surface-container-high);
+  border-radius:24px;border:none;
+  transition:background-color var(--md-dur-short);
+}
+.search-input-wrap input:focus{background:var(--md-surface-container-highest);}
+.search-bar .sb-clear{opacity:0;transition:opacity var(--md-dur-short),background-color var(--md-dur-short);}
+.search-bar.has-text .sb-clear{opacity:1;}
+
+/* ---------- 设置页面 ---------- */
+.settings-content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:24px;
+}
+.settings-content::-webkit-scrollbar{width:0;}
+.settings-group{margin:16px;border-radius:16px;overflow:hidden;background:var(--md-surface-container-low);}
+.settings-item{
+  display:flex;align-items:center;gap:16px;
+  padding:16px;min-height:56px;
+  position:relative;
+  transition:background-color var(--md-dur-short);
+}
+.settings-item.clickable{cursor:pointer;}
+.settings-item.clickable::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+.settings-item.clickable:hover::before{opacity:.06;}
+.settings-item.clickable:active::before{opacity:.1;}
+.settings-item .si-icon{font-size:24px;color:var(--md-on-surface-variant);flex-shrink:0;}
+.settings-item .si-text{flex:1;}
+.settings-item .si-title{font-size:16px;color:var(--md-on-surface);}
+.settings-item .si-sub{font-size:13px;color:var(--md-on-surface-variant);margin-top:2px;}
+.settings-item.disabled{opacity:.38;pointer-events:none;}
+
+/* 语言菜单项：圆角 state layer + 水滴效果（overflow:hidden 裁剪圆角） */
+.lang-item{
+  display:flex;align-items:center;gap:16px;
+  padding:16px;min-height:56px;
+  position:relative;overflow:hidden;border-radius:12px;
+  margin:0 4px;
+  transition:background-color var(--md-dur-short) var(--md-easing-standard);
+}
+.lang-item::before{
+  content:"";position:absolute;inset:0;background:currentColor;opacity:0;
+  border-radius:inherit;transition:opacity var(--md-dur-short) var(--md-easing-standard);
+}
+.lang-item:hover::before{opacity:.08;}
+.lang-item:active::before{opacity:.12;}
+.lang-item.selected .si-icon{color:var(--md-primary);}
+.lang-item .si-icon{font-size:24px;color:var(--md-on-surface-variant);flex-shrink:0;position:relative;z-index:1;}
+.lang-item .si-text{flex:1;position:relative;z-index:1;}
+.lang-item .si-title{font-size:16px;color:var(--md-on-surface);}
+
+/* 开关 Switch（MD3 完整重写）
+   轨道 52×32，圆角 16px。球用绝对定位 + transform 居中。
+   关闭：球 12px，左侧距边 8px
+   开启：球 24px，右侧距边 8px
+   按下：球横向拉伸 */
+.switch{
+  width:52px;height:32px;border-radius:16px;
+  background:var(--md-surface-container-highest);
+  border:2px solid var(--md-outline);
+  position:relative;flex-shrink:0;cursor:pointer;
+  display:flex;align-items:center;
+  transition:background-color var(--md-dur-medium) var(--md-easing-standard),border-color var(--md-dur-medium) var(--md-easing-standard);
+}
+.switch .switch-thumb{
+  position:absolute;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--md-outline);
+  /* 关闭：球在左侧，距左 border 6px（8-2border），用 left 定位 */
+  left:6px;
+  top:50%;transform:translateY(-50%);
+  transition:left var(--md-dur-medium) var(--md-easing-emphasized),
+             width var(--md-dur-medium) var(--md-easing-emphasized),
+             height var(--md-dur-medium) var(--md-easing-emphasized),
+             background-color var(--md-dur-medium) var(--md-easing-standard);
+}
+.switch.on{background:var(--md-primary);border-color:var(--md-primary);}
+/* 开启：球 24px，移到右侧。left = 52 - 2(border) - 24 - 6 = 20px */
+.switch.on .switch-thumb{left:22px;width:24px;height:24px;background:var(--md-on-primary);}
+/* 按下时球横向拉伸（MD3 规范） */
+.switch:active:not(.on) .switch-thumb{width:18px;}
+.switch.on:active .switch-thumb{width:28px;}
+
+/* 单选按钮组（主题模式选择） */
+.seg-buttons{display:flex;gap:8px;padding:0 16px 16px;}
+.seg-btn{
+  flex:1;height:40px;border-radius:20px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:14px;font-weight:500;
+  border:1px solid var(--md-outline);color:var(--md-on-surface-variant);
+  background:transparent;position:relative;overflow:hidden;
+  transition:background-color var(--md-dur-short),color var(--md-dur-short),border-color var(--md-dur-short);
+}
+.seg-btn::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+.seg-btn:hover::before{opacity:.08;}
+.seg-btn.selected{background:var(--md-secondary-container);color:var(--md-on-secondary-container);border-color:transparent;}
+.seg-btn .icon{font-size:18px;}
+
+/* 滑块 Slider（MD3 规范）：active track 用 primary 色，inactive 用 surface-container-highest */
+.slider-wrap{padding:8px 16px 16px;display:flex;align-items:center;gap:12px;}
+.slider-wrap .slider-value{font-size:13px;color:var(--md-primary);font-weight:500;min-width:48px;text-align:right;}
+.slider{
+  flex:1;height:40px;position:relative;display:flex;align-items:center;
+}
+.slider input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:4px;border-radius:2px;
+  /* active/inactive 双色 track 由 JS 通过 --slider-pct 动态设置渐变 */
+  background:linear-gradient(to right,
+    var(--md-primary) 0%, var(--md-primary) var(--slider-pct,0%),
+    var(--md-surface-container-highest) var(--slider-pct,0%), var(--md-surface-container-highest) 100%);
+  outline:none;margin:0;cursor:pointer;
+}
+.slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:var(--md-primary);cursor:pointer;
+  border:none;
+  transition:box-shadow var(--md-dur-short) var(--md-easing-standard),transform var(--md-dur-short) var(--md-easing-standard);
+}
+.slider input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 8px color-mix(in srgb,var(--md-primary) 12%,transparent);}
+.slider input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15);box-shadow:0 0 0 12px color-mix(in srgb,var(--md-primary) 16%,transparent);}
+.slider input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;background:var(--md-primary);cursor:pointer;border:none;
+}
+.slider input[type=range]::-moz-range-progress{background:var(--md-primary);height:4px;border-radius:2px;}
+.slider input[type=range]::-moz-range-track{background:var(--md-surface-container-highest);height:4px;border-radius:2px;}
+
+/* 下拉菜单（许可证） */
+.dropdown{margin:0 16px 16px;border-radius:16px;overflow:hidden;background:var(--md-surface-container-low);}
+.dropdown:last-child{margin-bottom:0;}
+.dropdown-header{
+  display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer;
+  position:relative;transition:background-color var(--md-dur-short);
+}
+.dropdown-header::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity var(--md-dur-short);}
+.dropdown-header:hover::before{opacity:.06;}
+.dropdown-header .dh-icon{font-size:24px;color:var(--md-on-surface-variant);}
+.dropdown-header .dh-title{flex:1;font-size:15px;font-weight:500;color:var(--md-on-surface);}
+.dropdown-header .dh-arrow{font-size:24px;color:var(--md-on-surface-variant);transition:transform var(--md-dur-medium) var(--md-easing-emphasized);}
+.dropdown.open .dh-arrow{transform:rotate(180deg);}
+.dropdown-body{
+  max-height:0;overflow:hidden;
+  transition:max-height var(--md-dur-long) var(--md-easing-emphasized);
+}
+.dropdown-body-inner{padding:8px 16px 20px;}
+.license-text{
+  font-family:'HarmonyOS Sans SC',monospace;
+  font-size:12px;line-height:1.6;color:var(--md-on-surface-variant);
+  white-space:pre-wrap;word-break:break-word;
+  max-height:280px;overflow-y:auto;
+  background:var(--md-surface-container);padding:12px;border-radius:8px;
+}
+.license-text::-webkit-scrollbar{width:4px;}
+.license-text::-webkit-scrollbar-thumb{background:var(--md-outline-variant);border-radius:2px;}
+.license-item{margin-bottom:8px;}
+.license-item .li-name{font-size:14px;font-weight:500;color:var(--md-on-surface);}
+.license-item .li-license{font-size:12px;color:var(--md-on-surface-variant);}
+
+/* 关于区域 */
+.about-section{padding:32px 16px;text-align:center;}
+.about-icon{
+  width:96px;height:96px;border-radius:24px;margin:0 auto 16px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15);
+}
+.about-icon img{width:100%;height:100%;object-fit:cover;}
+.about-name{font-size:28px;font-weight:700;color:var(--md-on-surface);margin-bottom:4px;}
+.about-version{font-size:14px;color:var(--md-on-surface-variant);margin-bottom:16px;}
+.about-credit{font-size:14px;color:var(--md-on-surface-variant);margin-bottom:4px;}
+.about-credit a{color:var(--md-primary);text-decoration:underline;cursor:pointer;}
+.about-glm{font-size:14px;color:var(--md-on-surface-variant);}
+
+/* 选择菜单（Select / 语言） */
+.select-field{
+  position:relative;margin:8px 16px;
+}
+.select-field select{
+  width:100%;height:56px;padding:0 16px;
+  font-size:16px;color:var(--md-on-surface);
+  background:transparent;
+  border:1px solid var(--md-outline);
+  border-radius:12px;
+  -webkit-appearance:none;appearance:none;
+  cursor:pointer;
+  transition:border-color var(--md-dur-short);
+}
+.select-field select:focus{border-color:var(--md-primary);border-width:2px;padding:0 15px;}
+.select-field .select-arrow{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:24px;color:var(--md-on-surface-variant);pointer-events:none;
+}
+.select-field label{
+  position:absolute;left:12px;top:-8px;padding:0 4px;
+  font-size:12px;color:var(--md-on-surface-variant);background:var(--md-surface);
+}
+
+/* 图标选择弹窗（底栏/检查项） */
+.modal-scrim{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);
+  z-index:100;opacity:0;pointer-events:none;
+  transition:opacity var(--md-dur-medium) var(--md-easing-standard);
+}
+.modal-scrim.visible{opacity:1;pointer-events:auto;}
+.modal{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
+  background:var(--md-surface-container-high);color:var(--md-on-surface);
+  border-radius:28px;z-index:101;
+  width:min(440px,90vw);max-height:80vh;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:transform var(--md-dur-long) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-medium);
+}
+.modal.visible{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+.modal-header{padding:24px 24px 16px;font-size:22px;font-weight:500;}
+.modal-search{padding:0 24px 16px;}
+.modal-search input{
+  width:100%;height:48px;padding:0 16px;
+  background:var(--md-surface-container-highest);border:none;border-radius:24px;
+  font-size:15px;color:var(--md-on-surface);
+}
+.modal-body{flex:1;overflow-y:auto;padding:0 16px 24px;}
+.modal-body::-webkit-scrollbar{width:0;}
+.modal-actions{padding:8px 24px 24px;display:flex;justify-content:flex-end;gap:8px;}
+
+/* 确认对话框（删除二次确认） */
+.dialog{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
+  background:var(--md-surface-container-high);color:var(--md-on-surface);
+  border-radius:28px;z-index:101;
+  width:min(360px,88vw);padding:24px;
+  opacity:0;pointer-events:none;
+  transition:transform var(--md-dur-long) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-medium);
+}
+.dialog.visible{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+.dialog-title{font-size:22px;font-weight:500;margin-bottom:8px;}
+.dialog-body{font-size:14px;color:var(--md-on-surface-variant);line-height:1.5;margin-bottom:24px;}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px;}
+
+/* Toast 提示 */
+.toast{
+  position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+  background:var(--md-inverse-surface);color:var(--md-inverse-on-surface);
+  padding:12px 16px;border-radius:8px;font-size:14px;
+  z-index:200;opacity:0;pointer-events:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+  transition:transform var(--md-dur-medium) var(--md-easing-emphasized-decelerate),opacity var(--md-dur-medium);
+  max-width:90vw;text-align:center;
+}
+.toast.visible{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* 大图标搜索弹窗的图标网格 */
+.modal-icon-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:8px;
+}
+
+/* 隐藏类 */
+.hidden{display:none!important;}
+
+/* 滚动条全局隐藏 */
+*::-webkit-scrollbar{width:0;height:0;}
+
+/* 搜索时高亮 */
+.search-highlight{background:color-mix(in srgb,var(--md-primary) 24%,transparent);border-radius:4px;padding:0 2px;}
+
+/* 响应式 */
+@media(max-width:360px){
+  .icon-picker-grid,.modal-icon-grid{grid-template-columns:repeat(5,1fr);}
+  .nav-tab{min-width:72px;padding:8px 8px 12px;}
+  .nav-tab .tab-icon-pill{width:56px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 顶栏 -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-title" id="topbarTitle"><span id="topbarTitleText"></span><span class="title-suffix" id="topbarTitleSuffix"></span></div>
+    <button class="icon-btn" id="btnConfig" aria-label="配置"><span class="icon">menu</span></button>
+    <button class="icon-btn" id="btnSearch" aria-label="搜索"><span class="icon">search</span></button>
+    <button class="icon-btn" id="btnSettings" aria-label="设置"><span class="icon">settings</span></button>
+  </header>
+
+  <!-- 搜索栏 -->
+  <div class="search-bar" id="searchBar">
+    <button class="sb-back" id="sbBack" aria-label="关闭搜索"><span class="icon">arrow_back</span></button>
+    <div class="search-input-wrap">
+      <input type="text" id="searchInput" autocomplete="off">
+    </div>
+    <button class="sb-clear" id="sbClear" aria-label="清除"><span class="icon">close</span></button>
+  </div>
+
+  <!-- 主区域（页面容器） -->
+  <main class="main-area" id="mainArea">
+    <!-- 主页面（检查项列表） -->
+    <section class="page page-active" id="pageHome">
+      <div class="list-scroll" id="listScroll">
+        <div class="list-container" id="listContainer"></div>
+        <!-- 空状态 / 全部完成 / 列表 由JS动态渲染 -->
+      </div>
+      <!-- 重置 FAB：仅全部完成时显示 -->
+      <button class="fab reset-fab" id="btnResetList" aria-label="重置检查单"><span class="icon">restart_alt</span></button>
+    </section>
+
+    <!-- 新建/编辑检查单页面 -->
+    <section class="page page-enter-right" id="pageForm">
+      <div class="form-page-content" id="formContent"></div>
+    </section>
+
+    <!-- 设置页面 -->
+    <section class="page page-enter-right" id="pageSettings">
+      <div class="settings-content" id="settingsContent"></div>
+    </section>
+  </main>
+
+  <!-- 底栏 -->
+  <nav class="bottombar" id="bottombar">
+    <div class="bottombar-scroll" id="bottombarScroll"></div>
+  </nav>
+</div>
+
+<!-- 弹窗：图标选择 -->
+<div class="modal-scrim" id="iconPickerScrim"></div>
+<div class="modal" id="iconPickerModal">
+  <div class="modal-header" id="iconPickerTitle">选择图标</div>
+  <div class="modal-search"><input type="text" id="iconPickerSearch" placeholder="搜索图标"></div>
+  <div class="modal-body"><div class="modal-icon-grid" id="iconPickerGrid"></div></div>
+  <div class="modal-actions">
+    <button class="btn btn-text" id="iconPickerCancel">取消</button>
+  </div>
+</div>
+
+<!-- 弹窗：语言选择（居中 modal 样式，可滚动） -->
+<div class="modal-scrim" id="langScrim"></div>
+<div class="modal" id="langModal">
+  <div class="modal-header" id="langModalTitle">语言</div>
+  <div class="modal-body" id="langModalBody"></div>
+  <div class="modal-actions">
+    <button class="btn btn-text" id="langModalCancel">取消</button>
+  </div>
+</div>
+
+<!-- 弹窗：确认对话框 -->
+<div class="modal-scrim" id="dialogScrim"></div>
+<div class="dialog" id="confirmDialog">
+  <div class="dialog-title" id="dialogTitle"></div>
+  <div class="dialog-body" id="dialogBody"></div>
+  <div class="dialog-actions" id="dialogActions"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   检查单应用 - JavaScript 逻辑
+   ============================================================ */
+
+/* ---------- 内嵌资源占位（构建脚本注入） ---------- */
+const EMBEDDED_ICON_PNG = /*INJECT_ICON_PNG*/'';
+const APP_VERSION = 'Release v0.7.0';
+const APP_AUTHOR_URL = 'https://github.com/CrazySue';
+
+/* ---------- 图标库（MD3 风格图标名清单） ---------- */
+const ICON_LIBRARY = [
+  'checklist','checklist_rtl','check_circle','check','task_alt','done','done_all',
+  'home','work','school','shopping_bag','shopping_cart','shopping_basket',
+  'backpack','luggage','key','key_round','wallet','credit_card','badge',
+  'phone_iphone','devices','laptop','tablet','watch','headphones','earbuds',
+  'battery_charging_full','power','cable','memory_storage','sd_storage','usb',
+  'directions_car','directions_bike','directions_walk','directions_run','directions_bus',
+  'flight','flight_takeoff','train','sailing','rocket_launch','rocket',
+  'restaurant','restaurant_menu','local_cafe','local_bar','local_pizza','cake',
+  'water_drop','water_full','local_drink','sports_bar','wine_bar','liquor',
+  'medication','medical_services','vaccines','health_and_safety','monitor_heart',
+  'fitness_center','sports_gymnastics','sports_basketball','sports_soccer','sports_tennis',
+  'pets','cruelty_free','child_care','elderly','groups','person','face',
+  'book','menu_book','auto_stories','library_books','description','article',
+  'edit_note','edit','draw','brush','palette','color_lens',
+  'music_note','queue_music','album','podcasts','radio','theaters',
+  'camera','photo_camera','photo_library','videocam','movie','imagesmode',
+  'park','forest','grass','eco','energy_savings_leaf','wb_sunny',
+  'cloud','umbrella','ac_unit','severe_cold','thermostat','air',
+  'cleaning_services','soap','handyman','build','construction','plumbing',
+  'local_florist','spa','emoji_nature','nature','yard','celebration',
+  'favorite','favorite_border','star','star_rate','bookmark','flag',
+  'lightbulb','tips_and_updates','science','psychology','history_edu','auto_awesome',
+  'savings','payments','account_balance','currency_exchange','trending_up','percent',
+  'schedule','alarm','timer','hourglass_empty','today','event',
+  'mail','inbox','send','drafts','forward_to_inbox','mark_email_unread',
+  'vpn_key','lock','lock_open','fingerprint','password','security',
+  'visibility','visibility_off','notifications','notifications_off','campaign','notifications_active',
+  'settings','settings_suggest','tune','build_circle','manage_accounts','admin_panel_settings',
+  'inventory','inventory_2','warehouse','category','label','sell',
+  'local_shipping','delivery_dining','moped','directions_boat','connecting_airports','transfer_within_a_station',
+  'bedtime','bedtime_off','hotel','bed','king_bed','couch',
+  'kitchen','microwave','blender','coffee','coffee_maker','outdoor_grill',
+  'window','door_front','chair','table_restaurant','light','chair_alt',
+  'toys','blocks','extension','puzzle','casino','videogame_asset',
+  'smoking_rooms','smoke_free','no_drinks','warning','error','info',
+  'help','question_mark','quiz','psychology_alt','biotech','compost',
+  'agriculture','farming','safety_check','verified',
+  'volume_up','volume_off','bluetooth','wifi','wifi_off','signal_cellular_alt',
+  'print','scanner','fax','mail_lock','attach_email','attach_file',
+  'folder','folder_open','folder_special','archive','delete','restore_from_trash',
+  'content_copy','content_paste','cut','save','file_download','file_upload',
+  'filter_list','sort','more_vert','more_horiz','drag_handle','drag_indicator',
+  'arrow_back','arrow_forward','arrow_upward','arrow_downward','expand_more','expand_less',
+  'add','remove','close','remove_circle','add_circle','clear',
+  'refresh','restart_alt','sync','sync_problem','autorenew','replay',
+  'play_arrow','pause','stop','skip_next','skip_previous','shuffle',
+  'navigation','explore','map','location_on','place','near_me',
+  'sunny','light_mode','dark_mode','contrast','brightness_4','brightness_6'
+];
+
+/* ---------- 自动图标映射（根据关键词选图标） ----------
+   每条包含 10 种语言的关键词，用 | 分隔。
+   语言顺序：zh-CN zh-TW en ja ko fr de es ru pt */
+const AUTO_ICON_KEYWORDS = [
+  ['钥匙|門禁|門鎖|key|钥匙|key|key|鍵|열쇠|clé|Schlüssel|llave|ключ|chave', 'key'],
+  ['钱包|錢包|wallet|wallet|財布|지갑|portefeuille|Geldbeutel|cartera|кошелёк|carteira', 'wallet'],
+  ['卡|卡|card|card|カード|카드|carte|Karte|tarjeta|карта|cartão', 'credit_card'],
+  ['水|水|water|water|水|물|eau|Wasser|agua|вода|água', 'water_full'],
+  ['咖啡|咖啡|coffee|coffee|コーヒー|커피|café|Kaffee|café|кофе|café', 'coffee'],
+  ['茶|茶|tea|tea|お茶|차|thé|Tee|té|чай|chá', 'local_cafe'],
+  ['手机|手機|phone|phone|スマホ|폰|téléphone|Handy|teléfono|телефон|telemóvel', 'phone_iphone'],
+  ['充电|充電|charge|charge|充電|충전|charger|laden|cargar|заряд|carregar', 'battery_charging_full'],
+  ['电脑|電腦|laptop|laptop|ノート|노트북|ordinateur|Laptop|portátil|ноутбук|portátil', 'laptop'],
+  ['耳机|耳機|headphone|headphone|イヤホン|이어폰|écouteur|Kopfhörer|auricular|наушник|auscultador', 'headphones'],
+  ['书|書|book|book|本|책|livre|Buch|libro|книга|livro', 'book'],
+  ['书包|書包|backpack|backpack|バッグ|가방|sac|Rucksack|mochila|рюкзак|mochila', 'backpack'],
+  ['行李|行李|luggage|luggage|荷物|짐|bagage|Gepäck|equipaje|багаж|bagagem', 'luggage'],
+  ['车|車|car|car|車|자동차|voiture|Auto|coche|машина|carro', 'directions_car'],
+  ['自行车|單車|bike|bike|自転車|자전거|vélo|Fahrrad|bici|велосипед|bicicleta', 'directions_bike'],
+  ['公交|公車|bus|bus|バス|버스|bus|Bus|autobús|автобус|autocarro', 'directions_bus'],
+  ['飞机|飛機|flight|flight|飛行機|비행기|vol|Flug|vuelo|самолёт|voo', 'flight'],
+  ['火车|火車|train|train|電車|기차|train|Zug|tren|поезд|comboio', 'train'],
+  ['饭|飯|meal|meal|食事|식사|repas|Mahlzeit|comida|еда|refeição', 'restaurant'],
+  ['食|食|food|food|食べ物|음식|nourriture|Essen|comida|еда|comida', 'restaurant_menu'],
+  ['药|藥|medicine|medicine|薬|약|médicament|Medikament|medicina|лекарство|remédio', 'medication'],
+  ['健康|健康|health|health|健康|건강|santé|Gesundheit|salud|здоровье|saúde', 'health_and_safety'],
+  ['运动|運動|exercise|exercise|運動|운동|exercice|Sport|ejercicio|упражнение|exercício', 'fitness_center'],
+  ['宠物|寵物|pet|pet|ペット|반려동물|animal|Haustier|mascota|питомец|animal', 'pets'],
+  ['孩子|孩子|baby|baby|赤ちゃん|아기|bébé|Baby|bebé|ребёнок|bebé', 'child_care'],
+  ['伞|傘|umbrella|umbrella|傘|우산|parapluie|Regenschirm|paraguas|зонт|guarda-chuva', 'umbrella'],
+  ['衣服|衣服|clothes|clothes|服|옷|vêtement|Kleidung|ropa|одежда|roupa', 'checkroom'],
+  ['鞋|鞋|shoe|shoe|靴|신발|chaussure|Schuh|zapato|обувь|sapato', 'snowshoeing'],
+  ['眼镜|眼鏡|glasses|glasses|眼鏡|안경|lunettes|Brille|gafas|очки|óculos', 'visibility'],
+  ['表|錶|watch|watch|時計|시계|montre|Uhr|reloj|часы|relógio', 'watch'],
+  ['音乐|音樂|music|music|音楽|음악|musique|Musik|música|музыка|música', 'music_note'],
+  ['相机|相機|camera|camera|カメラ|카메라|appareil|Kamera|cámara|камера|câmara', 'photo_camera'],
+  ['工作|工作|work|work|仕事|일업|travail|Arbeit|trabajo|работа|trabalho', 'work'],
+  ['学习|學習|study|study|勉強|공부|étudier|lernen|estudiar|учёба|estudar', 'school'],
+  ['购物|購物|shop|shop|買い物|쇼핑|courses|Einkaufen|comprar|покупки|compras', 'shopping_bag'],
+  ['植物|植物|plant|plant|植物|식물|plante|Pflanze|planta|растение|planta', 'local_florist'],
+  ['灯|燈|light|light|ライト|조명|lumière|Licht|luz|свет|luz', 'lightbulb'],
+  ['文档|文檔|document|document|書類|문서|document|Dokument|documento|документ|documento', 'description'],
+  ['密码|密碼|password|password|パスワード|비밀번호|mot de passe|Passwort|contraseña|пароль|senha', 'password'],
+  ['闹钟|鬧鐘|alarm|alarm|アラーム|알람|alarme|Alarm|alarma|будильник|alarme', 'alarm'],
+  ['日程|日程|schedule|schedule|スケジュール|일정|calendrier|Kalender|calendario|расписание|agenda', 'event'],
+  ['出门|出門|leave|leave|外出|외출|sortir|verlassen|salir|выход|sair', 'door_front'],
+  ['回家|回家|home|home|帰宅|귀가|maison|Heim|casa|дом|casa', 'home'],
+  ['刷牙|刷牙|brush|brush|歯磨き|양치|brosser|putzen|cepillar|чистить|escovar', 'brush'],
+  ['洗澡|洗澡|shower|shower|シャワー|샤워|douche|Dusche|ducha|душ|duche', 'shower'],
+  ['睡觉|睡覺|sleep|sleep|睡眠|수면|dormir|schlafen|dormir|сон|dormir', 'bedtime'],
+  ['起床|起床|wake|wake|起床|기상|réveiller|aufstehen|despertar|подъём|acordar', 'alarm'],
+  ['签到|簽到|check|check|チェック|체크|vérifier|prüfen|verificar|отметить|verificar', 'task_alt'],
+];
+
+/* ---------- 多语言 i18n ---------- */
+const I18N = {
+  'zh-CN':{
+    app_name:'检查单', app_suffix:'检查单',
+    checklist:'检查单', checklists:'检查单',
+    config:'配置', search:'搜索', settings:'设置',
+    back_home:'返回主页', new_checklist:'新建检查单', edit_checklist:'编辑检查单',
+    checklist_name:'检查单名称', checklist_icon:'检查单图标',
+    auto_icon:'自动选择图标', reset_time:'自动重置时间',
+    reset_time_sub:'完成后经过此时长自动重置',
+    never_reset:'不自动重置', hours:'小时',
+    add_check_item:'添加检查项', check_item_placeholder:'输入检查项内容',
+    item_icon:'检查项图标', confirm:'确认', save:'保存', delete:'删除',
+    cancel:'取消', add:'添加',
+    delete_confirm_title:'删除检查单', delete_confirm_body:'再按一次「删除」以确认删除此检查单',
+    delete_checklist:'删除检查单', save_changes:'保存更改', enter_checklist_name:'请输入检查单名称', enter_check_item:'请添加检查项',
+    reset_checklist:'重置检查单',
+    all_done_title:'做得好，我们可以休息一会儿了', all_done_sub:'全部检查项已完成',
+    empty_title:'点击新建检查单以添加第一个检查单',
+    empty_sub:'还没有检查单',
+    reset_toast:'检查单已重置', added_toast:'检查单已添加', saved_toast:'检查单已保存', deleted_toast:'检查单已删除',
+    pull_to_reset:'下拉重置', release_to_reset:'松手重置', refreshing:'重置中…',
+    new_tab:'新建',
+    settings_theme:'主题', settings_follow_system:'跟随系统主题',
+    settings_light:'浅色模式', settings_dark:'深色模式',
+    settings_item_height:'检查项单条高度', settings_item_height_sub:'拖动滑块调整检查项高度',
+    settings_first_only:'仅应用到第一个检查项', settings_first_only_sub:'仅当前待完成的第一个检查项使用此高度',
+    settings_language:'语言', settings_language_sub:'选择界面语言',
+    settings_about:'关于',
+    follow_system:'跟随系统',
+    mit_license_title:'本软件使用 MIT LICENSE 开源',
+    oss_license_title:'开放源代码许可',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'无搜索结果', search_placeholder:'搜索检查项',
+    select_icon:'选择图标', icon_search:'搜索图标',
+    auto_select:'自动',
+    add_first_item:'添加检查项',
+    items_count:'项',
+    completed_count:'已完成',
+  },
+  'zh-TW':{
+    app_name:'檢查單', app_suffix:'檢查單',
+    checklist:'檢查單', checklists:'檢查單',
+    config:'設定', search:'搜尋', settings:'設定',
+    back_home:'返回主頁', new_checklist:'新建檢查單', edit_checklist:'編輯檢查單',
+    checklist_name:'檢查單名稱', checklist_icon:'檢查單圖示',
+    auto_icon:'自動選擇圖示', reset_time:'自動重置時間',
+    reset_time_sub:'完成後經過此時長自動重置',
+    never_reset:'不自動重置', hours:'小時',
+    add_check_item:'新增檢查項', check_item_placeholder:'輸入檢查項內容',
+    item_icon:'檢查項圖示', confirm:'確認', save:'儲存', delete:'刪除',
+    cancel:'取消', add:'新增',
+    delete_confirm_title:'刪除檢查單', delete_confirm_body:'再按一次「刪除」以確認刪除此檢查單',
+    delete_checklist:'刪除檢查單', save_changes:'儲存變更', enter_checklist_name:'請輸入檢查單名稱', enter_check_item:'請新增檢查項',
+    reset_checklist:'重置檢查單',
+    all_done_title:'做得好，我們可以休息一會兒了', all_done_sub:'全部檢查項已完成',
+    empty_title:'點擊新建檢查單以新增第一個檢查單',
+    empty_sub:'還沒有檢查單',
+    reset_toast:'檢查單已重置', added_toast:'檢查單已新增', saved_toast:'檢查單已儲存', deleted_toast:'檢查單已刪除',
+    pull_to_reset:'下拉重置', release_to_reset:'放手重置', refreshing:'重置中…',
+    new_tab:'新建',
+    settings_theme:'主題', settings_follow_system:'跟隨系統主題',
+    settings_light:'淺色模式', settings_dark:'深色模式',
+    settings_item_height:'檢查項單條高度', settings_item_height_sub:'拖動滑塊調整檢查項高度',
+    settings_first_only:'僅套用到第一個檢查項', settings_first_only_sub:'僅當前待完成的第一個檢查項使用此高度',
+    settings_language:'語言', settings_language_sub:'選擇介面語言',
+    settings_about:'關於',
+    follow_system:'跟隨系統',
+    mit_license_title:'本軟體使用 MIT LICENSE 開源',
+    oss_license_title:'開放原始碼授權',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'無搜尋結果', search_placeholder:'搜尋檢查項',
+    select_icon:'選擇圖示', icon_search:'搜尋圖示',
+    auto_select:'自動',
+    add_first_item:'新增檢查項',
+    items_count:'項',
+    completed_count:'已完成',
+  },
+  'en':{
+    app_name:'Checklist', app_suffix:' Checklist',
+    checklist:'Checklist', checklists:'Checklists',
+    config:'Configure', search:'Search', settings:'Settings',
+    back_home:'Home', new_checklist:'New Checklist', edit_checklist:'Edit Checklist',
+    checklist_name:'Checklist name', checklist_icon:'Checklist icon',
+    auto_icon:'Auto-select icon', reset_time:'Auto-reset time',
+    reset_time_sub:'Auto-reset after this duration once completed',
+    never_reset:'No auto-reset', hours:'h',
+    add_check_item:'Add check item', check_item_placeholder:'Enter check item',
+    item_icon:'Item icon', confirm:'Confirm', save:'Save', delete:'Delete',
+    cancel:'Cancel', add:'Add',
+    delete_confirm_title:'Delete checklist', delete_confirm_body:'Press "Delete" again to confirm deletion',
+    delete_checklist:'Delete checklist', save_changes:'Save changes', enter_checklist_name:'Please enter a checklist name', enter_check_item:'Please add a check item',
+    reset_checklist:'Reset checklist',
+    all_done_title:'Well done, let\'s take a break', all_done_sub:'All check items completed',
+    empty_title:'Tap "New Checklist" to add your first one',
+    empty_sub:'No checklists yet',
+    reset_toast:'Checklist reset', added_toast:'Checklist added', saved_toast:'Checklist saved', deleted_toast:'Checklist deleted',
+    pull_to_reset:'Pull to reset', release_to_reset:'Release to reset', refreshing:'Resetting…',
+    new_tab:'New',
+    settings_theme:'Theme', settings_follow_system:'Follow system theme',
+    settings_light:'Light mode', settings_dark:'Dark mode',
+    settings_item_height:'Item row height', settings_item_height_sub:'Drag the slider to adjust item height',
+    settings_first_only:'Apply to first item only', settings_first_only_sub:'Only the next pending item uses this height',
+    settings_language:'Language', settings_language_sub:'Choose interface language',
+    settings_about:'About',
+    follow_system:'Follow system',
+    mit_license_title:'Open source under the MIT LICENSE',
+    oss_license_title:'Open source licenses',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'No results', search_placeholder:'Search items',
+    select_icon:'Select icon', icon_search:'Search icons',
+    auto_select:'Auto',
+    add_first_item:'Add check item',
+    items_count:'items',
+    completed_count:'completed',
+  },
+  'ja':{
+    app_name:'チェックリスト', app_suffix:'チェックリスト',
+    checklist:'チェックリスト', checklists:'チェックリスト',
+    config:'設定', search:'検索', settings:'設定',
+    back_home:'ホームに戻る', new_checklist:'新規チェックリスト', edit_checklist:'チェックリストを編集',
+    checklist_name:'チェックリスト名', checklist_icon:'チェックリストアイコン',
+    auto_icon:'アイコンを自動選択', reset_time:'自動リセット時間',
+    reset_time_sub:'完了後にこの時間で自動リセット',
+    never_reset:'自動リセットしない', hours:'時間',
+    add_check_item:'チェック項目を追加', check_item_placeholder:'チェック項目を入力',
+    item_icon:'項目アイコン', confirm:'確認', save:'保存', delete:'削除',
+    cancel:'キャンセル', add:'追加',
+    delete_confirm_title:'チェックリストを削除', delete_confirm_body:'もう一度「削除」を押して削除を確認',
+    delete_checklist:'チェックリストを削除', save_changes:'変更を保存', enter_checklist_name:'チェックリスト名を入力してください', enter_check_item:'チェック項目を追加してください',
+    reset_checklist:'チェックリストをリセット',
+    all_done_title:'よくできました、少し休みましょう', all_done_sub:'すべてのチェック項目が完了しました',
+    empty_title:'「新規チェックリスト」をタップして最初のものを追加',
+    empty_sub:'まだチェックリストがありません',
+    reset_toast:'チェックリストをリセットしました', added_toast:'チェックリストを追加しました', saved_toast:'チェックリストを保存しました', deleted_toast:'チェックリストを削除しました',
+    pull_to_reset:'引いてリセット', release_to_reset:'離してリセット', refreshing:'リセット中…',
+    new_tab:'新規',
+    settings_theme:'テーマ', settings_follow_system:'システムテーマに従う',
+    settings_light:'ライトモード', settings_dark:'ダークモード',
+    settings_item_height:'項目の行の高さ', settings_item_height_sub:'スライダーをドラッグして項目の高さを調整',
+    settings_first_only:'最初の項目のみに適用', settings_first_only_sub:'次の保留中の項目のみこの高さを使用します',
+    settings_language:'言語', settings_language_sub:'インターフェース言語を選択',
+    settings_about:'について',
+    follow_system:'システムに従う',
+    mit_license_title:'本ソフトウェアは MIT LICENSE でオープンソースです',
+    oss_license_title:'オープンソースライセンス',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'結果なし', search_placeholder:'項目を検索',
+    select_icon:'アイコンを選択', icon_search:'アイコンを検索',
+    auto_select:'自動',
+    add_first_item:'チェック項目を追加',
+    items_count:'項目',
+    completed_count:'完了',
+  },
+  'ko':{
+    app_name:'체크리스트', app_suffix:' 체크리스트',
+    checklist:'체크리스트', checklists:'체크리스트',
+    config:'설정', search:'검색', settings:'설정',
+    back_home:'홈으로', new_checklist:'새 체크리스트', edit_checklist:'체크리스트 편집',
+    checklist_name:'체크리스트 이름', checklist_icon:'체크리스트 아이콘',
+    auto_icon:'아이콘 자동 선택', reset_time:'자동 리셋 시간',
+    reset_time_sub:'완료 후 이 시간이 지나면 자동 리셋',
+    never_reset:'자동 리셋 안 함', hours:'시간',
+    add_check_item:'체크 항목 추가', check_item_placeholder:'체크 항목 입력',
+    item_icon:'항목 아이콘', confirm:'확인', save:'저장', delete:'삭제',
+    cancel:'취소', add:'추가',
+    delete_confirm_title:'체크리스트 삭제', delete_confirm_body:'삭제하려면 "삭제"를 한 번 더 누르세요',
+    delete_checklist:'체크리스트 삭제', save_changes:'변경 사항 저장', enter_checklist_name:'체크리스트 이름을 입력하세요', enter_check_item:'체크 항목을 추가하세요',
+    reset_checklist:'체크리스트 리셋',
+    all_done_title:'잘했어요, 잠시 쉬어요', all_done_sub:'모든 체크 항목이 완료되었습니다',
+    empty_title:'"새 체크리스트"를 눌러 첫 항목을 추가하세요',
+    empty_sub:'아직 체크리스트가 없습니다',
+    reset_toast:'체크리스트가 리셋되었습니다', added_toast:'체크리스트가 추가되었습니다', saved_toast:'체크리스트가 저장되었습니다', deleted_toast:'체크리스트가 삭제되었습니다',
+    pull_to_reset:'당겨서 리셋', release_to_reset:'놓아서 리셋', refreshing:'리셋 중…',
+    new_tab:'새로',
+    settings_theme:'테마', settings_follow_system:'시스템 테마 따르기',
+    settings_light:'라이트 모드', settings_dark:'다크 모드',
+    settings_item_height:'항목 행 높이', settings_item_height_sub:'슬라이더를 드래그하여 항목 높이 조정',
+    settings_first_only:'첫 항목에만 적용', settings_first_only_sub:'다음 대기 중인 항목만 이 높이를 사용합니다',
+    settings_language:'언어', settings_language_sub:'인터페이스 언어 선택',
+    settings_about:'정보',
+    follow_system:'시스템 따르기',
+    mit_license_title:'이 소프트웨어는 MIT LICENSE 오픈소스입니다',
+    oss_license_title:'오픈소스 라이선스',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'결과 없음', search_placeholder:'항목 검색',
+    select_icon:'아이콘 선택', icon_search:'아이콘 검색',
+    auto_select:'자동',
+    add_first_item:'체크 항목 추가',
+    items_count:'항목',
+    completed_count:'완료',
+  },
+  'fr':{
+    app_name:'Liste', app_suffix:' de contrôle',
+    checklist:'Liste de contrôle', checklists:'Listes de contrôle',
+    config:'Configurer', search:'Rechercher', settings:'Paramètres',
+    back_home:'Accueil', new_checklist:'Nouvelle liste', edit_checklist:'Modifier la liste',
+    checklist_name:'Nom de la liste', checklist_icon:'Icône de la liste',
+    auto_icon:'Sélection auto de l\'icône', reset_time:'Durée de réinitialisation auto',
+    reset_time_sub:'Réinitialisation auto après cette durée une fois terminé',
+    never_reset:'Pas de réinit. auto', hours:'h',
+    add_check_item:'Ajouter un élément', check_item_placeholder:'Saisir un élément',
+    item_icon:'Icône de l\'élément', confirm:'Confirmer', save:'Enregistrer', delete:'Supprimer',
+    cancel:'Annuler', add:'Ajouter',
+    delete_confirm_title:'Supprimer la liste', delete_confirm_body:'Appuyez à nouveau sur « Supprimer » pour confirmer',
+    delete_checklist:'Supprimer la liste', save_changes:'Enregistrer les modifications', enter_checklist_name:'Veuillez saisir un nom de liste', enter_check_item:'Veuillez ajouter un élément',
+    reset_checklist:'Réinitialiser la liste',
+    all_done_title:'Bien joué, faisons une pause', all_done_sub:'Tous les éléments sont complétés',
+    empty_title:'Appuyez sur « Nouvelle liste » pour ajouter la première',
+    empty_sub:'Aucune liste pour l\'instant',
+    reset_toast:'Liste réinitialisée', added_toast:'Liste ajoutée', saved_toast:'Liste enregistrée', deleted_toast:'Liste supprimée',
+    pull_to_reset:'Tirer pour réinitialiser', release_to_reset:'Relâcher pour réinitialiser', refreshing:'Réinitialisation…',
+    new_tab:'Nouv.',
+    settings_theme:'Thème', settings_follow_system:'Suivre le thème système',
+    settings_light:'Mode clair', settings_dark:'Mode sombre',
+    settings_item_height:'Hauteur de ligne des éléments', settings_item_height_sub:'Glissez le curseur pour ajuster la hauteur',
+    settings_first_only:'Appliquer au premier élément seulement', settings_first_only_sub:'Seul le prochain élément en attente utilise cette hauteur',
+    settings_language:'Langue', settings_language_sub:'Choisir la langue de l\'interface',
+    settings_about:'À propos',
+    follow_system:'Suivre le système',
+    mit_license_title:'Open source sous licence MIT',
+    oss_license_title:'Licences open source',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Aucun résultat', search_placeholder:'Rechercher des éléments',
+    select_icon:'Choisir l\'icône', icon_search:'Rechercher des icônes',
+    auto_select:'Auto',
+    add_first_item:'Ajouter un élément',
+    items_count:'éléments',
+    completed_count:'complétés',
+  },
+  'de':{
+    app_name:'Checkliste', app_suffix:'-Checkliste',
+    checklist:'Checkliste', checklists:'Checklisten',
+    config:'Konfigurieren', search:'Suchen', settings:'Einstellungen',
+    back_home:'Start', new_checklist:'Neue Checkliste', edit_checklist:'Checkliste bearbeiten',
+    checklist_name:'Name der Checkliste', checklist_icon:'Checklisten-Symbol',
+    auto_icon:'Symbol automatisch wählen', reset_time:'Auto-Zurücksetzzeit',
+    reset_time_sub:'Nach Ablauf automatisch zurücksetzen',
+    never_reset:'Kein Auto-Reset', hours:'Std',
+    add_check_item:'Prüfpunkt hinzufügen', check_item_placeholder:'Prüfpunkt eingeben',
+    item_icon:'Element-Symbol', confirm:'Bestätigen', save:'Speichern', delete:'Löschen',
+    cancel:'Abbrechen', add:'Hinzufügen',
+    delete_confirm_title:'Checkliste löschen', delete_confirm_body:'Erneut „Löschen“ drücken, um zu bestätigen',
+    delete_checklist:'Checkliste löschen', save_changes:'Änderungen speichern', enter_checklist_name:'Bitte einen Checklistennamen eingeben', enter_check_item:'Bitte ein Prüfelement hinzufügen',
+    reset_checklist:'Checkliste zurücksetzen',
+    all_done_title:'Gut gemacht, machen wir eine Pause', all_done_sub:'Alle Prüfpunkte erledigt',
+    empty_title:'Auf „Neue Checkliste“ tippen, um die erste hinzuzufügen',
+    empty_sub:'Noch keine Checklisten',
+    reset_toast:'Checkliste zurückgesetzt', added_toast:'Checkliste hinzugefügt', saved_toast:'Checkliste gespeichert', deleted_toast:'Checkliste gelöscht',
+    pull_to_reset:'Zum Zurücksetzen ziehen', release_to_reset:'Loslassen zum Zurücksetzen', refreshing:'Zurücksetzen…',
+    new_tab:'Neu',
+    settings_theme:'Design', settings_follow_system:'Systemdesign folgen',
+    settings_light:'Heller Modus', settings_dark:'Dunkler Modus',
+    settings_item_height:'Zeilenhöhe der Elemente', settings_item_height_sub:'Schieber ziehen, um die Höhe einzustellen',
+    settings_first_only:'Nur auf erstes Element anwenden', settings_first_only_sub:'Nur das nächste offene Element verwendet diese Höhe',
+    settings_language:'Sprache', settings_language_sub:'Oberflächensprache wählen',
+    settings_about:'Über',
+    follow_system:'System folgen',
+    mit_license_title:'Open Source unter der MIT-Lizenz',
+    oss_license_title:'Open-Source-Lizenzen',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Keine Ergebnisse', search_placeholder:'Elemente suchen',
+    select_icon:'Symbol wählen', icon_search:'Symbole suchen',
+    auto_select:'Auto',
+    add_first_item:'Prüfpunkt hinzufügen',
+    items_count:'Elemente',
+    completed_count:'erledigt',
+  },
+  'es':{
+    app_name:'Lista', app_suffix:' de verificación',
+    checklist:'Lista de verificación', checklists:'Listas de verificación',
+    config:'Configurar', search:'Buscar', settings:'Ajustes',
+    back_home:'Inicio', new_checklist:'Nueva lista', edit_checklist:'Editar lista',
+    checklist_name:'Nombre de la lista', checklist_icon:'Icono de la lista',
+    auto_icon:'Selección automática de icono', reset_time:'Tiempo de reinicio automático',
+    reset_time_sub:'Reinicio automático tras esta duración al completar',
+    never_reset:'Sin reinicio auto', hours:'h',
+    add_check_item:'Añadir elemento', check_item_placeholder:'Introducir elemento',
+    item_icon:'Icono del elemento', confirm:'Confirmar', save:'Guardar', delete:'Eliminar',
+    cancel:'Cancelar', add:'Añadir',
+    delete_confirm_title:'Eliminar lista', delete_confirm_body:'Pulsa «Eliminar» otra vez para confirmar',
+    delete_checklist:'Eliminar lista', save_changes:'Guardar cambios', enter_checklist_name:'Introduzca un nombre de lista', enter_check_item:'Añada un elemento',
+    reset_checklist:'Reiniciar lista',
+    all_done_title:'Bien hecho, tomemos un descanso', all_done_sub:'Todos los elementos completados',
+    empty_title:'Pulsa «Nueva lista» para añadir la primera',
+    empty_sub:'Aún no hay listas',
+    reset_toast:'Lista reiniciada', added_toast:'Lista añadida', saved_toast:'Lista guardada', deleted_toast:'Lista eliminada',
+    pull_to_reset:'Desliza para reiniciar', release_to_reset:'Suelta para reiniciar', refreshing:'Reiniciando…',
+    new_tab:'Nueva',
+    settings_theme:'Tema', settings_follow_system:'Seguir tema del sistema',
+    settings_light:'Modo claro', settings_dark:'Modo oscuro',
+    settings_item_height:'Altura de fila de elementos', settings_item_height_sub:'Arrastra el control para ajustar la altura',
+    settings_first_only:'Aplicar solo al primer elemento', settings_first_only_sub:'Solo el siguiente elemento pendiente usa esta altura',
+    settings_language:'Idioma', settings_language_sub:'Elegir idioma de la interfaz',
+    settings_about:'Acerca de',
+    follow_system:'Seguir sistema',
+    mit_license_title:'Código abierto bajo la licencia MIT',
+    oss_license_title:'Licencias de código abierto',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Sin resultados', search_placeholder:'Buscar elementos',
+    select_icon:'Elegir icono', icon_search:'Buscar iconos',
+    auto_select:'Auto',
+    add_first_item:'Añadir elemento',
+    items_count:'elementos',
+    completed_count:'completados',
+  },
+  'ru':{
+    app_name:'Чек-лист', app_suffix:' чек-лист',
+    checklist:'Чек-лист', checklists:'Чек-листы',
+    config:'Настроить', search:'Поиск', settings:'Настройки',
+    back_home:'Главная', new_checklist:'Новый чек-лист', edit_checklist:'Изменить чек-лист',
+    checklist_name:'Название чек-листа', checklist_icon:'Значок чек-листа',
+    auto_icon:'Авто-выбор значка', reset_time:'Время авто-сброса',
+    reset_time_sub:'Авто-сброс по истечении этого времени после завершения',
+    never_reset:'Без авто-сброса', hours:'ч',
+    add_check_item:'Добавить пункт', check_item_placeholder:'Введите пункт',
+    item_icon:'Значок пункта', confirm:'Подтвердить', save:'Сохранить', delete:'Удалить',
+    cancel:'Отмена', add:'Добавить',
+    delete_confirm_title:'Удалить чек-лист', delete_confirm_body:'Нажмите «Удалить» ещё раз для подтверждения',
+    delete_checklist:'Удалить чек-лист', save_changes:'Сохранить изменения', enter_checklist_name:'Введите название чек-листа', enter_check_item:'Добавьте пункт',
+    reset_checklist:'Сбросить чек-лист',
+    all_done_title:'Отлично, давайте отдохнём', all_done_sub:'Все пункты выполнены',
+    empty_title:'Нажмите «Новый чек-лист», чтобы добавить первый',
+    empty_sub:'Пока нет чек-листов',
+    reset_toast:'Чек-лист сброшен', added_toast:'Чек-лист добавлен', saved_toast:'Чек-лист сохранён', deleted_toast:'Чек-лист удалён',
+    pull_to_reset:'Потяните для сброса', release_to_reset:'Отпустите для сброса', refreshing:'Сброс…',
+    new_tab:'Новый',
+    settings_theme:'Тема', settings_follow_system:'Системная тема',
+    settings_light:'Светлая тема', settings_dark:'Тёмная тема',
+    settings_item_height:'Высота строки пунктов', settings_item_height_sub:'Перетащите ползунок для настройки высоты',
+    settings_first_only:'Только к первому пункту', settings_first_only_sub:'Только следующий ожидающий пункт использует эту высоту',
+    settings_language:'Язык', settings_language_sub:'Выбрать язык интерфейса',
+    settings_about:'О приложении',
+    follow_system:'Системный',
+    mit_license_title:'Открытый исходный код под лицензией MIT',
+    oss_license_title:'Лицензии открытого кода',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Нет результатов', search_placeholder:'Поиск пунктов',
+    select_icon:'Выбрать значок', icon_search:'Поиск значков',
+    auto_select:'Авто',
+    add_first_item:'Добавить пункт',
+    items_count:'пунктов',
+    completed_count:'выполнено',
+  },
+  'pt':{
+    app_name:'Lista', app_suffix:' de verificação',
+    checklist:'Lista de verificação', checklists:'Listas de verificação',
+    config:'Configurar', search:'Buscar', settings:'Configurações',
+    back_home:'Início', new_checklist:'Nova lista', edit_checklist:'Editar lista',
+    checklist_name:'Nome da lista', checklist_icon:'Ícone da lista',
+    auto_icon:'Seleção automática de ícone', reset_time:'Tempo de redefinição automática',
+    reset_time_sub:'Redefinição automática após essa duração ao concluir',
+    never_reset:'Sem redef. auto', hours:'h',
+    add_check_item:'Adicionar item', check_item_placeholder:'Digite o item',
+    item_icon:'Ícone do item', confirm:'Confirmar', save:'Salvar', delete:'Excluir',
+    cancel:'Cancelar', add:'Adicionar',
+    delete_confirm_title:'Excluir lista', delete_confirm_body:'Pressione «Excluir» novamente para confirmar',
+    delete_checklist:'Excluir lista', save_changes:'Salvar alterações', enter_checklist_name:'Introduza um nome de lista', enter_check_item:'Adicione um item',
+    reset_checklist:'Redefinir lista',
+    all_done_title:'Muito bem, vamos fazer uma pausa', all_done_sub:'Todos os itens concluídos',
+    empty_title:'Toque em «Nova lista» para adicionar a primeira',
+    empty_sub:'Nenhuma lista ainda',
+    reset_toast:'Lista redefinida', added_toast:'Lista adicionada', saved_toast:'Lista salva', deleted_toast:'Lista excluída',
+    pull_to_reset:'Puxe para redefinir', release_to_reset:'Solte para redefinir', refreshing:'Redefinindo…',
+    new_tab:'Nova',
+    settings_theme:'Tema', settings_follow_system:'Seguir tema do sistema',
+    settings_light:'Modo claro', settings_dark:'Modo escuro',
+    settings_item_height:'Altura da linha dos itens', settings_item_height_sub:'Arraste o controle para ajustar a altura',
+    settings_first_only:'Aplicar apenas ao primeiro item', settings_first_only_sub:'Apenas o próximo item pendente usa esta altura',
+    settings_language:'Idioma', settings_language_sub:'Escolher idioma da interface',
+    settings_about:'Sobre',
+    follow_system:'Sistema',
+    mit_license_title:'Código aberto sob a licença MIT',
+    oss_license_title:'Licenças de código aberto',
+    created_by:'Create with ❤️ by ', made_by:'Made by GLM-5.2',
+    no_results:'Sem resultados', search_placeholder:'Buscar itens',
+    select_icon:'Escolher ícone', icon_search:'Buscar ícones',
+    auto_select:'Auto',
+    add_first_item:'Adicionar item',
+    items_count:'itens',
+    completed_count:'concluídos',
+  },
+};
+const LANGUAGES = [
+  {code:'auto', name:'跟随系统', nativeName:'跟随系统 / Follow System'},
+  {code:'zh-CN', name:'简体中文', nativeName:'简体中文'},
+  {code:'zh-TW', name:'繁體中文', nativeName:'繁體中文'},
+  {code:'en', name:'English', nativeName:'English'},
+  {code:'ja', name:'日本語', nativeName:'日本語'},
+  {code:'ko', name:'한국어', nativeName:'한국어'},
+  {code:'fr', name:'Français', nativeName:'Français'},
+  {code:'de', name:'Deutsch', nativeName:'Deutsch'},
+  {code:'es', name:'Español', nativeName:'Español'},
+  {code:'ru', name:'Русский', nativeName:'Русский'},
+  {code:'pt', name:'Português', nativeName:'Português'},
+];
+
+/* ---------- MIT 许可证原文 ---------- */
+const MIT_LICENSE_TEXT = `MIT License
+
+Copyright (c) 2026 Crazy Sue
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`;
+
+/* ---------- 开源组件许可 ---------- */
+const OSS_LICENSES = [
+  {name:'Material Symbols Rounded (Google)', license:'Apache License 2.0', text:`Apache License 2.0
+
+Copyright 2022 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.`},
+  {name:'Material Design 3 (Google)', license:'Apache License 2.0', text:'Material Design 3 is a design system published by Google, licensed under the Apache License 2.0. This application implements its UI and interaction patterns in accordance with the MD3 design specification.'},
+  {name:'HarmonyOS Sans SC (Huawei)', license:'HarmonyOS Sans Font License', text:`HarmonyOS Sans SC is a typeface developed by Huawei.
+
+According to the font license published by Huawei, the HarmonyOS Sans font is free for both commercial and personal use.
+
+This application embeds the HarmonyOS Sans SC font files to ensure consistent typography across devices.`},
+];
+
+/* ---------- 默认设置 ---------- */
+const DEFAULT_SETTINGS = {
+  theme:'auto',          // auto | light | dark
+  itemHeight:64,         // 单条高度（px）
+  firstOnly:false,       // 仅首条应用高度
+  language:'auto',       // auto | 语言代码
+};
+const ITEM_HEIGHT_MIN = 56;
+const ITEM_HEIGHT_MAX = 120;
+
+/* ---------- 数据模型 ---------- */
+/*
+  state = {
+    checklists: [
+      { id, name, icon, resetHours, items:[{id, text, icon, done}], completedAt, createdAt }
+    ],
+    activeChecklistId: id | null,
+    settings: {...DEFAULT_SETTINGS}
+  }
+*/
+
+/* ---------- 状态管理 ---------- */
+const Store = {
+  key:'checklist_app_state_v1',
+  state:null,
+  listeners:[],
+  load(){
+    try{
+      const raw = localStorage.getItem(this.key);
+      if(raw){
+        this.state = JSON.parse(raw);
+        // 合并默认设置（防止旧版本字段缺失）
+        this.state.settings = Object.assign({...DEFAULT_SETTINGS}, this.state.settings||{});
+      }else{
+        this.state = {checklists:[], activeChecklistId:null, settings:{...DEFAULT_SETTINGS}};
+      }
+    }catch(e){
+      this.state = {checklists:[], activeChecklistId:null, settings:{...DEFAULT_SETTINGS}};
+    }
+    // 数据校验
+    if(!Array.isArray(this.state.checklists)) this.state.checklists = [];
+    if(!this.state.settings) this.state.settings = {...DEFAULT_SETTINGS};
+  },
+  save(){
+    try{ localStorage.setItem(this.key, JSON.stringify(this.state)); }catch(e){}
+  },
+  subscribe(fn){ this.listeners.push(fn); },
+  emit(){ this.listeners.forEach(fn=>fn(this.state)); },
+  set(partial){ Object.assign(this.state, partial); this.save(); this.emit(); },
+};
+
+/* ---------- 工具函数 ---------- */
+const uid = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const $ = (sel,root=document)=> root.querySelector(sel);
+const $$ = (sel,root=document)=> Array.from(root.querySelectorAll(sel));
+function el(tag, props={}, children=[]){
+  const e = document.createElement(tag);
+  // 布尔属性：值为 false 时不设置（HTML 规范中属性存在即为真）
+  const BOOL_ATTRS = ['disabled','checked','selected','readonly','multiple','hidden','autoplay','controls','loop','muted','open','required'];
+  Object.entries(props).forEach(([k,v])=>{
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else if(k==='text') e.textContent=v;
+    else if(k.startsWith('on')&&typeof v==='function') e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if(k==='dataset') Object.entries(v).forEach(([dk,dv])=>e.dataset[dk]=dv);
+    else if(BOOL_ATTRS.includes(k)){
+      if(v) e.setAttribute(k,''); else e.removeAttribute(k);
+    }
+    else if(v!==null&&v!==undefined&&v!==false) e.setAttribute(k,v);
+  });
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    if(typeof c==='string') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+/* ---------- MD3 水滴效果（Ripple） ----------
+   为可交互元素附加点击水滴动画。元素需有 position:relative 和 overflow:hidden。
+   水滴会被父元素的 border-radius 裁剪，确保圆角区域不溢出。 */
+function attachRipple(el){
+  el._rippleAttached = true;
+  el.addEventListener('pointerdown', e=>{
+    // 仅对主按键响应
+    if(e.button!==0 && e.pointerType==='mouse') return;
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size/2;
+    const y = e.clientY - rect.top - size/2;
+    const ripple = document.createElement('span');
+    ripple.className = 'md-ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.width = ripple.style.height = size + 'px';
+    el.appendChild(ripple);
+    // 主动画结束后移除
+    const cleanup = ()=>{ ripple.remove(); el.removeEventListener('pointerup', cleanup); el.removeEventListener('pointerleave', cleanup); };
+    el.addEventListener('pointerup', cleanup);
+    el.addEventListener('pointerleave', cleanup);
+    // 兜底清理
+    setTimeout(()=>ripple.remove(), 700);
+  });
+}
+/* 全局水波效果委托：自动给匹配选择器的元素添加 ripple，无需手动 attach。
+   匹配的元素需要 position:relative + overflow:hidden 以裁剪圆角。 */
+const RIPPLE_SELECTOR = '.btn,.seg-btn,.chip,.settings-item.clickable,.dropdown-header.clickable,.lang-item,.icon-option,.icon-circle-btn,.nav-tab .tab-icon-pill,.icon-btn,.fab,.ci-check,.check-item,.fi-icon-btn,.fi-remove';
+function initGlobalRipple(){
+  document.addEventListener('pointerdown', e=>{
+    if(e.button!==0 && e.pointerType==='mouse') return;
+    const target = e.target.closest(RIPPLE_SELECTOR);
+    if(!target) return;
+    // 已通过 attachRipple 处理的元素跳过（避免重复）
+    if(target._rippleAttached) return;
+    const rect = target.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size/2;
+    const y = e.clientY - rect.top - size/2;
+    const ripple = document.createElement('span');
+    ripple.className = 'md-ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.width = ripple.style.height = size + 'px';
+    target.appendChild(ripple);
+    setTimeout(()=>ripple.remove(), 550);
+  }, {capture:true});
+}
+function autoIconFor(text){
+  if(!text) return 'checklist';
+  const lower = text.toLowerCase();
+  for(const [pattern, icon] of AUTO_ICON_KEYWORDS){
+    const parts = pattern.split('|');
+    for(const p of parts){
+      if(lower.includes(p.toLowerCase())) return icon;
+    }
+  }
+  return 'checklist';
+}
+function resolveIcon(iconName, fallbackText){
+  // 返回实际图标名：若用户提供则用，否则自动选
+  if(iconName && iconName!=='auto' && ICON_LIBRARY.includes(iconName)) return iconName;
+  return autoIconFor(fallbackText||'');
+}
+
+/* ---------- i18n 取词 ---------- */
+function getLang(){
+  const s = Store.state.settings.language;
+  if(s==='auto'){
+    const nav = navigator.language || 'zh-CN';
+    // 精确匹配
+    if(I18N[nav]) return nav;
+    // 前缀匹配
+    const prefix = nav.split('-')[0];
+    if(I18N[prefix]) return prefix;
+    return 'zh-CN';
+  }
+  return I18N[s] ? s : 'zh-CN';
+}
+function t(key){
+  const lang = getLang();
+  return (I18N[lang] && I18N[lang][key]) || I18N['zh-CN'][key] || key;
+}
+
+/* ---------- 主题应用 ---------- */
+function applyTheme(){
+  const s = Store.state.settings.theme;
+  let dark;
+  if(s==='auto'){
+    dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }else{
+    dark = s==='dark';
+  }
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+  const meta = document.querySelector('meta[name=theme-color]');
+  if(meta) meta.content = dark?'#131318':'#FCF8FF';
+}
+
+/* ============================================================
+   渲染层
+   ============================================================ */
+
+/* ---------- 顶栏渲染 ---------- */
+function renderTopbar(pageType){
+  const titleText = $('#topbarTitleText');
+  const titleSuffix = $('#topbarTitleSuffix');
+  const btnConfig = $('#btnConfig');
+  const btnSearch = $('#btnSearch');
+  const btnSettings = $('#btnSettings');
+
+  if(pageType==='home'){
+    const cl = getActiveChecklist();
+    if(cl){
+      titleText.textContent = cl.name;
+      titleSuffix.textContent = t('app_suffix');
+    }else{
+      titleText.textContent = t('app_name');
+      titleSuffix.textContent = '';
+    }
+    btnConfig.style.display='';
+    btnSearch.style.display='';
+    btnSettings.style.display='';
+    btnSettings.querySelector('.icon').textContent='settings';
+    btnSettings.setAttribute('aria-label', t('settings'));
+    btnSettings.classList.remove('is-active');
+    btnConfig.querySelector('.icon').textContent='menu';
+    btnConfig.setAttribute('aria-label', t('config'));
+    btnSearch.querySelector('.icon').textContent='search';
+    btnSearch.setAttribute('aria-label', t('search'));
+    // 配置按钮在有检查单时可用
+    btnConfig.style.opacity = cl? '1':'.38';
+    btnConfig.style.pointerEvents = cl? 'auto':'none';
+    btnSearch.style.opacity = cl? '1':'.38';
+    btnSearch.style.pointerEvents = cl? 'auto':'none';
+  }else if(pageType==='form'){
+    const editing = Store.state._editing;
+    titleText.textContent = editing? t('edit_checklist') : t('new_checklist');
+    titleSuffix.textContent='';
+    btnConfig.style.display='none';
+    btnSearch.style.display='none';
+    // 表单页显示主页按钮（与设置页一致）
+    btnSettings.style.display='';
+    btnSettings.querySelector('.icon').textContent='close';
+    btnSettings.setAttribute('aria-label', t('back_home'));
+    btnSettings.classList.add('is-active');
+  }else if(pageType==='settings'){
+    titleText.textContent = t('settings');
+    titleSuffix.textContent='';
+    btnConfig.style.display='none';
+    btnSearch.style.display='none';
+    btnSettings.style.display='';
+    btnSettings.querySelector('.icon').textContent='home';
+    btnSettings.setAttribute('aria-label', t('back_home'));
+    btnSettings.classList.add('is-active');
+  }
+  // 重置搜索栏状态
+  if(pageType!=='home'){
+    closeSearch(true);
+  }
+}
+
+/* ---------- 获取当前活动检查单 ---------- */
+function getActiveChecklist(){
+  const id = Store.state.activeChecklistId;
+  if(!id) return null;
+  return Store.state.checklists.find(c=>c.id===id) || null;
+}
+
+/* ---------- 主页面渲染 ---------- */
+let currentHomeView = 'list'; // list | empty | alldone
+
+function renderHome(){
+  const container = $('#listContainer');
+  const resetFab = $('#btnResetList');
+  const cl = getActiveChecklist();
+
+  // 清空
+  container.innerHTML='';
+
+  if(!cl){
+    // 无检查单 - 自动跳到新建页面，不显示空状态
+    resetFab.classList.remove('visible');
+    if(currentPage==='home'){
+      openForm(null);
+    }
+    return;
+  }
+
+  const pendingItems = cl.items.filter(i=>!i.done);
+  if(cl.items.length===0 || pendingItems.length===0){
+    // 全部完成 - 显示重置 FAB
+    showHomeView('alldone');
+    resetFab.classList.add('visible');
+    return;
+  }
+
+  showHomeView('list');
+  resetFab.classList.remove('visible');
+
+  const settings = Store.state.settings;
+  // FLIP：记录旧位置
+  const oldRects = new Map();
+  $$('.check-item', container).forEach(node=>{
+    oldRects.set(node.dataset.id, node.getBoundingClientRect());
+  });
+
+  // 渲染待办项
+  pendingItems.forEach((item, idx)=>{
+    const isFirst = idx===0;
+    const useCustom = isFirst || !settings.firstOnly;
+    const height = useCustom? settings.itemHeight : 64;
+    const iconName = resolveIcon(item.icon, item.text);
+
+    const node = el('div', {class:'check-item', dataset:{id:item.id}});
+    node.style.height = height+'px';
+
+    const iconEl = el('span', {class:'icon ci-icon'}, iconName);
+    const textEl = el('div', {class:'ci-text'}, item.text);
+    const checkBtn = el('button', {class:'ci-check', 'aria-label':t('confirm'), onclick:(e)=>{
+      e.stopPropagation();
+      completeItem(cl.id, item.id);
+    }});
+    checkBtn.appendChild(el('span', {class:'icon ci-check-icon'}, 'check'));
+    // 附加水滴效果
+    attachRipple(checkBtn);
+
+    node.appendChild(iconEl);
+    node.appendChild(textEl);
+    node.appendChild(checkBtn);
+    container.appendChild(node);
+  });
+
+  // FLIP 补位动画
+  requestAnimationFrame(()=>{
+    $$('.check-item', container).forEach(node=>{
+      const old = oldRects.get(node.dataset.id);
+      if(old){
+        const neW = node.getBoundingClientRect();
+        const dy = old.top - neW.top;
+        if(Math.abs(dy)>1){
+          node.style.transform = `translateY(${dy}px)`;
+          node.style.transition='none';
+          requestAnimationFrame(()=>{
+            node.style.transition='';
+            node.style.transform='';
+          });
+        }
+      }
+    });
+  });
+}
+
+function showHomeView(view){
+  const container = $('#listContainer');
+  // 若视图类型相同，仅更新文本（用于语言切换时刷新文案）
+  if(view===currentHomeView){
+    if(view==='alldone'){
+      const dt = $('#allDoneView .done-title'), ds = $('#allDoneView .done-sub');
+      if(dt) dt.textContent = t('all_done_title');
+      if(ds) ds.textContent = t('all_done_sub');
+    }
+    return;
+  }
+  currentHomeView = view;
+
+  // 移除旧的完成视图
+  const oldDone = $('#allDoneView');
+  if(oldDone){ oldDone.classList.remove('show'); setTimeout(()=>oldDone.remove(), 400); }
+
+  if(view==='alldone'){
+    const v = el('div', {class:'all-done', id:'allDoneView'});
+    v.appendChild(el('span', {class:'icon big-icon'}, 'coffee'));
+    v.appendChild(el('div', {class:'done-title'}, t('all_done_title')));
+    v.appendChild(el('div', {class:'done-sub'}, t('all_done_sub')));
+    $('#listScroll').appendChild(v);
+    requestAnimationFrame(()=>v.classList.add('show'));
+  }
+}
+
+/* ---------- 完成检查项（带动画） ----------
+   彻底重写：直接操作 DOM，不重新渲染整个列表。
+   流程：1.勾选填充 → 2.右滑淡出+高度收缩 → 3.移除节点 → 4.新的第一项布局过渡
+   这样下方项会随高度收缩自然上移，无需 FLIP，不会瞬移。 */
+function completeItem(clId, itemId){
+  const cl = Store.state.checklists.find(c=>c.id===clId);
+  if(!cl) return;
+  const item = cl.items.find(i=>i.id===itemId);
+  if(!item) return;
+
+  const node = $(`.check-item[data-id="${itemId}"]`);
+  if(node){
+    // 1. 勾选填充动画（200ms）
+    node.classList.add('completed');
+    setTimeout(()=>{
+      // 2. 移除动画：右滑淡出 + 高度收缩（CSS transition 自然带动下方项上移）
+      node.classList.add('removing');
+      // 3. 等待移除动画完成
+      setTimeout(()=>{
+        // 更新数据
+        item.done = true;
+        const allDone = cl.items.every(i=>i.done);
+        if(allDone) cl.completedAt = Date.now();
+        Store.save();
+        // 从 DOM 移除已完成节点
+        node.remove();
+        renderBottombar();
+        checkAutoReset();
+        // 4. 如果还有待办项，新的第一项高度可能需要更新
+        const pendingItems = cl.items.filter(i=>!i.done);
+        if(pendingItems.length === 0){
+          // 全部完成：显示咖啡态
+          showHomeView('alldone');
+          $('#btnResetList').classList.add('visible');
+        }else{
+          // 更新新的第一项的高度
+          updateFirstItemHeight();
+        }
+      }, 400);
+    }, 200);
+  }else{
+    item.done = true;
+    const allDone = cl.items.every(i=>i.done);
+    if(allDone) cl.completedAt = Date.now();
+    Store.save();
+    renderHome();
+    renderBottombar();
+  }
+}
+
+/* 更新第一项的高度（firstOnly 模式下，新的第一项使用自定义高度） */
+function updateFirstItemHeight(){
+  const settings = Store.state.settings;
+  const container = $('#listContainer');
+  const firstNode = container.querySelector('.check-item');
+  if(!firstNode) return;
+  firstNode.style.height = settings.itemHeight + 'px';
+}
+
+
+/* ---------- 重置检查单 ---------- */
+function resetChecklist(clId){
+  const cl = Store.state.checklists.find(c=>c.id===clId);
+  if(!cl) return;
+  cl.items.forEach(i=>i.done=false);
+  cl.completedAt = null;
+  Store.save();
+  renderHome();
+  renderBottombar();
+  showToast(t('reset_toast'));
+}
+
+/* ---------- 自动重置检查 ---------- */
+function checkAutoReset(){
+  const now = Date.now();
+  let changed = false;
+  Store.state.checklists.forEach(cl=>{
+    if(cl.completedAt && cl.resetHours && cl.resetHours>0){
+      const elapsed = (now - cl.completedAt)/3600000;
+      if(elapsed >= cl.resetHours){
+        cl.items.forEach(i=>i.done=false);
+        cl.completedAt = null;
+        changed = true;
+      }
+    }
+  });
+  if(changed){ Store.save(); renderHome(); renderBottombar(); }
+}
+// 每分钟检查一次自动重置
+setInterval(checkAutoReset, 60000);
+
+/* ---------- 底栏渲染 ---------- */
+function renderBottombar(newTabId){
+  const scroll = $('#bottombarScroll');
+  scroll.innerHTML='';
+
+  // 检查单标签 —— 仅在主页且为当前活动检查单时高亮
+  Store.state.checklists.forEach(cl=>{
+    const active = currentPage==='home' && cl.id===Store.state.activeChecklistId;
+    const iconName = resolveIcon(cl.icon, cl.name);
+    // 新增的标签应用入场动画
+    const isNew = cl.id===newTabId;
+    const tab = el('button', {class:'nav-tab'+(active?' is-active':'')+(isNew?' tab-enter':''), dataset:{id:cl.id}, onclick:()=>switchChecklist(cl.id)});
+    const pill = el('div', {class:'tab-icon-pill'}, el('span', {class:'icon'}, iconName));
+    attachRipple(pill);
+    const label = el('div', {class:'tab-label'}, cl.name || t('checklist'));
+    tab.appendChild(pill);
+    tab.appendChild(label);
+    scroll.appendChild(tab);
+    // 动画结束后移除入场类
+    if(isNew){
+      tab.addEventListener('animationend', ()=>tab.classList.remove('tab-enter'), {once:true});
+    }
+  });
+
+  // 新建标签 —— 在表单页（新建模式）时高亮
+  const newTabActive = currentPage==='form' && !Store.state._editing;
+  const newTab = el('button', {class:'nav-tab'+(newTabActive?' is-active':''), id:'newTab', onclick:()=>openForm(null)});
+  const newPill = el('div', {class:'tab-icon-pill'}, el('span', {class:'icon'}, 'add'));
+  attachRipple(newPill);
+  newTab.appendChild(newPill);
+  newTab.appendChild(el('div', {class:'tab-label'}, t('new_tab')));
+  scroll.appendChild(newTab);
+
+  // 滚动到活动标签
+  setTimeout(()=>{
+    const active = $('.nav-tab.is-active', scroll);
+    if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  }, 50);
+}
+
+function switchChecklist(clId){
+  // 判断切换方向（基于底栏标签顺序）
+  const oldId = Store.state.activeChecklistId;
+  const lists = Store.state.checklists;
+  const oldIdx = lists.findIndex(c=>c.id===oldId);
+  const newIdx = lists.findIndex(c=>c.id===clId);
+  const goRight = newIdx > oldIdx;
+
+  Store.set({activeChecklistId:clId});
+  if(currentPage!=='home'){
+    switchPage('home');
+  }
+  renderTopbar('home');
+  renderBottombar();
+  closeSearch(true);
+
+  // 丝滑左右滑动切换：旧内容滑出 → 渲染新内容 → 新内容滑入
+  const container = $('#listContainer');
+  if(container && oldId !== clId){
+    const dir = goRight ? -1 : 1;  // 滑出方向
+    const enterDir = goRight ? 1 : -1;  // 滑入方向
+    // 1. 旧内容滑出（加速曲线，150ms）
+    container.style.transition = 'transform 150ms cubic-bezier(.3,0,.8,.15), opacity 120ms cubic-bezier(.3,0,.8,.15)';
+    container.style.transform = `translateX(${dir*40}px)`;
+    container.style.opacity = '0';
+    setTimeout(()=>{
+      // 2. 渲染新内容
+      renderHome();
+      // 3. 新内容从反方向无过渡地定位
+      container.style.transition = 'none';
+      container.style.transform = `translateX(${enterDir*40}px)`;
+      container.style.opacity = '0';
+      // 4. 下一帧滑入（减速曲线，丝滑）
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        container.style.transition = 'transform 300ms cubic-bezier(.05,.7,.1,1), opacity 250ms cubic-bezier(.05,.7,.1,1)';
+        container.style.transform = 'translateX(0)';
+        container.style.opacity = '1';
+        // 过渡结束后清理 inline 样式
+        setTimeout(()=>{
+          container.style.transition = '';
+          container.style.transform = '';
+          container.style.opacity = '';
+        }, 320);
+      }));
+    }, 150);
+  }else{
+    renderHome();
+  }
+}
+
+/* ---------- 新建/编辑表单 ---------- */
+let formState = {name:'', icon:'auto', resetHours:0, items:[{id:uid(), text:'', icon:'auto'}]};
+
+function openForm(checklistId){
+  // checklistId 为 null 表示新建
+  Store.state._editing = checklistId;
+  if(checklistId){
+    const cl = Store.state.checklists.find(c=>c.id===checklistId);
+    formState = {
+      name:cl.name,
+      icon:cl.icon||'auto',
+      resetHours:cl.resetHours||0,
+      items: cl.items.map(i=>({id:i.id, text:i.text, icon:i.icon||'auto', done:i.done}))
+    };
+  }else{
+    formState = {name:'', icon:'auto', resetHours:0, items:[{id:uid(), text:'', icon:'auto'}]};
+  }
+  renderForm();
+  switchPage('form');
+  renderTopbar('form');
+  renderBottombar(); // 更新底栏高亮（新建按钮高亮）
+}
+
+/* 渲染检查单图标选择行（6常用 + 预览/更多） */
+const CHECKLIST_COMMON_ICONS = ['checklist','home','work','school','shopping_bag','directions_car'];
+function renderChecklistIconRow(){
+  const row = el('div', {class:'icon-circle-row', id:'checklistIconRow'});
+  // 计算当前实际显示的图标
+  const isAuto = formState.icon==='auto';
+  const autoIcon = autoIconFor(formState.name);
+  const curIcon = isAuto ? autoIcon : formState.icon;
+  // 判断自动图标是否在常用列表中
+  const autoInCommon = CHECKLIST_COMMON_ICONS.includes(autoIcon);
+
+  CHECKLIST_COMMON_ICONS.forEach(ic=>{
+    // 选中状态：手动选了该图标，或 auto 模式下该图标恰好是自动图标
+    const sel = (!isAuto && formState.icon===ic) || (isAuto && autoInCommon && ic===autoIcon);
+    const btn = el('button', {class:'icon-circle-btn'+(sel?' selected':''), onclick:()=>{
+      // 点击已选中的图标时取消选择（回到 auto）；否则选择该图标
+      if(formState.icon===ic){
+        formState.icon = 'auto';
+      }else{
+        formState.icon = ic;
+      }
+      refreshChecklistIconRow();
+    }});
+    btn.appendChild(el('span', {class:'icon'}, ic));
+    attachRipple(btn);
+    row.appendChild(btn);
+  });
+  // 更多按钮：打开完整图标选择弹窗
+  const moreBtn = el('button', {class:'icon-circle-btn', onclick:()=>openIconPicker('checklist')});
+  moreBtn.appendChild(el('span', {class:'icon'}, 'more_horiz'));
+  attachRipple(moreBtn);
+  row.appendChild(moreBtn);
+  // 如果 auto 模式且自动图标不在常用列表中，在更多按钮前插入高亮预览按钮
+  if(isAuto && !autoInCommon){
+    const previewBtn = el('button', {class:'icon-circle-btn selected preview-btn', onclick:()=>openIconPicker('checklist')});
+    previewBtn.appendChild(el('span', {class:'icon'}, autoIcon));
+    attachRipple(previewBtn);
+    row.insertBefore(previewBtn, moreBtn);
+  }
+  // 如果手动选了非常用图标，也显示预览按钮
+  if(!isAuto && !CHECKLIST_COMMON_ICONS.includes(formState.icon)){
+    const previewBtn = el('button', {class:'icon-circle-btn selected preview-btn', onclick:()=>{
+      // 点击预览按钮取消选择（回到 auto）
+      formState.icon = 'auto';
+      refreshChecklistIconRow();
+    }});
+    previewBtn.appendChild(el('span', {class:'icon'}, formState.icon));
+    attachRipple(previewBtn);
+    row.insertBefore(previewBtn, moreBtn);
+  }
+  return row;
+}
+/* 刷新检查单图标行（不重新渲染整个表单，保持输入焦点） */
+function refreshChecklistIconRow(){
+  const oldRow = $('#checklistIconRow');
+  if(!oldRow) return;
+  const newRow = renderChecklistIconRow();
+  oldRow.replaceWith(newRow);
+}
+
+function renderForm(){
+  const content = $('#formContent');
+  const editing = Store.state._editing;
+
+  content.innerHTML='';
+  // 表单内容区 + 底部按钮区（按钮跟随滚动）
+  const formBody = el('div', {class:'form-body'});
+
+  // 检查单图标选择 —— 7个圆按钮（6常用图标 + 更多按钮）
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('checklist_icon')),
+    renderChecklistIconRow()
+  ]));
+
+  // 名称输入
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('checklist_name')),
+    el('div', {class:'text-field'}, [
+      (()=>{
+        const input = el('input', {type:'text', value:formState.name, placeholder:t('checklist_name')});
+        input.addEventListener('input', e=>{
+          formState.name = e.target.value;
+          // 若检查单图标为自动，即时更新图标行预览（不重新渲染整个表单，保持焦点）
+          if(formState.icon==='auto'){
+            refreshChecklistIconRow();
+          }
+        });
+        return input;
+      })()
+    ])
+  ]));
+
+  // 重置时间 —— 下拉菜单选择（需求3）
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('reset_time')),
+    (()=>{
+      const dd = el('div', {class:'dropdown form-dropdown'});
+      const header = el('div', {class:'dropdown-header clickable', onclick:()=>{
+        const willOpen = !dd.classList.contains('open');
+        const body = dd.querySelector('.dropdown-body');
+        if(willOpen){
+          dd.classList.add('open');
+          body.style.maxHeight = body.scrollHeight + 'px';
+        }else{
+          body.style.maxHeight = body.scrollHeight + 'px';
+          void body.offsetHeight;
+          body.style.maxHeight = '0px';
+          dd.classList.remove('open');
+        }
+      }});
+      const curText = formState.resetHours>0 ? `${formState.resetHours} ${t('hours')}` : t('never_reset');
+      header.appendChild(el('span', {class:'icon dh-icon'}, 'schedule'));
+      header.appendChild(el('span', {class:'dh-title'}, curText));
+      header.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+      attachRipple(header);
+      dd.appendChild(header);
+      const body = el('div', {class:'dropdown-body'});
+      const inner = el('div', {class:'dropdown-body-inner'});
+      const options = [0,1,2,4,6,8,12,24,48,72];
+      options.forEach(h=>{
+        const sel = formState.resetHours===h;
+        const opt = el('div', {class:'lang-item'+(sel?' selected':''), onclick:()=>{
+          formState.resetHours=h;
+          // 先播放收起动画，再重新渲染表单
+          const bodyEl = dd.querySelector('.dropdown-body');
+          bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+          void bodyEl.offsetHeight;
+          bodyEl.style.maxHeight = '0px';
+          dd.classList.remove('open');
+          // 更新 header 文本（即时反馈）
+          header.querySelector('.dh-title').textContent = h===0 ? t('never_reset') : `${h} ${t('hours')}`;
+          // 收起动画结束后重新渲染（更新选项选中状态）
+          setTimeout(()=>renderForm(), 400);
+        }});
+        opt.appendChild(el('span', {class:'icon si-icon', style:sel?'color:var(--md-primary)':''}, sel?'check':'schedule'));
+        opt.appendChild(el('div', {class:'si-text'}, el('div', {class:'si-title'}, h===0? t('never_reset') : `${h} ${t('hours')}`)));
+        inner.appendChild(opt);
+      });
+      body.appendChild(inner);
+      dd.appendChild(body);
+      return dd;
+    })()
+  ]));
+
+  // 检查项
+  formBody.appendChild(el('div', {class:'form-section'}, [
+    el('label', {class:'form-label'}, t('add_check_item')),
+    (()=>{
+      const wrap = el('div', {id:'formItemsWrap'});
+      renderFormItems(wrap);
+      return wrap;
+    })()
+  ]));
+
+  content.appendChild(formBody);
+
+  // 按钮 —— 嵌入 formContent 末尾，跟随滚动（需求13）
+  const actions = el('div', {class:'form-actions', id:'formActions'});
+  if(editing){
+    actions.appendChild(el('button', {class:'btn btn-large btn-error', id:'btnDelete', onclick:handleDelete}, [
+      el('span', {class:'icon'}, 'delete'), t('delete_checklist')
+    ]));
+    actions.appendChild(el('button', {class:'btn btn-large', onclick:handleSave}, [
+      el('span', {class:'icon'}, 'save'), t('save_changes')
+    ]));
+  }else{
+    actions.appendChild(el('button', {class:'btn btn-large', onclick:handleConfirm}, [
+      el('span', {class:'icon'}, 'check'), t('confirm')
+    ]));
+  }
+  content.appendChild(actions);
+}
+
+function renderFormItems(wrap){
+  wrap.innerHTML='';
+  // 确保最后总有一个空行供继续输入
+  const last = formState.items[formState.items.length-1];
+  if(!last || last.text.trim()) {
+    formState.items.push({id:uid(), text:'', icon:'auto'});
+  }
+  formState.items.forEach((item, idx)=>{
+    const hasContent = item.text.trim().length>0;
+    const fi = el('div', {class:'form-item'+(hasContent?' has-content':''), dataset:{id:item.id}});
+    // 图标按钮
+    const iconBtn = el('button', {class:'fi-icon-btn'+(item.icon!=='auto'?' has-icon':''), onclick:()=>openIconPicker('item', item.id)});
+    iconBtn.appendChild(el('span', {class:'icon'}, item.icon==='auto'? (hasContent?autoIconFor(item.text):'add_circle') : resolveIcon(item.icon, item.text)));
+    attachRipple(iconBtn);
+    fi.appendChild(iconBtn);
+    // 输入框
+    const tf = el('div', {class:'text-field fi-input'});
+    const input = el('input', {type:'text', value:item.text, placeholder:t('check_item_placeholder')});
+    // 记录当前聚焦元素，避免重新渲染时丢失焦点（需求4）
+    const focusedId = document.activeElement && document.activeElement.tagName==='INPUT' ? document.activeElement.closest('.form-item')?.dataset?.id : null;
+    input.addEventListener('input', e=>{
+      item.text = e.target.value;
+      const hc = item.text.trim().length>0;
+      fi.classList.toggle('has-content', hc);
+      // 自动图标预览更新
+      if(item.icon==='auto'){
+        iconBtn.querySelector('.icon').textContent = hc? autoIconFor(item.text) : 'add_circle';
+      }
+      // 若是最后一条且有内容，新增一条空行（不抢焦点，不重新渲染当前行）
+      if(idx===formState.items.length-1 && hc){
+        const newId = uid();
+        formState.items.push({id:newId, text:'', icon:'auto'});
+        // 仅追加新行，不重新渲染所有行，保持当前焦点
+        appendFormItem(wrap, newId);
+      }
+    });
+    tf.appendChild(input);
+    fi.appendChild(tf);
+    // 删除按钮
+    const rmBtn = el('button', {class:'fi-remove', onclick:()=>{
+      if(formState.items.length<=1){
+        // 仅清空
+        item.text=''; item.icon='auto';
+        renderFormItems(wrap);
+        return;
+      }
+      fi.classList.add('removing');
+      setTimeout(()=>{
+        formState.items = formState.items.filter(i=>i.id!==item.id);
+        renderFormItems(wrap);
+      }, 250);
+    }});
+    rmBtn.appendChild(el('span', {class:'icon'}, 'close'));
+    fi.appendChild(rmBtn);
+    wrap.appendChild(fi);
+    // 恢复焦点
+    if(focusedId===item.id){
+      requestAnimationFrame(()=>input.focus());
+      // 将光标放到末尾
+      const len = input.value.length;
+      requestAnimationFrame(()=>{ input.setSelectionRange(len,len); });
+    }
+  });
+}
+
+/* 追加单个表单项（不重新渲染全部，避免抢焦点） */
+function appendFormItem(wrap, itemId){
+  const item = formState.items.find(i=>i.id===itemId);
+  if(!item) return;
+  const fi = el('div', {class:'form-item', dataset:{id:item.id}});
+  const iconBtn = el('button', {class:'fi-icon-btn', onclick:()=>openIconPicker('item', item.id)});
+  iconBtn.appendChild(el('span', {class:'icon'}, 'add_circle'));
+  attachRipple(iconBtn);
+  fi.appendChild(iconBtn);
+  const tf = el('div', {class:'text-field fi-input'});
+  const input = el('input', {type:'text', value:item.text, placeholder:t('check_item_placeholder')});
+  input.addEventListener('input', e=>{
+    item.text = e.target.value;
+    const hc = item.text.trim().length>0;
+    fi.classList.toggle('has-content', hc);
+    if(item.icon==='auto'){
+      iconBtn.querySelector('.icon').textContent = hc? autoIconFor(item.text) : 'add_circle';
+    }
+    if(item.id===formState.items[formState.items.length-1].id && hc){
+      const newId = uid();
+      formState.items.push({id:newId, text:'', icon:'auto'});
+      appendFormItem(wrap, newId);
+    }
+  });
+  tf.appendChild(input);
+  fi.appendChild(tf);
+  const rmBtn = el('button', {class:'fi-remove', onclick:()=>{
+    if(formState.items.length<=1){ item.text=''; item.icon='auto'; renderFormItems(wrap); return; }
+    fi.classList.add('removing');
+    setTimeout(()=>{ formState.items = formState.items.filter(i=>i.id!==item.id); renderFormItems(wrap); }, 250);
+  }});
+  rmBtn.appendChild(el('span', {class:'icon'}, 'close'));
+  fi.appendChild(rmBtn);
+  wrap.appendChild(fi);
+}
+
+function handleConfirm(){
+  const name = formState.name.trim();
+  if(!name){
+    showToast(t('enter_checklist_name'));
+    return;
+  }
+  const items = formState.items.filter(i=>i.text.trim()).map(i=>({id:i.id, text:i.text.trim(), icon:i.icon, done:false}));
+  if(items.length===0){
+    showToast(t('enter_check_item'));
+    return;
+  }
+  const newCl = {
+    id:uid(), name, icon:formState.icon, resetHours:formState.resetHours,
+    items, completedAt:null, createdAt:Date.now()
+  };
+  Store.state.checklists.push(newCl);
+  Store.state.activeChecklistId = newCl.id;
+  Store.state._editing = null;
+  Store.save(); Store.emit();
+  switchPage('home');
+  renderTopbar('home');
+  renderHome();
+  renderBottombar(newCl.id);
+  showToast(t('added_toast'));
+}
+
+function handleSave(){
+  const editing = Store.state._editing;
+  const cl = Store.state.checklists.find(c=>c.id===editing);
+  if(!cl) return;
+  const name = formState.name.trim();
+  if(!name){ showToast(t('enter_checklist_name')); return; }
+  const items = formState.items.filter(i=>i.text.trim()).map(i=>{
+    const old = cl.items.find(o=>o.id===i.id);
+    return {id:i.id, text:i.text.trim(), icon:i.icon, done: old? old.done : false};
+  });
+  if(items.length===0){ showToast(t('enter_check_item')); return; }
+  cl.name = name;
+  cl.icon = formState.icon;
+  cl.resetHours = formState.resetHours;
+  cl.items = items;
+  // 检查是否仍全部完成
+  const allDone = cl.items.every(i=>i.done);
+  cl.completedAt = allDone? (cl.completedAt||Date.now()) : null;
+  Store.state._editing = null;
+  Store.save(); Store.emit();
+  switchPage('home');
+  renderTopbar('home');
+  renderHome();
+  renderBottombar();
+  showToast(t('saved_toast'));
+}
+
+let deleteConfirmTimer = null;
+function handleDelete(){
+  const btn = $('#btnDelete');
+  if(!btn) return;
+  if(!btn.dataset.armed){
+    btn.dataset.armed='1';
+    btn.textContent='';
+    btn.appendChild(el('span', {class:'icon'}, 'warning'));
+    btn.appendChild(document.createTextNode(t('delete')));
+    showToast(t('delete_confirm_body'));
+    deleteConfirmTimer = setTimeout(()=>{
+      btn.removeAttribute('data-armed');
+      btn.textContent='';
+      btn.appendChild(el('span', {class:'icon'}, 'delete'));
+      btn.appendChild(document.createTextNode(t('delete')));
+    }, 3000);
+  }else{
+    clearTimeout(deleteConfirmTimer);
+    const editing = Store.state._editing;
+    // 先播放底栏标签移除动画
+    const removingTab = $(`.nav-tab[data-id="${editing}"]`);
+    const finishDelete = ()=>{
+      Store.state.checklists = Store.state.checklists.filter(c=>c.id!==editing);
+      // 选第一个检查单或 null
+      Store.state.activeChecklistId = Store.state.checklists[0]? Store.state.checklists[0].id : null;
+      Store.state._editing = null;
+      Store.save(); Store.emit();
+      renderBottombar();
+      showToast(t('deleted_toast'));
+      if(Store.state.checklists.length === 0){
+        // 没有检查单了，直接跳到新建页面
+        openForm(null);
+      }else{
+        switchPage('home');
+        renderTopbar('home');
+        renderHome();
+      }
+    };
+    if(removingTab){
+      let done = false;
+      const finishOnce = ()=>{
+        if(done) return; done = true;
+        finishDelete();
+      };
+      removingTab.classList.add('tab-leave');
+      removingTab.addEventListener('animationend', finishOnce, {once:true});
+      // 兜底：若动画事件未触发，450ms 后强制完成
+      setTimeout(finishOnce, 450);
+    }else{
+      finishDelete();
+    }
+  }
+}
+
+/* ---------- 设置页面 ---------- */
+function renderSettings(){
+  const content = $('#settingsContent');
+  const s = Store.state.settings;
+  content.innerHTML='';
+
+  // 主题
+  content.appendChild(el('div', {class:'section-title'}, t('settings_theme')));
+  const themeGroup = el('div', {class:'settings-group'});
+  // 跟随系统
+  const followItem = el('div', {class:'settings-item'});
+  followItem.appendChild(el('span', {class:'icon si-icon'}, 'brightness_auto'));
+  followItem.appendChild(el('div', {class:'si-text'}, [el('div',{class:'si-title'}, t('settings_follow_system'))]));
+  const followSwitch = el('div', {class:'switch'+(s.theme==='auto'?' on':''), onclick:()=>{
+    s.theme = s.theme==='auto'? 'light' : 'auto';
+    Store.save(); applyTheme(); renderSettings();
+  }});
+  followSwitch.appendChild(el('div', {class:'switch-thumb'}));
+  followItem.appendChild(followSwitch);
+  themeGroup.appendChild(followItem);
+  // 浅/深色选择（跟随系统时禁用）
+  const modeDisabled = s.theme==='auto';
+  const modeRow = el('div', {class:'seg-buttons'+(modeDisabled?' disabled':'')});
+  ['light','dark'].forEach(mode=>{
+    const sel = s.theme===mode;
+    const btn = el('button', {class:'seg-btn'+(sel?' selected':'')+(modeDisabled?' disabled':''), disabled:modeDisabled, onclick:()=>{
+      if(modeDisabled) return;
+      s.theme = mode; Store.save(); applyTheme(); renderSettings();
+    }}, [
+      el('span', {class:'icon'}, mode==='light'?'light_mode':'dark_mode'),
+      mode==='light'? t('settings_light') : t('settings_dark')
+    ]);
+    modeRow.appendChild(btn);
+  });
+  themeGroup.appendChild(modeRow);
+  content.appendChild(themeGroup);
+
+  // 检查项高度
+  content.appendChild(el('div', {class:'section-title'}, t('settings_item_height')));
+  const heightGroup = el('div', {class:'settings-group'});
+  const heightItem = el('div', {class:'settings-item'});
+  heightItem.appendChild(el('span', {class:'icon si-icon'}, 'format_line_spacing'));
+  heightItem.appendChild(el('div', {class:'si-text'}, [
+    el('div', {class:'si-title'}, t('settings_item_height')),
+    el('div', {class:'si-sub'}, `${s.itemHeight}px · ${t('settings_item_height_sub')}`)
+  ]));
+  heightGroup.appendChild(heightItem);
+  const sliderWrap = el('div', {class:'slider-wrap'});
+  const slider = el('div', {class:'slider'});
+  const range = el('input', {type:'range', min:ITEM_HEIGHT_MIN, max:ITEM_HEIGHT_MAX, value:s.itemHeight});
+  // 初始化 active track 百分比
+  const updateSliderPct = ()=>{
+    const pct = ((s.itemHeight - ITEM_HEIGHT_MIN)/(ITEM_HEIGHT_MAX - ITEM_HEIGHT_MIN))*100;
+    range.style.setProperty('--slider-pct', pct+'%');
+  };
+  updateSliderPct();
+  range.addEventListener('input', e=>{
+    s.itemHeight = parseInt(e.target.value);
+    Store.save();
+    updateSliderPct();
+    // 实时更新显示
+    heightItem.querySelector('.si-sub').textContent = `${s.itemHeight}px · ${t('settings_item_height_sub')}`;
+    $('#sliderValue').textContent = s.itemHeight+'px';
+    renderHome();
+  });
+  slider.appendChild(range);
+  sliderWrap.appendChild(slider);
+  sliderWrap.appendChild(el('div', {class:'slider-value', id:'sliderValue'}, s.itemHeight+'px'));
+  heightGroup.appendChild(sliderWrap);
+  // 仅首条
+  const firstOnlyItem = el('div', {class:'settings-item'});
+  firstOnlyItem.appendChild(el('span', {class:'icon si-icon'}, 'looks_one'));
+  firstOnlyItem.appendChild(el('div', {class:'si-text'}, [
+    el('div', {class:'si-title'}, t('settings_first_only')),
+    el('div', {class:'si-sub'}, t('settings_first_only_sub'))
+  ]));
+  const foSwitch = el('div', {class:'switch'+(s.firstOnly?' on':''), onclick:()=>{
+    s.firstOnly = !s.firstOnly; Store.save(); renderSettings(); renderHome();
+  }});
+  foSwitch.appendChild(el('div', {class:'switch-thumb'}));
+  firstOnlyItem.appendChild(foSwitch);
+  heightGroup.appendChild(firstOnlyItem);
+  content.appendChild(heightGroup);
+
+  // 语言
+  content.appendChild(el('div', {class:'section-title'}, t('settings_language')));
+  const langGroup = el('div', {class:'settings-group'});
+  const langItem = el('div', {class:'settings-item'});
+  langItem.appendChild(el('span', {class:'icon si-icon'}, 'language'));
+  const sel = LANGUAGES.find(l=>l.code===s.language) || LANGUAGES[0];
+  // auto 模式下显示本地化的"跟随系统"，而非混合文本
+  const displayLang = s.language==='auto' ? t('follow_system') : sel.nativeName;
+  langItem.appendChild(el('div', {class:'si-text'}, [
+    el('div', {class:'si-title'}, t('settings_language')),
+    el('div', {class:'si-sub'}, displayLang)
+  ]));
+  langItem.appendChild(el('span', {class:'icon si-icon'}, 'chevron_right'));
+  langItem.style.cursor='pointer';
+  langItem.addEventListener('click', ()=>openLanguageMenu());
+  langGroup.appendChild(langItem);
+  content.appendChild(langGroup);
+
+  // 关于
+  content.appendChild(el('div', {class:'section-title'}, t('settings_about')));
+  // 应用图标与名称
+  const about = el('div', {class:'about-section'});
+  const iconWrap = el('div', {class:'about-icon'});
+  const img = el('img', {src:EMBEDDED_ICON_PNG, alt:'icon'});
+  iconWrap.appendChild(img);
+  about.appendChild(iconWrap);
+  about.appendChild(el('div', {class:'about-name'}, t('app_name')));
+  about.appendChild(el('div', {class:'about-version'}, APP_VERSION));
+  // Create with ❤️ by Crazy Sue
+  const credit = el('div', {class:'about-credit'});
+  credit.appendChild(document.createTextNode(t('created_by')));
+  const link = el('a', {href:'#'}, 'Crazy Sue');
+  link.addEventListener('click', e=>{
+    e.preventDefault();
+    window.open(APP_AUTHOR_URL, '_blank', 'noopener');
+  });
+  credit.appendChild(link);
+  about.appendChild(credit);
+  about.appendChild(el('div', {class:'about-glm'}, t('made_by')));
+  content.appendChild(about);
+
+  // MIT 许可下拉
+  const mitDd = el('div', {class:'dropdown', id:'mitDropdown'});
+  const mitHeader = el('div', {class:'dropdown-header clickable', onclick:()=>{
+    const willOpen = !mitDd.classList.contains('open');
+    const body = mitDd.querySelector('.dropdown-body');
+    if(willOpen){
+      // 先展开：设为内容高度以触发过渡
+      mitDd.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }else{
+      // 收起：先设回当前高度（覆盖 none），再强制重排，再设 0 触发过渡
+      body.style.maxHeight = body.scrollHeight + 'px';
+      void body.offsetHeight;
+      body.style.maxHeight = '0px';
+      mitDd.classList.remove('open');
+    }
+  }});
+  mitHeader.appendChild(el('span', {class:'icon dh-icon'}, 'description'));
+  mitHeader.appendChild(el('span', {class:'dh-title'}, t('mit_license_title')));
+  mitHeader.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+  mitDd.appendChild(mitHeader);
+  const mitBody = el('div', {class:'dropdown-body'});
+  mitBody.appendChild(el('div', {class:'dropdown-body-inner'}, el('div', {class:'license-text'}, MIT_LICENSE_TEXT)));
+  mitDd.appendChild(mitBody);
+  content.appendChild(mitDd);
+
+  // OSS 许可下拉
+  const ossDd = el('div', {class:'dropdown', id:'ossDropdown'});
+  const ossHeader = el('div', {class:'dropdown-header clickable', onclick:()=>{
+    const willOpen = !ossDd.classList.contains('open');
+    const body = ossDd.querySelector('.dropdown-body');
+    if(willOpen){
+      ossDd.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }else{
+      body.style.maxHeight = body.scrollHeight + 'px';
+      void body.offsetHeight;
+      body.style.maxHeight = '0px';
+      ossDd.classList.remove('open');
+    }
+  }});
+  ossHeader.appendChild(el('span', {class:'icon dh-icon'}, 'gavel'));
+  ossHeader.appendChild(el('span', {class:'dh-title'}, t('oss_license_title')));
+  ossHeader.appendChild(el('span', {class:'icon dh-arrow'}, 'expand_more'));
+  ossDd.appendChild(ossHeader);
+  const ossBody = el('div', {class:'dropdown-body'});
+  const ossInner = el('div', {class:'dropdown-body-inner'});
+  OSS_LICENSES.forEach(l=>{
+    const item = el('div', {class:'license-item'});
+    item.appendChild(el('div', {class:'li-name'}, l.name));
+    item.appendChild(el('div', {class:'li-license'}, l.license));
+    item.appendChild(el('div', {class:'license-text'}, l.text));
+    ossInner.appendChild(item);
+  });
+  ossBody.appendChild(ossInner);
+  ossDd.appendChild(ossBody);
+  content.appendChild(ossDd);
+}
+
+/* 语言选择菜单（用对话框） */
+function openLanguageMenu(){
+  const title = $('#langModalTitle');
+  const body = $('#langModalBody');
+  title.textContent = t('settings_language');
+  body.innerHTML='';
+  const list = el('div', {style:'display:flex;flex-direction:column;gap:4px;'});
+  LANGUAGES.forEach(l=>{
+    const sel = Store.state.settings.language===l.code;
+    const displayName = l.code==='auto' ? t('follow_system') : l.nativeName;
+    const item = el('div', {class:'lang-item'+(sel?' selected':''), onclick:()=>{
+      Store.state.settings.language = l.code;
+      Store.save();
+      closeLangModal();
+      updateStaticLabels();
+      renderSettings();
+      renderTopbar('settings');
+      renderBottombar();
+      renderHome();
+    }});
+    item.appendChild(el('span', {class:'icon si-icon', style:sel?'color:var(--md-primary)':''}, sel?'check':'language'));
+    item.appendChild(el('div', {class:'si-text'}, el('div', {class:'si-title'}, displayName)));
+    list.appendChild(item);
+  });
+  body.appendChild(list);
+  $('#langModalCancel').textContent = t('cancel');
+  openLangModal();
+}
+function openLangModal(){
+  $('#langScrim').classList.add('visible');
+  $('#langModal').classList.add('visible');
+}
+function closeLangModal(){
+  $('#langScrim').classList.remove('visible');
+  $('#langModal').classList.remove('visible');
+}
+
+/* ---------- 图标选择弹窗 ---------- */
+let iconPickerContext = null; // {type:'checklist'|'item', itemId?}
+function openIconPicker(type, itemId){
+  iconPickerContext = {type, itemId};
+  $('#iconPickerTitle').textContent = t('select_icon');
+  $('#iconPickerSearch').value='';
+  renderIconPickerGrid('');
+  $('#iconPickerScrim').classList.add('visible');
+  $('#iconPickerModal').classList.add('visible');
+}
+function closeIconPicker(){
+  $('#iconPickerScrim').classList.remove('visible');
+  $('#iconPickerModal').classList.remove('visible');
+}
+function renderIconPickerGrid(filter){
+  const grid = $('#iconPickerGrid');
+  grid.innerHTML='';
+  const lower = filter.toLowerCase();
+  const icons = ICON_LIBRARY.filter(ic=> !lower || ic.includes(lower));
+  if(icons.length===0){
+    grid.appendChild(el('div', {style:'grid-column:1/-1;text-align:center;padding:24px;color:var(--md-on-surface-variant)'}, t('no_results')));
+    return;
+  }
+  icons.forEach(ic=>{
+    const opt = el('button', {class:'icon-option', onclick:()=>selectIcon(ic)});
+    opt.appendChild(el('span', {class:'icon'}, ic));
+    grid.appendChild(opt);
+  });
+}
+function selectIcon(iconName){
+  const ctx = iconPickerContext;
+  if(!ctx) return;
+  if(ctx.type==='checklist'){
+    formState.icon = iconName;
+    renderForm();
+  }else if(ctx.type==='item'){
+    const item = formState.items.find(i=>i.id===ctx.itemId);
+    if(item){ item.icon = iconName; renderForm(); }
+  }
+  closeIconPicker();
+}
+
+/* ---------- 搜索 ---------- */
+let searchActive = false;
+function toggleSearch(){
+  if(searchActive){
+    closeSearch();
+  }else{
+    openSearch();
+  }
+}
+function openSearch(){
+  searchActive = true;
+  $('#btnSearch').classList.add('is-active');
+  $('#searchBar').classList.add('visible');
+  setTimeout(()=>$('#searchInput').focus(), 250);
+}
+function closeSearch(silent){
+  if(!searchActive && silent) return;
+  searchActive = false;
+  $('#btnSearch').classList.remove('is-active');
+  $('#searchBar').classList.remove('visible');
+  $('#searchInput').value='';
+  $('#searchBar').classList.remove('has-text');
+  // 清除高亮
+  $$('.check-item.is-search-match').forEach(n=>n.classList.remove('is-search-match'));
+}
+function doSearch(q){
+  q = q.trim().toLowerCase();
+  $('#searchBar').classList.toggle('has-text', q.length>0);
+  const cl = getActiveChecklist();
+  if(!cl) return;
+  // 清除旧高亮
+  $$('.check-item.is-search-match').forEach(n=>n.classList.remove('is-search-match'));
+  if(!q){
+    return;
+  }
+  // 找第一个匹配的待办项
+  const match = cl.items.find(i=>!i.done && i.text.toLowerCase().includes(q));
+  if(match){
+    const node = $(`.check-item[data-id="${match.id}"]`);
+    if(node){
+      node.classList.add('is-search-match');
+      node.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+}
+
+/* ---------- 页面切换 ---------- */
+let currentPage = 'home'; // home | form | settings
+function switchPage(target){
+  const pages = {home:'#pageHome', form:'#pageForm', settings:'#pageSettings'};
+  const curEl = $(pages[currentPage]);
+  const tgtEl = $(pages[target]);
+  if(curEl===tgtEl) return;
+  // 判断方向：home在左，form/settings在右
+  const order = ['home','form','settings'];
+  const curIdx = order.indexOf(currentPage);
+  const tgtIdx = order.indexOf(target);
+  const goRight = tgtIdx > curIdx;
+
+  curEl.classList.remove('page-active');
+  curEl.classList.add(goRight? 'page-leave-left':'page-leave-right');
+  tgtEl.classList.remove('page-enter-right','page-enter-left','page-leave-left','page-leave-right');
+  // 先设置初始位置
+  tgtEl.classList.add(goRight? 'page-enter-right':'page-enter-left');
+  requestAnimationFrame(()=>{
+    tgtEl.classList.remove('page-enter-right','page-enter-left');
+    tgtEl.classList.add('page-active');
+  });
+
+  currentPage = target;
+}
+
+/* ---------- 对话框 ---------- */
+function openDialog(){
+  $('#dialogScrim').classList.add('visible');
+  $('#confirmDialog').classList.add('visible');
+}
+function closeDialog(){
+  $('#dialogScrim').classList.remove('visible');
+  $('#confirmDialog').classList.remove('visible');
+}
+
+/* ---------- Toast ---------- */
+let toastTimer = null;
+function showToast(msg){
+  const toast = $('#toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('visible'), 2200);
+}
+
+/* ---------- 事件绑定 ---------- */
+function bindEvents(){
+  // 顶栏按钮 —— 附加水滴效果
+  ['btnConfig','btnSearch','btnSettings','sbBack','sbClear'].forEach(id=>{
+    const el = $('#'+id);
+    if(el) attachRipple(el);
+  });
+  // 顶栏按钮
+  $('#btnConfig').addEventListener('click', ()=>{
+    const cl = getActiveChecklist();
+    if(cl) openForm(cl.id);
+  });
+  $('#btnSearch').addEventListener('click', toggleSearch);
+  $('#btnSettings').addEventListener('click', ()=>{
+    if(currentPage==='settings' || currentPage==='form'){
+      // 从设置页或表单页返回主页
+      Store.state._editing = null;
+      switchPage('home');
+      renderTopbar('home');
+      renderHome();
+    }else{
+      renderSettings();
+      switchPage('settings');
+      renderTopbar('settings');
+    }
+  });
+
+  // 搜索
+  $('#sbBack').addEventListener('click', ()=>closeSearch());
+  $('#sbClear').addEventListener('click', ()=>{
+    $('#searchInput').value='';
+    $('#searchBar').classList.remove('has-text');
+    doSearch('');
+    $('#searchInput').focus();
+  });
+  $('#searchInput').addEventListener('input', e=>doSearch(e.target.value));
+
+  // 重置 FAB
+  const resetFab = $('#btnResetList');
+  attachRipple(resetFab);
+  resetFab.addEventListener('click', ()=>{
+    const cl = getActiveChecklist();
+    if(cl) resetChecklist(cl.id);
+  });
+
+  // 图标选择弹窗
+  $('#iconPickerScrim').addEventListener('click', closeIconPicker);
+  $('#iconPickerCancel').addEventListener('click', closeIconPicker);
+  // 语言弹窗
+  $('#langScrim').addEventListener('click', closeLangModal);
+  $('#langModalCancel').addEventListener('click', closeLangModal);
+  $('#iconPickerSearch').addEventListener('input', e=>renderIconPickerGrid(e.target.value));
+
+  // 对话框
+  $('#dialogScrim').addEventListener('click', closeDialog);
+
+  // 系统主题变化
+  if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+      if(Store.state.settings.theme==='auto') applyTheme();
+    });
+  }
+
+  // 键盘 ESC
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape'){
+      if($('#iconPickerModal').classList.contains('visible')) closeIconPicker();
+      else if($('#confirmDialog').classList.contains('visible')) closeDialog();
+      else if(searchActive) closeSearch();
+      else if(currentPage!=='home'){
+        switchPage('home');
+        renderTopbar('home');
+      }
+    }
+  });
+
+  // 防止双击缩放
+  let lastTouch=0;
+  document.addEventListener('touchend', e=>{
+    const now=Date.now();
+    if(now-lastTouch<300){ e.preventDefault(); }
+    lastTouch=now;
+  }, {passive:false});
+}
+
+/* ---------- 更新静态元素的国际化标签 ---------- */
+function updateStaticLabels(){
+  // 搜索栏按钮
+  $('#sbBack').setAttribute('aria-label', t('search'));
+  $('#sbClear').setAttribute('aria-label', t('cancel'));
+  $('#searchInput').setAttribute('placeholder', t('search_placeholder'));
+  // 图标选择弹窗
+  $('#iconPickerTitle').textContent = t('select_icon');
+  $('#iconPickerSearch').setAttribute('placeholder', t('icon_search'));
+  $('#iconPickerCancel').textContent = t('cancel');
+  // 文档语言
+  document.documentElement.lang = getLang();
+  document.title = t('app_name');
+}
+
+/* ---------- 初始化 ---------- */
+function init(){
+  Store.load();
+  applyTheme();
+  bindEvents();
+  initGlobalRipple();
+
+  // 如果没有检查单，设置为空状态
+  if(Store.state.checklists.length===0){
+    Store.state.activeChecklistId = null;
+  }else if(!Store.state.activeChecklistId || !Store.state.checklists.find(c=>c.id===Store.state.activeChecklistId)){
+    Store.state.activeChecklistId = Store.state.checklists[0].id;
+  }
+
+  updateStaticLabels();
+  renderTopbar('home');
+  renderHome();
+  renderBottombar();
+  // 启动时检查自动重置
+  checkAutoReset();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
